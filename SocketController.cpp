@@ -96,8 +96,14 @@ void SocketController::kqueueInit() {
 				{
 					/* read data from client */
 					char buf[1024];
-					int n = read(curr_event->ident, buf, sizeof(buf));
+                    RequestMessage rm;
+                    if (fd_list.find(curr_event->ident) == fd_list.end())
+                        fd_list.insert(std::pair<int, RequestMessage>(curr_event->ident, RequestMessage()));
 
+					rm = fd_list[curr_event->ident];
+                    int n = read(curr_event->ident, buf, sizeof(buf));
+                    rm.inputBuf(buf);
+                    std::cout << rm.getterBuf() << std::endl;
 					if (n <= 0)
 					{
 						if (n < 0)

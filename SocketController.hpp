@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <map>
+#include "RequestMessage.hpp"
 
 #define SOCKET_LISTEN_BACKLOG 5
 #define SOCKET_PORT 80
@@ -22,11 +23,12 @@
 */
 class SocketController {
 private:
-	int							server_socket;
-	sockaddr_in					server_addr;
-	int							kq;
-    struct kevent				event_list[8]; // kevent array for eventlist
-	std::vector<struct kevent>	change_list;
+	int						    	server_socket;
+	sockaddr_in				    	server_addr;
+	int						    	kq;
+    struct kevent			    	event_list[8]; // kevent array for eventlist
+	std::vector<struct kevent>  	change_list;
+    std::map<int, RequestMessage>   fd_list;
 public:
 	SocketController();
 	void socketInit();
