@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include "RequestMessage.hpp"
+//#include "ResponseMessage.hpp"
 
 #define SOCKET_LISTEN_BACKLOG 5
 #define SOCKET_PORT 80
@@ -28,7 +29,7 @@ private:
 	int						    	kq;
     struct kevent			    	event_list[8]; // kevent array for eventlist
 	std::vector<struct kevent>  	change_list;
-    std::map<int, RequestMessage>   fd_list;
+    std::map<uintptr_t, RequestMessage>   fd_list;
 public:
 	SocketController();
 	void socketInit();
@@ -36,6 +37,8 @@ public:
 	void  change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
         uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 	void disconnect_client(int client_fd, std::map<int, std::string>& clients);
+
+    void sendMessage(uintptr_t fd);
 };
 
 #endif

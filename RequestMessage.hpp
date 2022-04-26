@@ -1,10 +1,19 @@
 #ifndef REQUESTMESSAGE_HPP
 #define REQUESTMESSAGE_HPP
+
 #include "HeaderFieldInfo.hpp"
 #include <map>
+#include <iostream>
+//#include "next/ResponseMessage.hpp"
+
+//todo binary에대한 처리 생각하기!
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
-//todo binary에대한 처리 생각하기!
+
+#define REQUEST_LINE        0
+#define HEADER_FIELD        1
+#define BODY                2
+
 class RequestMessage{
 private:
     int                     protocol_minor_version;
@@ -14,13 +23,20 @@ private:
     std::string             body;
     long                    length;
     std::string             buf;
+    int                     err_num;
+    int                     current;
+    uintptr_t               socket_fd;
 public:
-    RequestMessage();
+    RequestMessage(uintptr_t fd);
     virtual ~RequestMessage();
-    RequestMessage(std::string const & str);
-    void inputBuf(std::string const & str);
-    std::string getterBuf(void);
+    bool inputBuf(std::string const & str);
+    std::string const & getterBuf(void) const;
+    uintptr_t const & getterSocketFd(void) const;
     bool bufCheck();
+    bool parsing();
+    void parsingRequestLine(std::string & temp);
+    void parsingHeaderField(std::string const & temp);
+    bool parsingBody(std::string const & temp);
 };
 
 #endif
