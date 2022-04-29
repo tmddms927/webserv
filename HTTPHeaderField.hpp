@@ -1,7 +1,3 @@
-//
-// Created by gilee on 2022/04/20.
-//
-
 #ifndef WEBSERV_HTTPHEADERFIELD_HPP
 #define WEBSERV_HTTPHEADERFIELD_HPP
 

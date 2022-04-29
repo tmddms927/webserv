@@ -97,15 +97,13 @@ void SocketController::kqueueInit() {
 					/* read data from client */
 					char buf[1024];
                     if (fd_list.find(curr_event->ident) == fd_list.end())
-                        fd_list.insert(std::pair<uintptr_t , RequestMessage>(curr_event->ident, RequestMessage(curr_event->ident)));
+                        fd_list.insert(std::pair<uintptr_t, HTTP>(curr_event->ident, HTTP(curr_event->ident)));
 
-                    RequestMessage rm = fd_list.find(curr_event->ident)->second;
                     int n = read(curr_event->ident, buf, sizeof(buf));
-                    if (rm.inputBuf(buf)) {
-                        sendMessage(curr_event->ident);
+                    fd_list[curr_event->ident].reqInputBuf(buf);
+                        // sendMessage(curr_event->ident);
                         //response start!
-                    }
-//                  // std::cout << rm.getterBuf() << std::endl;
+                    // }
 					if (n <= 0)
 					{
 						if (n < 0)
@@ -116,7 +114,7 @@ void SocketController::kqueueInit() {
 					{
 						buf[n] = '\0';
 						clients[curr_event->ident] += buf;
-						std::cout << "received data from " << curr_event->ident << ": " << clients[curr_event->ident] << std::endl;
+						// std::cout << "received data from " << curr_event->ident << ": " << clients[curr_event->ident] << std::endl;
 					}
 				}
 			}

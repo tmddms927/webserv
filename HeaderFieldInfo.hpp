@@ -16,5 +16,4 @@ public:
     const std::string&  operator[](unsigned int idx) const;
 };
 
-
 #endif //WEBSERV_HEADERFIELDINFO_HPP

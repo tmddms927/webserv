@@ -3,4 +3,4 @@ project(untitled1)
 
 set(CMAKE_CXX_STANDARD 98)
 
-add_executable(untitled1 main.cpp SocketController.cpp SocketController.hpp RequestMessage.cpp RequestMessage.hpp)
+add_executable(untitled1 main.cpp SocketController.cpp SocketController.hpp RequestMessage.cpp RequestMessage.hpp HTTP.cpp HTTP.hpp)
