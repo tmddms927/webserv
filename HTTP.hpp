@@ -8,7 +8,16 @@
 #define REQ_REQUEST_LINE        0
 #define REQ_HEADER_FIELD        1
 #define REQ_BODY                2
-#define REQ_FINISHED            3
+#define REQ_CONTENT_LENGTH      3
+#define REQ_CHUNKED             4
+#define REQ_FINISHED            5
+
+#define BAD_REQUEST             -1
+#define NO_BODY                 -2
+
+#define GET                     "GET"
+#define POST                    "POST"
+#define DELETE                  "DELETE"
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
@@ -19,8 +28,7 @@ struct  RequestMessage {
     std::string             path;
     HTTPHeaderField         header;
     std::string             body;
-    // 필요없는거 같음
-    // long                    length;
+    //long                   content_length;
     std::string             buf;
     int                     err_num;
     // 공통으로 씀..?
@@ -51,9 +59,14 @@ public:
     void reqParsing();
     void reqParsingRequestLine(std::string & temp);
     void reqParsingHeaderField(std::string const & temp);
-    void reqParsingBody(std::string const & temp);
+    void reqBodyContentLength(std::string const & temp);
+    void reqBodyChunked(std::string const & temp);
     bool reqCheckFinished();
     void reqPrint();
+
+    /* valid */
+    void reqGETHeaderCheck();
+    void bodyEncodingType();
 
     /* response function */
     void resSendMessage();

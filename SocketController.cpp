@@ -49,7 +49,7 @@ void SocketController::kqueueInit() {
 	int new_events;
 	struct kevent* curr_event;
 	std::map<int, std::string> clients; // map for client socket:data
-
+    //todo client 삭제~
 	while (1)
 	{
 		/*  apply changes and return new events(pending events) */
@@ -100,20 +100,22 @@ void SocketController::kqueueInit() {
                         fd_list.insert(std::pair<uintptr_t, HTTP>(curr_event->ident, HTTP(curr_event->ident)));
 
                     int n = read(curr_event->ident, buf, sizeof(buf));
-                    fd_list[curr_event->ident].reqInputBuf(buf);
-                        // sendMessage(curr_event->ident);
-                        //response start!
+                    // sendMessage(curr_event->ident);
+                    // response start!
                     // }
 					if (n <= 0)
 					{
-						if (n < 0)
+						if (n < 0) {
 							std::cerr << "client read error!" << std::endl;
-						disconnect_client(curr_event->ident, clients);
-					}
+						    disconnect_client(curr_event->ident, clients);
+					    }
+                    }
 					else
 					{
-						buf[n] = '\0';
-						clients[curr_event->ident] += buf;
+//						buf[n] = '\0';
+                        fd_list[curr_event->ident].reqInputBuf(buf);
+//                        std::cout << "========+++> here\n" << buf << std::endl;
+//						clients[curr_event->ident] += buf;
 						// std::cout << "received data from " << curr_event->ident << ": " << clients[curr_event->ident] << std::endl;
 					}
 				}
@@ -156,6 +158,7 @@ void SocketController::disconnect_client(int client_fd, std::map<int, std::strin
 	std::cout << "client disconnected: " << client_fd << std::endl;
 	close(client_fd);
 	clients.erase(client_fd);
+    fd_list.erase(client_fd);
 }
 
 void SocketController::sendMessage(uintptr_t fd) {

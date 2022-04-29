@@ -1,29 +1,31 @@
 #include "HTTP.hpp"
-
+#include "HTTPHeaderField.hpp"
 /*
 ** HTTP class default constructor.
 */
 HTTP::HTTP() : socket_fd(-1) {
-
+    requestMessage.current = REQ_REQUEST_LINE;
 }
 
 /*
 ** HTTP class constructor. socket_fd값을 받아와서 저장.
 */
 HTTP::HTTP(uintptr_t _socket_fd) : socket_fd(_socket_fd) {
+    requestMessage.current = REQ_REQUEST_LINE;
 }
 
 /*
 ** request message가 왔을 경우 request.buf에 메시지 저장
 */
 void HTTP::reqInputBuf(std::string const & str) {
+    std::cout << "[" + str + "]" << std::endl;
     requestMessage.buf += str;
     if (reqbufCheck() == true) 
         reqParsing();
-    reqPrint();
+    std::cout << "=============================+++++>" << requestMessage.current << std::endl;
     // request message 끝나면
     if (reqCheckFinished() == true) {
-        std::cout << socket_fd << std::endl;
+        reqPrint();
         resSendMessage();
     }
 }
@@ -46,20 +48,33 @@ void HTTP::reqParsing() {
     std::string temp;
 
     while (1) {
+        // header field parsing 끝나면
+        if (requestMessage.current == REQ_BODY) {
+            // 각 메소드 별 함수 실행?
+            reqGETHeaderCheck();
+        }
         index = requestMessage.buf.find("\r\n");
+//        if (index == std::string::npos)
         if (index == std::string::npos)
             break;
         temp = requestMessage.buf.substr(0, index);
+        //std::cout << "[" << temp << "]" << requestMessage.current << std::endl;
         if (requestMessage.current == REQ_REQUEST_LINE)
             reqParsingRequestLine(temp);
         else if (requestMessage.current == REQ_HEADER_FIELD)
             reqParsingHeaderField(temp);
-        else if (requestMessage.current == REQ_BODY) {
-            reqParsingBody(temp);
-        }
-        requestMessage.buf = requestMessage.buf.substr(index + 1);
+        // method 분기
+//        if (requestMessage.method == POST)
+            //reqMethodPostProcess()
+        else if (requestMessage.current == REQ_CONTENT_LENGTH)
+            reqBodyContentLength(temp);
+        requestMessage.buf = requestMessage.buf.substr(index + 2);
     }
 }
+
+//void    HTTP::reqMethodPostProcess() {
+//
+//}
 
 /*
 ** request message - request line를 파싱하는 함수
@@ -82,7 +97,7 @@ void HTTP::reqParsingRequestLine(std::string & temp) {
     temp = temp.substr(index + 1);
 
     // HTTP-version
-    if (temp != "HTTP/1.1\r\n")
+    if (temp != "HTTP/1.1")
         std::cout << "HTTP-version error!" << index << '\n';
     protocol_minor_version = 1;
     requestMessage.current = REQ_HEADER_FIELD;
@@ -96,7 +111,7 @@ void HTTP::reqParsingHeaderField(std::string const & temp) {
     std::string first;
     std::string second;
 
-    if (temp == "\r\n") {
+    if (temp == "") {
         requestMessage.current = REQ_BODY;
         return ;
     }
@@ -104,19 +119,60 @@ void HTTP::reqParsingHeaderField(std::string const & temp) {
     if (!index)
         std::cout << "HeaderField [key:value] error. there are no key!" << std::endl;
     //todo !need to modify key and value validation check!
-    first = temp.substr(0, index - 1);
+    first = temp.substr(0, index);
     second = temp.substr(index + 1);
     requestMessage.header.insert(std::pair<std::string, std::string>(first, second));
 }
 
 /*
-** request message - body를 파싱하는 함수
+ *  header field에서 body를 어떻게 받는지(chuncked인지, content-length인지)를 확인
+ */
+// todo invalid header 이전 parsingHeader에서 체크
+void HTTP::bodyEncodingType(){
+    if (requestMessage.header.find(CONTENT_LENGTH_STR) !=  requestMessage.header.end()
+        && requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end())
+        throw BAD_REQUEST;
+    if (requestMessage.header.find(CONTENT_LENGTH_STR) ==  requestMessage.header.end()
+        && requestMessage.header.find(TRANSFER_ENCODING_STR) == requestMessage.header.end())
+        throw NO_BODY;
+    if (requestMessage.header.find(CONTENT_LENGTH_STR) !=  requestMessage.header.end())
+        throw REQ_CONTENT_LENGTH;
+    // todo transfer-encoding value가 chunked가 아닌 경우도 고려
+    if (requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end())
+        throw REQ_CHUNKED;
+}
+/*
+** request message - chunked body를 받는 함수
 */
-void HTTP::reqParsingBody(std::string const & temp) {
-    if (temp == "\r\n") {
-        requestMessage.current = REQ_FINISHED;
+//void HTTP::reqBodyChunked(std::string const & temp) {
+//
+//}
+
+/*
+ * get GET Header Check
+ */
+void HTTP::reqGETHeaderCheck() {
+    try {
+        bodyEncodingType();
     }
+    catch (int const & status) {
+        if (status == BAD_REQUEST)
+            std::cout << "reqGETHeaderCheck : header error! (bad request)" << std::endl;
+        else if (status == NO_BODY)
+            requestMessage.current = REQ_FINISHED;
+        else
+            requestMessage.current = status;
+    }
+}
+
+/*
+** request message - content-length를 받는 함수
+*/
+void HTTP::reqBodyContentLength(std::string const & temp) {
+    std::cout << "content length =========>" << requestMessage.header["Content-Length"] << ", " << requestMessage.body.length() << std::endl;
     requestMessage.body += temp;
+    if (requestMessage.body.length() == std::strtod(requestMessage.header["Content-Length"].c_str(), 0))
+        requestMessage.current = REQ_FINISHED;
 }
 
 /*
