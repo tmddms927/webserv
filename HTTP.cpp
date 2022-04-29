@@ -1,5 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
+
 /*
 ** HTTP class default constructor.
 */
@@ -27,6 +28,7 @@ void HTTP::reqInputBuf(std::string const & str) {
     if (reqCheckFinished() == true) {
         reqPrint();
         resSendMessage();
+        std::cout << "finished!" << std::endl;
     }
 }
 
@@ -54,9 +56,11 @@ void HTTP::reqParsing() {
             reqGETHeaderCheck();
         }
         index = requestMessage.buf.find("\r\n");
-//        if (index == std::string::npos)
-        if (index == std::string::npos)
+        if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH) {
+            std::cout << requestMessage.current << std::endl;
+            std::cout << requestMessage.buf << std::endl;
             break;
+        }
         temp = requestMessage.buf.substr(0, index);
         //std::cout << "[" << temp << "]" << requestMessage.current << std::endl;
         if (requestMessage.current == REQ_REQUEST_LINE)
@@ -97,7 +101,7 @@ void HTTP::reqParsingRequestLine(std::string & temp) {
     temp = temp.substr(index + 1);
 
     // HTTP-version
-    if (temp != "HTTP/1.1")
+    if (temp != "HTTP/1.1" && temp != "HTTP/1.0")
         std::cout << "HTTP-version error!" << index << '\n';
     protocol_minor_version = 1;
     requestMessage.current = REQ_HEADER_FIELD;
@@ -141,6 +145,7 @@ void HTTP::bodyEncodingType(){
     if (requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end())
         throw REQ_CHUNKED;
 }
+
 /*
 ** request message - chunked body를 받는 함수
 */

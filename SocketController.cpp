@@ -1,6 +1,7 @@
 #include "SocketController.hpp"
 
 SocketController::SocketController() {
+    // todo construct member function 제외하기
 	try {
 		socketInit();
 		kqueueInit();
@@ -114,7 +115,10 @@ void SocketController::kqueueInit() {
 					{
 //						buf[n] = '\0';
                         fd_list[curr_event->ident].reqInputBuf(buf);
-//                        std::cout << "========+++> here\n" << buf << std::endl;
+                        //
+                        disconnect_client(curr_event->ident, clients);
+//                      //
+//                      std::cout << "========+++> here\n" << buf << std::endl;
 //						clients[curr_event->ident] += buf;
 						// std::cout << "received data from " << curr_event->ident << ": " << clients[curr_event->ident] << std::endl;
 					}
