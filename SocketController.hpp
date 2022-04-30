@@ -27,13 +27,27 @@ private:
 	sockaddr_in				    	server_addr;
 	int						    	kq;
     struct kevent			    	event_list[8]; // kevent array for eventlist
+    struct kevent*                  curr_event;
 	std::vector<struct kevent>  	change_list;
     std::map<uintptr_t, HTTP>		fd_list;
+    // todo client 삭제
+    std::map<int, std::string>      clients;
 public:
 	SocketController();
 	void socketInit();
+    void socketRun();
 	void kqueueInit();
-	void  change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
+    void kqueueEventRun();
+    /* in eventRun */
+    void kqueueEventError();
+    void kqueueEventRead();
+    void kqueueEventWrite();
+
+    /* in kqueueEventRead */
+    void kqueueConnectAccept();
+    void kqueueEventReadClient();
+
+    void  change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
         uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 	void disconnect_client(int client_fd, std::map<int, std::string>& clients);
     void sendMessage(uintptr_t fd);

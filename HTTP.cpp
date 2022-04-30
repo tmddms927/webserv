@@ -53,14 +53,15 @@ void HTTP::reqParsing() {
         // header field parsing 끝나면
         if (requestMessage.current == REQ_BODY) {
             // 각 메소드 별 함수 실행?
-            reqGETHeaderCheck();
+             if (requestMessage.method == "GET")
+                reqGETHeaderCheck();
+             if (requestMessage.method == "POST")
+                reqPOSTHeaderCheck();
         }
         index = requestMessage.buf.find("\r\n");
-        if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH) {
-            std::cout << requestMessage.current << std::endl;
-            std::cout << requestMessage.buf << std::endl;
+        if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH)
+        //if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH && requestMessage.current != REQ_CHUNKED)
             break;
-        }
         temp = requestMessage.buf.substr(0, index);
         //std::cout << "[" << temp << "]" << requestMessage.current << std::endl;
         if (requestMessage.current == REQ_REQUEST_LINE)
@@ -72,10 +73,12 @@ void HTTP::reqParsing() {
             //reqMethodPostProcess()
         else if (requestMessage.current == REQ_CONTENT_LENGTH)
             reqBodyContentLength(temp);
+        else if (requestMessage.current == REQ_CHUNKED)
+            reqBodyChunked(temp);
         requestMessage.buf = requestMessage.buf.substr(index + 2);
     }
 }
-
+//todo 연결 끊어졌을때 HTTP객체도 제대로 없어져야해!!!!! 기억해!!!!! 꼭 고쳐!!!! 미래의 승은님
 //void    HTTP::reqMethodPostProcess() {
 //
 //}
@@ -142,16 +145,34 @@ void HTTP::bodyEncodingType(){
     if (requestMessage.header.find(CONTENT_LENGTH_STR) !=  requestMessage.header.end())
         throw REQ_CONTENT_LENGTH;
     // todo transfer-encoding value가 chunked가 아닌 경우도 고려
-    if (requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end())
+    if (requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end()) {
+        reqChunkInit();
         throw REQ_CHUNKED;
+    }
 }
 
 /*
 ** request message - chunked body를 받는 함수
 */
-//void HTTP::reqBodyChunked(std::string const & temp) {
-//
-//}
+void HTTP::reqBodyChunked(std::string const & temp) {
+    std::stringstream stream;
+
+    if (requestMessage.chunk.length == 0) {
+        if (temp == "")
+            requestMessage.current = REQ_FINISHED;
+    }
+    if (requestMessage.chunk.length == -1) {
+        stream << temp;
+        stream >> std::hex >> requestMessage.chunk.length;
+        std::cout << "requestMessage.chunk.length ! : " << requestMessage.chunk.length << std::endl;
+    }
+    else {
+        requestMessage.chunk.content += temp;
+        requestMessage.chunk.length -= temp.length();
+        if (requestMessage.chunk.length <= 0)
+            reqChunkInit();
+    }
+}
 
 /*
  * get GET Header Check
@@ -161,10 +182,27 @@ void HTTP::reqGETHeaderCheck() {
         bodyEncodingType();
     }
     catch (int const & status) {
-        if (status == BAD_REQUEST)
+        if (status == BAD_REQUEST) //content-length, transfer-encoding both true
             std::cout << "reqGETHeaderCheck : header error! (bad request)" << std::endl;
-        else if (status == NO_BODY)
+        else if (status == NO_BODY) //content-length, transfer-encoding both false
             requestMessage.current = REQ_FINISHED;
+        else
+            requestMessage.current = status;
+    }
+}
+
+/*
+ * get POST Header Check
+ */
+void HTTP::reqPOSTHeaderCheck() {
+    try {
+        bodyEncodingType();
+    }
+    catch (int const & status) {
+        if (status == BAD_REQUEST) //content-length, transfer-encoding both true
+            std::cout << "reqGETHeaderCheck : header error! (bad request)" << std::endl;
+        else if (status == NO_BODY) //content-length, transfer-encoding both false
+            requestMessage.current = BAD_REQUEST; //todo error throw
         else
             requestMessage.current = status;
     }
@@ -201,6 +239,44 @@ void HTTP::reqPrint() {
         std::cout << it->first << ": " << it->second << std::endl;
     std::cout << "body : " << requestMessage.body << std::endl;
 }
+
+
+/*
+ * chunk struct 초기화 하는 함수
+ * length = -1, content = ""
+ */
+void HTTP::reqChunkInit() {
+    requestMessage.chunk.length = -1;
+    if (requestMessage.chunk.content.length() != 0)
+        requestMessage.body += requestMessage.chunk.content;
+    requestMessage.chunk.content = "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 ** response message를 socket fd에 write하는 함수

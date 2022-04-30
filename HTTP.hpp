@@ -4,6 +4,7 @@
 #include <map>
 #include <iostream>
 #include <unistd.h>
+#include <sstream>
 
 #define REQ_REQUEST_LINE        0
 #define REQ_HEADER_FIELD        1
@@ -21,6 +22,11 @@
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
+struct  Chunk {
+    size_t                  length;
+    std::string             content;
+};
+
 struct  RequestMessage {
     // 공통으로 씀
     std::string             method;
@@ -28,6 +34,7 @@ struct  RequestMessage {
     std::string             path;
     HTTPHeaderField         header;
     std::string             body;
+    Chunk                   chunk;
     //long                   content_length;
     std::string             buf;
     int                     err_num;
@@ -63,9 +70,11 @@ public:
     void reqBodyChunked(std::string const & temp);
     bool reqCheckFinished();
     void reqPrint();
+    void reqChunkInit();
 
     /* valid */
     void reqGETHeaderCheck();
+    void reqPOSTHeaderCheck();
     void bodyEncodingType();
 
     /* response function */
