@@ -1,6 +1,5 @@
 #include "SocketController.hpp"
 
-
 void SocketController::kqueueConnectAccept(void) {
     /* accept new client */
     int client_socket;
@@ -10,58 +9,80 @@ void SocketController::kqueueConnectAccept(void) {
     fcntl(client_socket, F_SETFL, O_NONBLOCK);
 
     /* add event for client socket - add read && write event */
-    change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    clients[client_socket] = "";
+    change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, NULL);
+    //change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE , 0, 0, NULL);
+//    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    //if (fd_list.find(curr_event->ident) == fd_list.end())
+    fd_list.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
+    //todo 있을경우 생각!!!! 꼮!!!!!
 }
 
 void SocketController::kqueueEventReadClient() {
     /* read data from client */
-    char buf[1024];
-    for (int i = 0; i < 1024; ++i)
-        buf[i] = 0;
-    if (fd_list.find(curr_event->ident) == fd_list.end())
-        fd_list.insert(std::pair<uintptr_t, HTTP>(curr_event->ident, HTTP(curr_event->ident)));
+    char buf[SOCKET_READ_BUF];
+    int n;
 
-    int n = read(curr_event->ident, buf, sizeof(buf));
-    // sendMessage(curr_event->ident);
-    // response start!
-    // }
-    if (n <= 0) {
-        if (n < 0) {
+    while (1) {
+        std::memset(buf, 0, SOCKET_READ_BUF);
+        n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
+        std::cout << "read num!!!!!!! " << n << std::endl;
+        if (n == 0) {
             std::cerr << "client read error!" << std::endl;
-            disconnect_client(curr_event->ident, clients);
+            disconnect_client(curr_event->ident);
         }
-    } else
-        fd_list[curr_event->ident].reqInputBuf(buf);
+        else if (n == - 1) {
+            //fd_list[curr_event->ident].reqInputBuf(buf);
+            break;
+        }
+        else {
+            fd_list[curr_event->ident].reqInputBuf(buf);
+//       change_events(change_list, curr_event->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+//       kevent(kq, &change_list[0], change_list.size(), event_list, KQUEUE_EVENT_LIST_SIZE, &timeout);
+//       change_events(change_list, curr_event->ident, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+            //std::cout << "READ END============================================" << std::endl;
+            //std::cout << "ident " << curr_event->ident << std::endl;
+        }
+    }
 }
 
 void SocketController::kqueueEventError(){
     if (curr_event->ident == server_socket) {
-// server socket 다시 init 해주기!
+//todo server socket 다시 init 해주기!
         throw "server socket error";
     }
     else
     {
         std::cerr << "client socket error" << std::endl;
-        disconnect_client(curr_event->ident, clients);
+        disconnect_client(curr_event->ident);
     }
 }
 
 void SocketController::kqueueEventRead() {
-    std::cout << "READ!!!!!!!!!!!!!!!!!" << std::endl;
-    if (curr_event->ident == server_socket)
+    //std::cout << "READ!!!!!!!!!!!!!!!!!" << std::endl;
+    if (curr_event->ident == server_socket) {
+        //std::cout << "read1!!!!!!!!" << std::endl;
         kqueueConnectAccept();
-    else if (clients.find(curr_event->ident) != clients.end())
+    }
+    else if (fd_list.find(curr_event->ident) != fd_list.end()) {
+        //std::cout << "read2!!!!!" << std::endl;
         kqueueEventReadClient();
+    }
 }
 
 void SocketController::kqueueEventWrite() {
+//    std::cout << "WRITE!!!!!!!!!!!!!!!!!" << std::endl;
     /* send data to client */
-    std::map<int, std::string>::iterator it = clients.find(curr_event->ident);
-    if (it != clients.end())
+    std::map<uintptr_t , HTTP>::iterator it = fd_list.find(curr_event->ident);
+
+    if (it != fd_list.end())
     {
-        if (clients[curr_event->ident] != "")
+        if (it->second.reqCheckFinished() == true) {
+            it->second.reqPrint();
+            it->second.resSendMessage();
+            std::cout << "finished!" << std::endl;
+        }
+        /*
+        if (fd_list[curr_event->ident]. != "")
         {
             int n;
             if ((n = write(curr_event->ident, clients[curr_event->ident].c_str(),
@@ -73,10 +94,15 @@ void SocketController::kqueueEventWrite() {
             else
                 clients[curr_event->ident].clear();
         }
+         */
     }
+
 }
 
-SocketController::SocketController() {}
+SocketController::SocketController() {
+    timeout.tv_nsec = 0;
+    timeout.tv_sec = 0;
+}
 
 void SocketController::socketRun() {
     try {
@@ -92,7 +118,8 @@ void SocketController::socketRun() {
 void SocketController::socketInit() {
 	if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
 		throw "socket() error!";
-
+    sock_opt = 0;
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt));
 	// sockaddr_in->sin_zero가 반드시 0으로 채워져 있어야 함.
 	// https://techlog.gurucat.net/292
 	memset(&server_addr, 0, sizeof(server_addr));
@@ -128,11 +155,10 @@ void SocketController::kqueueInit() {
 }
 
 
-void SocketController::disconnect_client(int client_fd, std::map<int, std::string>& clients)
+void SocketController::disconnect_client(int client_fd)
 {
 	std::cout << "client disconnected: " << client_fd << std::endl;
 	close(client_fd);
-	clients.erase(client_fd);
     fd_list.erase(client_fd);
 }
 
@@ -182,12 +208,14 @@ void SocketController::kqueueEventRun() {
     while (1)
     {
         /*  apply changes and return new events(pending events) */
-        new_events = kevent(kq, &change_list[0], change_list.size(), event_list, 8, NULL);
-        //std::cout << new_events << std::endl;
+        std::cout << "kqueueEventRun start" << std::endl;
+        new_events = kevent(kq, &change_list[0], change_list.size(), event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
+        //std::cout << "new event : " << new_events << std::endl;
         if (new_events == -1)
             throw "kevent() error";
 
         change_list.clear(); // clear change_list for new changes
+        //std::cout << "change_list size : " << change_list.size() << std::endl;
 
         for (int i = 0; i < new_events; ++i)
         {
@@ -197,7 +225,7 @@ void SocketController::kqueueEventRun() {
             /* check error event return */
             if (curr_event->flags & EV_ERROR)
                 kqueueEventError();
-            if (curr_event->filter == EVFILT_READ)
+            else if (curr_event->filter == EVFILT_READ)
                 kqueueEventRead();
             else if (curr_event->filter == EVFILT_WRITE)
                 kqueueEventWrite();

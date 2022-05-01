@@ -23,13 +23,13 @@ void HTTP::reqInputBuf(std::string const & str) {
     requestMessage.buf += str;
     if (reqbufCheck() == true) 
         reqParsing();
-    std::cout << "=============================+++++>" << requestMessage.current << std::endl;
+    std::cout << "requestMesaage, reqInputBuf  =============================+++++>" << requestMessage.current << std::endl;
     // request message 끝나면
-    if (reqCheckFinished() == true) {
-        reqPrint();
-        resSendMessage();
-        std::cout << "finished!" << std::endl;
-    }
+//    if (reqCheckFinished() == true) {
+//        reqPrint();
+//        resSendMessage();
+//        std::cout << "finished!" << std::endl;
+//    }
 }
 
 /*
