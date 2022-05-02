@@ -5,11 +5,10 @@
 ** request message가 왔을 경우 request.buf에 메시지 저장
 */
 void HTTP::reqInputBuf(std::string const & str) {
-    std::cout << "[" + str + "]" << std::endl;
     requestMessage.buf += str;
-    if (reqbufCheck() == true) 
+
+    if (reqbufCheck() == true)
         reqParsing();
-    std::cout << "requestMesaage, reqInputBuf  =============================+++++>" << requestMessage.current << std::endl;
 }
 
 /*
@@ -40,21 +39,17 @@ void HTTP::reqParsing() {
         }
         index = requestMessage.buf.find("\r\n");
         if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH)
-        //if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH && requestMessage.current != REQ_CHUNKED)
             break;
         temp = requestMessage.buf.substr(0, index);
-        //std::cout << "[" << temp << "]" << requestMessage.current << std::endl;
         if (requestMessage.current == REQ_REQUEST_LINE)
             reqParsingRequestLine(temp);
         else if (requestMessage.current == REQ_HEADER_FIELD)
             reqParsingHeaderField(temp);
-        // method 분기
-//        if (requestMessage.method == POST)
-            //reqMethodPostProcess()
         else if (requestMessage.current == REQ_CONTENT_LENGTH)
             reqBodyContentLength(temp);
         else if (requestMessage.current == REQ_CHUNKED)
             reqBodyChunked(temp);
+        // todo (+ 2) 변경하기
         requestMessage.buf = requestMessage.buf.substr(index + 2);
     }
 }
@@ -155,8 +150,8 @@ void HTTP::reqBodyChunked(std::string const & temp) {
 }
 
 /*
- * get GET Header Check
- */
+** get GET Header Check
+*/
 void HTTP::reqGETHeaderCheck() {
     try {
         bodyEncodingType();
@@ -172,8 +167,8 @@ void HTTP::reqGETHeaderCheck() {
 }
 
 /*
- * get POST Header Check
- */
+** get POST Header Check
+*/
 void HTTP::reqPOSTHeaderCheck() {
     try {
         bodyEncodingType();
@@ -192,7 +187,6 @@ void HTTP::reqPOSTHeaderCheck() {
 ** request message - content-length를 받는 함수
 */
 void HTTP::reqBodyContentLength(std::string const & temp) {
-    std::cout << "content length =========>" << requestMessage.header["Content-Length"] << ", " << requestMessage.body.length() << std::endl;
     requestMessage.body += temp;
     if (requestMessage.body.length() == std::strtod(requestMessage.header["Content-Length"].c_str(), 0))
         requestMessage.current = REQ_FINISHED;
