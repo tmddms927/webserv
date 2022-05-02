@@ -11,7 +11,7 @@ void SocketController::kqueueConnectAccept(void) {
     /* add event for client socket - add read && write event */
     change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, NULL);
     //change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE , 0, 0, NULL);
-//    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+//change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
     //if (fd_list.find(curr_event->ident) == fd_list.end())
     fd_list.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
     //todo 있을경우 생각!!!! 꼮!!!!!
