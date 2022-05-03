@@ -13,9 +13,10 @@ TEST(Config_test, readFileTest) {
             e.readFile();
             e.validateParenthesis();
             e.validateFirstServerBlock();
-            e.validateFirstServerName();
         } catch (std::exception const & e) {
             throw;
         }
         });
+    a.validateFirstServerVariables();
+    a.serverCount();
 }
