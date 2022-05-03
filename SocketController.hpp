@@ -18,20 +18,20 @@
 #define SOCKET_PORT 80
 #define SOCKET_ADDR INADDR_ANY
 #define SOCKET_READ_BUF    1024
-#define KQUEUE_EVENT_LIST_SIZE   10
+#define KQUEUE_EVENT_LIST_SIZE   1
 
 /*
 ** socket를 관리해주는 객체
 */
 class SocketController {
 private:
-	int						    	server_socket;
+	uintptr_t						server_socket;
 	sockaddr_in				    	server_addr;
 	int						    	kq;
     int                             sock_opt;
-    struct kevent			    	event_list[8]; // kevent array for eventlist
-    struct kevent*                  curr_event;
-	std::vector<struct kevent>  	change_list;
+    struct kevent			    	event_list; // kevent array for eventlist
+    // struct kevent*                  curr_event;
+	struct kevent                 	change_list;
     std::map<uintptr_t, HTTP>		fd_list;
     struct timespec                 timeout;
 public:
@@ -43,13 +43,15 @@ public:
     /* in eventRun */
     void kqueueEventError();
     void kqueueEventRead();
+    void finishRead();
+    void finishWrite();
     void kqueueEventWrite();
 
     /* in kqueueEventRead */
     void kqueueConnectAccept();
     void kqueueEventReadClient();
-    void  change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
-        uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
+    void  change_events(uintptr_t ident, int16_t filter, uint16_t flags,
+                        uint32_t fflags, intptr_t data, void *udata);
 	void disconnect_client(int client_fd);
 };
 
