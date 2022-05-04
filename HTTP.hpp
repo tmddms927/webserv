@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
+#include "Config.hpp"
 
 #define REQ_REQUEST_LINE        0
 #define REQ_HEADER_FIELD        1
@@ -51,6 +52,7 @@ struct ResponseMessage {
 
 class HTTP {
 private:
+    const servers   server;
     uintptr_t       socket_fd;
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
@@ -58,7 +60,7 @@ private:
     int             protocol_minor_version;
 public:
     HTTP();
-    HTTP(uintptr_t _socket_fd);
+    HTTP(servers const & _server, uintptr_t _socket_fd);
 
     /* request function */
     void reqInputBuf(std::string const & str);

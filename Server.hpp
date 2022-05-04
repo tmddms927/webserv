@@ -1,0 +1,59 @@
+#ifndef Server_HPP
+#define Server_HPP
+
+#include <iostream>
+#include <sys/socket.h>
+#include <sys/event.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <vector>
+#include <map>
+#include "HTTP.hpp"
+#include "Config.hpp"
+
+#define SOCKET_LISTEN_BACKLOG   5
+#define SOCKET_PORT             80
+#define SOCKET_ADDR             INADDR_ANY
+#define SOCKET_READ_BUF         16384
+#define KQUEUE_EVENT_LIST_SIZE  1024
+
+/*
+** socket를 관리해주는 객체
+*/
+class Server {
+private:
+	// socket
+	const std::vector<servers>		config;
+	const global					global_config;
+	std::vector<uintptr_t>			server_socket;
+	sockaddr_in						server_addr;
+	// kqueue
+	int								kq;
+	struct kevent					event_list[KQUEUE_EVENT_LIST_SIZE];
+	std::vector<struct kevent>		change_list;
+	struct kevent*					curr_event;
+	std::map<uintptr_t, HTTP>		clients;
+	struct timespec					kq_timeout;
+public:
+	Server(std::vector<servers> s, Config const & c);
+	/* Server_socket */
+	void socketInit();
+	void socketRun();
+
+	/* Server_kqueue */
+	void kqueueInit();
+	void kqueueEventRun();
+
+	/* in kqueue eventRun */
+	void kqueueEventError();
+	void kqueueEventRead();
+	void kqueueConnectAccept();
+	void kqueueEventReadClient();
+	void kqueueEventWrite();
+	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
+	void disconnect_client();
+	int checkServerSocket(uintptr_t const & fd);
+};
+
+#endif
