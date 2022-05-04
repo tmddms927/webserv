@@ -7,7 +7,7 @@
 
 #include "Config.hpp"
 
-Config::Config() : str(){}
+Config::Config() : str(), config(), raw(), global_config(){}
 
 void Config::readFile() {
     std::ifstream file("../test.conf");
@@ -27,6 +27,22 @@ void Config::readFile() {
     }
 }
 
+void Config::setGlobalConfig() {
+    if (raw[0].find("client_max_body_size ") != std::string::npos) {
+        std::stringstream ss(raw[0].substr(raw[0].find("client_max_body_size ") + strlen("client_max_body_size ")));
+        ss >> global_config.client_max_body_size;
+    }
+    if (raw[1].find("default_error_page ") != std::string::npos) {
+        global_config.err_page = raw[1].substr(raw[1].find("default_error_page ") + strlen("default_error_page "));
+        raw.erase(0);
+        raw.erase(1);
+        std::cout << global_config.err_page << std::endl;
+        std::cout << global_config.client_max_body_size << std::endl;
+        return;
+    }
+    throw std::exception();
+}
+
 void Config::validateParenthesis() {
     std::string::iterator it = str.begin();
     int left = 0;
@@ -43,8 +59,9 @@ void Config::validateParenthesis() {
 }
 
 void Config::serverCount() {
-    int i = 0;
-    int j = 0;
+    /*
+    int i = 2;
+    int j = 2;
     while (i < raw.size()) {
         if (raw[i] == "http {")
             config[j++] = servers();
@@ -53,14 +70,16 @@ void Config::serverCount() {
         i++;
     }
     std::cout << config.size() << std::endl;
+     */
 }
+
 void Config::validateFirstServerBlock() {
-    if (raw[0] != "http {")
+    if (raw[2] != "http {")
         throw std::exception();
 }
 
-void Config::validateFirstServerVariables() {
-    int i = 0;
+void Config::validateServerVariables() {
+    int i = 2;
     int j = 0;
     while (i < raw.size()) {
         if (raw[i] == "" || raw[i].find('}') != std::string::npos) {
@@ -94,15 +113,27 @@ void Config::validateFirstServerVariables() {
 
 void Config::runParse() {
     readFile();
+    serverCount();
+    setGlobalConfig();
     validateParenthesis();
+    validateFirstServerBlock();
+    validateServerVariables();
+}
+
+std::map<int, servers> const & Config::getConfig() const{
+    return config;
+}
+global const & Config::getGlobal() const{
+    return global_config;
 }
 
 //todo root location --> 초기값을 어케하지~
-//todo • Choose the port and host of each ’server’. --> 우리 소켓 여러개 열어야함!
 /*
  *      todo parsing 규칙
- * 1. 최상위 서버블록의 이름은 http; ✔
+ * 1. 최상위 서버블록의 이름은 http ✔
  * 2. 최상위 서버블록 이외의 서버블록은 하위 서버블록 없음! ✔
- * 3. 하위 서버블록의 구분은 tabspace!
- * 4. parsing 시작시에 가장먼저 괄호 체크
+ * 3. 하위 서버블록의 구분은 tabspace! ✔
+ * 4. parsing 시작시에 가장먼저 괄호 체크 ✔
+ * 5. body size limit 추가 ✔
+ * 6. default error page 추가 ✔
 */

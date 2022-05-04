@@ -37,10 +37,11 @@ void HTTP::resSendMessage() {
            "<p><em>Thank you for using nginx.</em></p>\r\n"
            "</body>\r\n"
            "</html>\r\n";
-    
+
     // todo write fd error check!
     write(socket_fd, responseMessage.header.c_str(), responseMessage.header.size());
     write(socket_fd, "\r\n", 2);
     write(socket_fd, responseMessage.body.c_str(), responseMessage.body.size());
     write(socket_fd, "\r\n", 2);
+    requestMessage.current = REQ_REQUEST_LINE;
 }

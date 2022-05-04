@@ -6,17 +6,14 @@
 
 TEST(Config_test, readFileTest) {
     Config a;
-    a.readFile();
     EXPECT_NO_THROW({
         try {
             Config e;
-            e.readFile();
-            e.validateParenthesis();
-            e.validateFirstServerBlock();
+            e.runParse();
         } catch (std::exception const & e) {
             throw;
         }
         });
-    a.validateFirstServerVariables();
-    a.serverCount();
+    //a.validateServerVariables();
+    //a.serverCount();
 }

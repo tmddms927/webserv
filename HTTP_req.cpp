@@ -172,17 +172,17 @@ void HTTP::reqBodyChunked(std::string const & temp) {
         if (temp == "")
             requestMessage.current = REQ_FINISHED;
     }
-    if (requestMessage.chunk.length == -1) {
-        stream << temp;
-        stream >> std::hex >> requestMessage.chunk.length;
-        std::cout << "requestMessage.chunk.length ! : " << requestMessage.chunk.length << std::endl;
-    }
-    else {
-        requestMessage.chunk.content += temp;
-        requestMessage.chunk.length -= temp.length();
-        if (requestMessage.chunk.length <= 0)
-            reqChunkInit();
-    }
+    // if (requestMessage.chunk.length == -1) {
+    //     stream << temp;
+    //     stream >> std::hex >> requestMessage.chunk.length;
+    //     std::cout << "requestMessage.chunk.length ! : " << requestMessage.chunk.length << std::endl;
+    // }
+    // else {
+    //     requestMessage.chunk.content += temp;
+    //     requestMessage.chunk.length -= temp.length();
+    //     if (requestMessage.chunk.length <= 0)
+    //         reqChunkInit();
+    // }
 }
 
 /*
