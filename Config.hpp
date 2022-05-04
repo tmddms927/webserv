@@ -23,14 +23,16 @@ private:
     std::map<int, servers>      config;
     std::map<int, std::string>  raw;
     global                      global_config;
-public:
-    Config();
     void    readFile();
     void    serverCount();
     void    setGlobalConfig();
     void    validateParenthesis();
     void    validateFirstServerBlock();
     void    validateServerVariables();
+public:
+    Config();
+    std::map<int, servers> const & getConfig() const;
+    global const & getGlobal() const;
     void    runParse();
 };
 

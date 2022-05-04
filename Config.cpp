@@ -113,9 +113,19 @@ void Config::validateServerVariables() {
 
 void Config::runParse() {
     readFile();
+    serverCount();
+    setGlobalConfig();
     validateParenthesis();
+    validateFirstServerBlock();
+    validateServerVariables();
 }
 
+std::map<int, servers> const & Config::getConfig() const{
+    return config;
+}
+global const & Config::getGlobal() const{
+    return global_config;
+}
 
 //todo root location --> 초기값을 어케하지~
 /*
