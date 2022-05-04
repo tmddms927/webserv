@@ -6,8 +6,8 @@ SRCS	=	main.cpp\
 			HTTP.cpp\
 			HTTP_req.cpp\
 			HTTP_res.cpp\
-			SocketController.cpp\
-			SocketController_kqueue.cpp
+			Server_socket.cpp\
+			Server_kqueue.cpp
 OBJS	=	${SRCS:.cpp=.o}
 
 all		:	${OUT}

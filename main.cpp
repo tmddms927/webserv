@@ -1,4 +1,4 @@
-#include "SocketController.hpp"
+#include "Server.hpp"
 #include "HeaderFieldInfo.hpp"
 #include "HTTP.hpp"
 
@@ -6,7 +6,7 @@ int main() {
     // config ();
     run:
         try {
-            SocketController server;
+            Server server;
             server.socketRun();
         }
         catch (std::exception e){
