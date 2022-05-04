@@ -32,7 +32,7 @@ void    ft_split(std::vector<std::string> &dest, std::string const &src, std::st
 // case 1-2(exist ':') -> [key:] ?
 // case 1-3(exist ':') -> [:value] 400 bad request
 // case 2(not exist ':') -> [key] ?
-void        reqHeaderFieldParse(std::string const &req_header_field, std::map<std::string, std::string> & buf) {
+void        process_request_headers(std::string const &req_header_field, std::map<std::string, std::string> & buf) {
     std::vector<std::string> req_header_field_splited;
     (void)buf;
 
@@ -40,13 +40,7 @@ void        reqHeaderFieldParse(std::string const &req_header_field, std::map<st
     for (size_t i = 0; i < req_header_field_splited.size(); i++) {
         std::vector<std::string> node;
         ft_split(node , req_header_field_splited[i], ":");
-        if (node.size() < 2)
+        if (node.size() != 2)
             continue;
-        //invalid key check
-
-        
-        // line syntax error
-        // line invalid argument error
-        // parse key, value
     }
 }

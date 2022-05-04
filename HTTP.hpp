@@ -6,8 +6,16 @@
 #include <unistd.h>
 #include <sstream>
 
+/* new phase level */
+#define PRE_READ_REQUEST_HEADER 0
+#define POST_READ_REQUEST_HEADER 1
+
+
+/* reqParsing */
 #define REQ_REQUEST_LINE        0
 #define REQ_HEADER_FIELD        1
+
+/* process */
 #define REQ_BODY                2
 #define REQ_CONTENT_LENGTH      3
 #define REQ_CHUNKED             4
@@ -28,15 +36,30 @@ struct  Chunk {
 };
 
 struct  RequestMessage {
-    // 공통으로 씀
-    std::string             method;
-    // 공통으로 씀..?
-    std::string             path;
-    HTTPHeaderField         header;
+    /* raw data */
+    std::string             buf;           // storage of whole request message;
+    /* raw data */
+
+    /* request_line */
+    std::string             request_line;   //  original request line
+    std::string             unparsed_uri;   //  original uri
+    std::string             method;         // -> method name: method name string
+    //int                   method;         //  method's numeric value defined
+    std::string             path;           // -> uri : parsed uri(deferent with unparsed_uri)
+    /* request_line */
+
+    /* request header */
+    HTTPHeaderField         header_in;
+    /* request header */
+
+    /* request body */
     std::string             body;
     Chunk                   chunk;
-    //long                   content_length;
-    std::string             buf;
+    /* request body */
+
+
+    long                   content_length;
+//    std::string             buf;
     int                     err_num;
     // 공통으로 씀..?
     int                     current;
@@ -66,6 +89,11 @@ public:
     void reqParsing();
     void reqParsingRequestLine(std::string & temp);
     void reqParsingHeaderField(std::string const & temp);
+
+    int     process_request_headers(std::string const &req_header_field);
+    int     process_request_body(std::string const &req_header_field);
+    void    content_phase();
+
     void reqBodyContentLength(std::string const & temp);
     void reqBodyChunked(std::string const & temp);
     bool reqCheckFinished();

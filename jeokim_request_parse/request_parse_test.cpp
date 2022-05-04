@@ -5,7 +5,7 @@
 #include <map>
 
 #define REQ_HEADER_FIELD_BUF_SIZE   1024
-void        reqHeaderFieldParse(std::string const &req_header_field, std::map<std::string, std::string> & buf);
+void        process_request_headers(std::string const &req_header_field, std::map<std::string, std::string> & buf);
     /*  request_test_header format
         line\r\n
         line\r\n
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     }
 
     std::map<std::string, std::string> buf;
-    reqHeaderFieldParse(req_header_field_buf, buf);
+    process_request_headers(req_header_field_buf, buf);
 
     return 0;
 }
