@@ -2,13 +2,13 @@
 #include "HeaderFieldInfo.hpp"
 #include "HTTP.hpp"
 
-
-void seungoh_config_test(std::vector<servers_s> & servers) {
+void seungoh_config_test(Config & c) {
     servers_s temp;
     temp.host = "127.0.0.1";
     temp.location = "/";
     temp.port = 80;
-    servers.push_back(temp);
+    c.config.
+    config.config.push_back(temp);
 //////////////////////////////////
     temp.host = "127.0.0.1";
     temp.location = "/";
@@ -17,9 +17,8 @@ void seungoh_config_test(std::vector<servers_s> & servers) {
 }
 
 int main() {
-    // config ();
-    std::vector<servers_s> servers;
-    seungoh_config_test(servers);
+    Config c;
+    seungoh_config_test(c);
 
     run:
         try {

@@ -23,7 +23,7 @@
 */
 class Server {
 private:
-	const std::vector<servers_s>		servers;
+	const Config						config;
 	uintptr_t							server_socket;
 	sockaddr_in							server_addr;
 	int									kq;
@@ -33,8 +33,7 @@ private:
 	std::map<uintptr_t, HTTP>			clients;
 	struct timespec						kq_timeout;
 public:
-	// Server();
-	Server(std::vector<servers_s> const & s);
+	Server(Config const & c);
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
