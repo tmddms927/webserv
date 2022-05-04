@@ -11,12 +11,15 @@ TEST(Config_test, readFileTest) {
         try {
             Config e;
             e.readFile();
+            e.serverCount();
+            e.setGlobalConfig();
             e.validateParenthesis();
             e.validateFirstServerBlock();
+            e.validateServerVariables();
         } catch (std::exception const & e) {
             throw;
         }
         });
-    a.validateFirstServerVariables();
-    a.serverCount();
+    //a.validateServerVariables();
+    //a.serverCount();
 }
