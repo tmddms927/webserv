@@ -3,16 +3,14 @@
 
 #include <iostream>
 #include <sys/socket.h>
-// #include <sys/types.h>
 #include <sys/event.h>
-// #include <sys/time.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
-
 #include <vector>
 #include <map>
 #include "HTTP.hpp"
+#include "Config.hpp"
 
 #define SOCKET_LISTEN_BACKLOG   5
 #define SOCKET_PORT             80
@@ -25,16 +23,18 @@
 */
 class Server {
 private:
-	uintptr_t						server_socket;
-	sockaddr_in				    	server_addr;
-	int						    	kq;
-	struct kevent			    	event_list[KQUEUE_EVENT_LIST_SIZE];
-	std::vector<struct kevent>		change_list;
-    struct kevent*					curr_event;
-	std::map<uintptr_t, HTTP>		clients_map;
-	struct timespec                 kq_timeout;
+	const std::vector<servers_s>		servers;
+	uintptr_t							server_socket;
+	sockaddr_in							server_addr;
+	int									kq;
+	struct kevent						event_list[KQUEUE_EVENT_LIST_SIZE];
+	std::vector<struct kevent>			change_list;
+	struct kevent*						curr_event;
+	std::map<uintptr_t, HTTP>			clients;
+	struct timespec						kq_timeout;
 public:
-	Server();
+	// Server();
+	Server(std::vector<servers_s> const & s);
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
