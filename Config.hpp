@@ -8,8 +8,9 @@
 #include <map>
 
 typedef struct  servers_s {
-    std::string server_name;
+    std::string host;
     std::string location;
+    int         port;
 }               servers;
 
 class Config {
@@ -20,9 +21,10 @@ private:
 public:
     Config();
     void    readFile();
+    void    serverCount();
     void    validateParenthesis();
     void    validateFirstServerBlock();
-    void    validateFirstServerName();
+    void    validateFirstServerVariables();
     void    runParse();
 };
 
