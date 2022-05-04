@@ -7,7 +7,7 @@ void Server::kqueueInit() {
 	this->kq = kqueue();
 	if (this->kq == -1)
 		throw "kqueue() error!";
-    change_events(server_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    change_events(server_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
 	std::cout << "<<< server started! >>>" << std::endl;
 }
 
@@ -73,8 +73,8 @@ void Server::kqueueConnectAccept(void) {
 		throw "accept() error";
 	std::cout << "accept new client : " << client_socket << std::endl;
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
+	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 	clients_map.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(client_socket)));
 }
 
@@ -100,7 +100,7 @@ void Server::kqueueEventReadClient() {
 	}
 	if (clients_map[curr_event->ident].reqCheckFinished()) {
 		std::cout << "write change!!!!!!!" << std::endl;
-		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 	}
 }
 
@@ -111,18 +111,17 @@ void Server::kqueueEventWrite() {
 	clients_map[curr_event->ident].reqPrint();
 	clients_map[curr_event->ident].resSendMessage();
 	// todo write buf 크기가 나눠져 있으면
-	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 }
 
 /*
 ** connect client : add kqueue event & add fd_list
 */
-void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags,
-					uint32_t const & fflags, intptr_t const & data, void *udata)
+void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags)
 {
     struct kevent temp_event;
 
-    EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
+    EV_SET(&temp_event, ident, filter, flags, 0, 0, NULL);
     change_list.push_back(temp_event);
 }
 

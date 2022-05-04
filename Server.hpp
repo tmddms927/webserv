@@ -43,16 +43,13 @@ public:
 	void kqueueInit();
 	void kqueueEventRun();
 
-	/* in eventRun */
+	/* in kqueue eventRun */
 	void kqueueEventError();
 	void kqueueEventRead();
-	void kqueueEventWrite();
-
-	/* in kqueueEventRead */
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
-	void change_events(uintptr_t const & ident, int16_t const &  filter, uint16_t const &  flags,
-						uint32_t const & fflags, intptr_t const & data, void *udata);
+	void kqueueEventWrite();
+	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 	void disconnect_client();
 };
 
