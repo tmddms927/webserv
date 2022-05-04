@@ -1,13 +1,16 @@
 OUT		=	webserv
 CC		=	clang++
-CFLAGS	=	-Wall -Wextra -Werror -fsanitize=address -g
+CFLAGS	=	-fsanitize=address -g
+# -Wall -Wextra -Werror -fsanitize=address -g
 SRCS	=	main.cpp\
 			HeaderFieldInfo.cpp\
 			HTTP.cpp\
 			HTTP_req.cpp\
 			HTTP_res.cpp\
 			Server_socket.cpp\
-			Server_kqueue.cpp
+			Server_kqueue.cpp\
+			Server.cpp\
+			Config.cpp
 OBJS	=	${SRCS:.cpp=.o}
 
 all		:	${OUT}

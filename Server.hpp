@@ -23,17 +23,20 @@
 */
 class Server {
 private:
-	const Config						config;
-	uintptr_t							server_socket;
-	sockaddr_in							server_addr;
-	int									kq;
-	struct kevent						event_list[KQUEUE_EVENT_LIST_SIZE];
-	std::vector<struct kevent>			change_list;
-	struct kevent*						curr_event;
-	std::map<uintptr_t, HTTP>			clients;
-	struct timespec						kq_timeout;
+	// socket
+	const std::vector<servers>		config;
+	const global					global_config;
+	std::vector<uintptr_t>			server_socket;
+	sockaddr_in						server_addr;
+	// kqueue
+	int								kq;
+	struct kevent					event_list[KQUEUE_EVENT_LIST_SIZE];
+	std::vector<struct kevent>		change_list;
+	struct kevent*					curr_event;
+	std::map<uintptr_t, HTTP>		clients;
+	struct timespec					kq_timeout;
 public:
-	Server(Config const & c);
+	Server(std::vector<servers> s, Config const & c);
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
@@ -50,6 +53,7 @@ public:
 	void kqueueEventWrite();
 	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 	void disconnect_client();
+	int checkServerSocket(uintptr_t const & fd);
 };
 
 #endif

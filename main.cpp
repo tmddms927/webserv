@@ -2,27 +2,27 @@
 #include "HeaderFieldInfo.hpp"
 #include "HTTP.hpp"
 
-void seungoh_config_test(Config & c) {
-    servers_s temp;
+void seungoh_config_test(std::vector<servers> & server) {
+    servers temp;
     temp.host = "127.0.0.1";
     temp.location = "/";
     temp.port = 80;
-    c.config.
-    config.config.push_back(temp);
+    server.push_back(temp);
 //////////////////////////////////
     temp.host = "127.0.0.1";
     temp.location = "/";
     temp.port = 8080;
-    servers.push_back(temp);
+    server.push_back(temp);
 }
 
 int main() {
     Config c;
-    seungoh_config_test(c);
+    std::vector<servers> ss;
+    seungoh_config_test(ss);
 
     run:
         try {
-            Server server(servers);
+            Server server(ss, c);
             server.socketRun();
         }
         catch (std::exception e){
