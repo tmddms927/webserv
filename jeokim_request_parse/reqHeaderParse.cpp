@@ -40,6 +40,10 @@ void        reqHeaderFieldParse(std::string const &req_header_field, std::map<st
     for (size_t i = 0; i < req_header_field_splited.size(); i++) {
         std::vector<std::string> node;
         ft_split(node , req_header_field_splited[i], ":");
+        if (node.size() < 2)
+            continue;
+        //invalid key check
+
         
         // line syntax error
         // line invalid argument error
