@@ -16,11 +16,10 @@ void SocketController::socketRun() {
     }
 }
 
-
 void SocketController::socketInit() {
 	if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
 		throw "socket() error!";
-    sock_opt = 0;
+    sock_opt = 1;
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt));
 	// sockaddr_in->sin_zero가 반드시 0으로 채워져 있어야 함.
 	// https://techlog.gurucat.net/292

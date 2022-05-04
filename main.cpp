@@ -10,6 +10,8 @@ int main() {
             server.socketRun();
         }
         catch (std::exception e){
+            std::cout << e.what() << std::endl;
+            std::cout << "webserv restart..." << std::endl;
             goto run;
         }
 }
