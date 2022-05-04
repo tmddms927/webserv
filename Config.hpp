@@ -6,6 +6,10 @@
 #define UNTITLED1_CONFIG_HPP
 
 #include <map>
+typedef struct  global_s {
+    std::string err_page;
+    int         client_max_body_size;
+}               global;
 
 typedef struct  servers_s {
     std::string host;
@@ -18,13 +22,15 @@ private:
     std::string                 str;
     std::map<int, servers>      config;
     std::map<int, std::string>  raw;
+    global                      global_config;
 public:
     Config();
     void    readFile();
     void    serverCount();
+    void    setGlobalConfig();
     void    validateParenthesis();
     void    validateFirstServerBlock();
-    void    validateFirstServerVariables();
+    void    validateServerVariables();
     void    runParse();
 };
 
