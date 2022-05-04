@@ -16,13 +16,15 @@ void seungoh_config_test(std::vector<servers> & server) {
 }
 
 int main() {
-    Config c;
     std::vector<servers> ss;
     seungoh_config_test(ss);
 
+    Config conf;
+    // conf.runParse();
+
     run:
         try {
-            Server server(ss, c);
+            Server server(ss, conf);
             server.socketRun();
         }
         catch (std::exception e){
