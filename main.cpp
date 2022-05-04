@@ -1,9 +1,10 @@
 #include "SocketController.hpp"
 #include "HeaderFieldInfo.hpp"
 #include "HTTP.hpp"
-
+#include "Config.hpp"
 int main() {
-    // config ();
+    Config conf;
+    conf.runParse();
     run:
         try {
             SocketController server;
