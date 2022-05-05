@@ -5,7 +5,7 @@
 #ifndef UNTITLED1_CONFIG_HPP
 #define UNTITLED1_CONFIG_HPP
 
-#include <map>
+#include <vector>
 typedef struct  global_s {
     std::string err_page;
     int         client_max_body_size;
@@ -20,8 +20,8 @@ typedef struct  servers_s {
 class Config {
 private:
     std::string                 str;
-    std::map<int, servers>      config;
-    std::map<int, std::string>  raw;
+    std::vector<servers>      config;
+    std::vector<std::string>  raw;
     global                      global_config;
     void    readFile();
     void    serverCount();
@@ -29,9 +29,25 @@ private:
     void    validateParenthesis();
     void    validateFirstServerBlock();
     void    validateServerVariables();
+    class   GlobalConfigException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   ParenthesisException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   FirstServerBlockException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   VariableRuleException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
 public:
     Config();
-    std::map<int, servers> const & getConfig() const;
+    std::vector<servers> const & getConfig() const;
     global const & getGlobal() const;
     void    runParse();
 };
