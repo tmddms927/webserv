@@ -5,7 +5,6 @@
 #include "../Config.hpp"
 
 TEST(Config_test, readFileTest) {
-    Config a;
     EXPECT_NO_THROW({
         try {
             Config e;
@@ -14,6 +13,4 @@ TEST(Config_test, readFileTest) {
             throw;
         }
         });
-    //a.validateServerVariables();
-    //a.serverCount();
 }

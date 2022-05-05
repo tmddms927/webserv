@@ -17,7 +17,6 @@ void Config::readFile() {
             str += buf + '\n';
             raw.push_back(buf);
         }
-        //std::cout << str << std::endl;
         file.close();
     } else {
         std::cerr << "config Error" << std::endl;
@@ -38,7 +37,7 @@ void Config::setGlobalConfig() {
         std::cout << global_config.client_max_body_size << std::endl;
         return;
     }
-    throw std::exception();
+    throw GlobalConfigException();
 }
 
 void Config::validateParenthesis() {
@@ -53,7 +52,7 @@ void Config::validateParenthesis() {
         it++;
     }
     if (left != right)
-        throw std::exception();
+        throw ParenthesisException();
 }
 
 void Config::serverCount() {
@@ -71,7 +70,7 @@ void Config::serverCount() {
 
 void Config::validateFirstServerBlock() {
     if (raw[0] != "http {")
-        throw std::exception();
+        throw FirstServerBlockException();
 }
 
 void Config::validateServerVariables() {
@@ -84,15 +83,15 @@ void Config::validateServerVariables() {
         }
         if (raw[i].find("http {") || raw[i].find("server {")) {
             if (raw[++i].find("host ") == std::string::npos)
-                throw std::exception();
+                throw VariableRuleException();
             config[j].host = raw[i].substr(raw[i].find("host ") + strlen("host "));
             if (raw[++i].find("port ") == std::string::npos)
-                throw std::exception();
+                throw VariableRuleException();
             std::stringstream ss(raw[i].substr(raw[i].find("port ") + strlen("port ")));
             ss >> config[j].port;
             if (j != 0) {
                 if (raw[++i].find("location ") == std::string::npos)
-                    throw std::exception();
+                    throw VariableRuleException();
                 config[j].location = raw[i].substr(raw[i].find("location ") + strlen("location "));
                 config[j].location.erase(config[j].location.length() - 2, config[j].location.length());
             }
@@ -133,3 +132,18 @@ global const & Config::getGlobal() const{
  * 5. body size limit 추가 ✔
  * 6. default error page 추가 ✔
 */
+const char *Config::GlobalConfigException::what() const throw(){
+    return "Check global-value rule";
+}
+
+const char *Config::ParenthesisException::what() const throw() {
+    return "Check parenthesis";
+}
+
+const char *Config::FirstServerBlockException::what() const throw() {
+    return "First server block is \"http\"";
+}
+
+const char *Config::VariableRuleException::what() const throw() {
+    return "Check config file rule";
+}

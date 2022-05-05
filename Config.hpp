@@ -29,6 +29,22 @@ private:
     void    validateParenthesis();
     void    validateFirstServerBlock();
     void    validateServerVariables();
+    class   GlobalConfigException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   ParenthesisException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   FirstServerBlockException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
+    class   VariableRuleException : public std::exception {
+    public:
+        const char *what() const throw();
+    };
 public:
     Config();
     std::vector<servers> const & getConfig() const;
