@@ -6,7 +6,9 @@
 #include <sstream>
 #include "Config.hpp"
 
-Config::Config() : str(), config(), raw(), global_config(){}
+Config::Config() : str(), config(1), raw(), global_config(){
+
+}
 
 void Config::readFile() {
     std::ifstream file("../test.conf");
@@ -19,10 +21,20 @@ void Config::readFile() {
         }
         file.close();
     } else {
-        std::cerr << "config Error" << std::endl;
+        std::cerr << "ERROR : you need test.conf file" << std::endl;
         std::exit(1);
     }
+    if (!(raw.end() - 1)->empty())
+        throw VariableRuleException();
 }
+
+
+void Config::eraseCompleted() {
+    while (!raw.begin()->empty())
+        raw.erase(raw.begin());
+    raw.erase(raw.begin());
+}
+
 
 void Config::setGlobalConfig() {
     if (raw[0].find("client_max_body_size ") != std::string::npos) {
@@ -31,87 +43,51 @@ void Config::setGlobalConfig() {
     }
     if (raw[1].find("default_error_page ") != std::string::npos) {
         global_config.err_page = raw[1].substr(raw[1].find("default_error_page ") + strlen("default_error_page "));
-        raw.erase(raw.begin());
-        raw.erase(raw.begin());
-        std::cout << global_config.err_page << std::endl;
-        std::cout << global_config.client_max_body_size << std::endl;
+    }
+    if (raw[2].find("host ") != std::string::npos)
+        config[0].host = raw[2].substr(strlen("host "));
+    if (raw[3].find("port ") != std::string::npos) {
+        std::stringstream ss(raw[3].substr(strlen("port ")));
+        ss >> config[0].port;
+        eraseCompleted();
         return;
     }
     throw GlobalConfigException();
 }
 
-void Config::validateParenthesis() {
-    std::string::iterator it = str.begin();
-    int left = 0;
-    int right = 0;
-    while (it != str.end()){
-        if (*it == '{')
-            ++left;
-        if (*it == '}')
-            ++right;
-        it++;
-    }
-    if (left != right)
-        throw ParenthesisException();
-}
-
+/*
 void Config::serverCount() {
     int i = 0;
     int j = 0;
     while (i < raw.size()) {
-        if (raw[i] == "http {")
-            j++;
-        if (raw[i] == "    server {")
+        if (raw[i].find("server") != std::string::npos)
             j++;
         i++;
     }
-    config.resize(j);
+    config.resize(j + 1);
 }
-
-void Config::validateFirstServerBlock() {
-    if (raw[0] != "http {")
-        throw FirstServerBlockException();
-}
-
+*/
 void Config::validateServerVariables() {
-    int i = 0;
-    int j = 0;
-    while (i < raw.size()) {
-        if (raw[i] == "" || raw[i].find('}') != std::string::npos) {
-            i++;
-            continue;
+    while (!raw.empty()) {
+        std::vector<std::string>::iterator it = raw.begin();
+        if (*it++ == "server") {
+            config.push_back(ServerBlock::parse(raw, config[0]));
+            eraseCompleted();
         }
-        if (raw[i].find("http {") || raw[i].find("server {")) {
-            if (raw[++i].find("host ") == std::string::npos)
-                throw VariableRuleException();
-            config[j].host = raw[i].substr(raw[i].find("host ") + strlen("host "));
-            if (raw[++i].find("port ") == std::string::npos)
-                throw VariableRuleException();
-            std::stringstream ss(raw[i].substr(raw[i].find("port ") + strlen("port ")));
-            ss >> config[j].port;
-            if (j != 0) {
-                if (raw[++i].find("location ") == std::string::npos)
-                    throw VariableRuleException();
-                config[j].location = raw[i].substr(raw[i].find("location ") + strlen("location "));
-                config[j].location.erase(config[j].location.length() - 2, config[j].location.length());
-            }
-        }
-        i++;
-        j++;
     }
-    for (i = 0; i < config.size(); i++) {
-        std::cout << config[i].host << std::endl;
-        std::cout << config[i].port << std::endl;
-        std::cout << config[i].location << std::endl;
+    for (int i = 0; i < config.size(); ) {
+        std::cout << "port " << config[i].port << std::endl;
+        std::cout << "host " << config[i].host << std::endl;
+        std::cout << "location " << config[i].location << std::endl;
+        std::cout << "root " << config[i].root << std::endl;
+        i++;
     }
 }
 
 void Config::runParse() {
     readFile();
-    serverCount();
+    //serverCount();
     setGlobalConfig();
-    validateParenthesis();
-    validateFirstServerBlock();
     validateServerVariables();
 }
 
@@ -147,3 +123,15 @@ const char *Config::FirstServerBlockException::what() const throw() {
 const char *Config::VariableRuleException::what() const throw() {
     return "Check config file rule";
 }
+/*
+if (raw[++i].find("port ") == std::string::npos)
+throw VariableRuleException();
+std::stringstream ss(raw[i].substr(raw[i].find("port ") + strlen("port ")));
+ss >> config[j].port;
+if (j != 0) {
+if (raw[++i].find("location ") == std::string::npos)
+throw VariableRuleException();
+config[j].location = raw[i].substr(raw[i].find("location ") + strlen("location "));
+config[j].location.erase(config[j].location.length() - 2, config[j].location.length());
+}
+*/

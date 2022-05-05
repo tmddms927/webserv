@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
-#include "Config.hpp"
+#include "config/Config.hpp"
 
 #define REQ_REQUEST_LINE        0
 #define REQ_HEADER_FIELD        1

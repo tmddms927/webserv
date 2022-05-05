@@ -5,17 +5,8 @@
 #ifndef UNTITLED1_CONFIG_HPP
 #define UNTITLED1_CONFIG_HPP
 
+#include "ServerBlock.hpp"
 #include <vector>
-typedef struct  global_s {
-    std::string err_page;
-    int         client_max_body_size;
-}               global;
-
-typedef struct  servers_s {
-    std::string host;
-    std::string location;
-    int         port;
-}               servers;
 
 class Config {
 private:
@@ -26,9 +17,8 @@ private:
     void    readFile();
     void    serverCount();
     void    setGlobalConfig();
-    void    validateParenthesis();
-    void    validateFirstServerBlock();
     void    validateServerVariables();
+    void    eraseCompleted();
     class   GlobalConfigException : public std::exception {
     public:
         const char *what() const throw();
