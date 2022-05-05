@@ -60,12 +60,15 @@ void Server::kqueueEventError(){
 void Server::kqueueEventRead() {
 	if (checkServerSocket(curr_event->ident) != -1)
 		kqueueConnectAccept();
-	// else
-	// 	kqueueEventReadClient();
 	else if (checkClientSocket(curr_event->ident) != -1)
 		kqueueEventReadClient(); //kqueueEventReadClientRequest()
-	else if (checkFileDescriptor(curr_event->ident) != -1)
-		GETMethod(curr_event->ident, clients[curr_event->ident].getBody());
+	else if (checkFileDescriptor(curr_event->ident) != -1) {
+		if (GETMethod(curr_event->ident, clients[curr_event->ident].getBody()) == 0) {
+			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DELETE);
+			change_events(subrequest_fd[curr_event->ident], EVFILT_WRITE, EV_ADD | EV_ENABLE);
+		}
+
+	}
 }
 
 /*
@@ -107,26 +110,51 @@ void Server::kqueueEventReadClient() {
 	}
 	if (clients[curr_event->ident].reqCheckFinished()) {
 		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+		// todo uri access check
 		if (clients[curr_event->ident].getMethod() == GET) {
 			int fd;
-			
 			fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+			// todo open fail 처리
 			change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 			subrequest_fd.insert(std::pair<uintptr_t, uintptr_t>(fd, curr_event->ident));
 			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
             std::cout << "file fd resister" << std::endl;
 		}
+		else if (clients[curr_event->ident].getMethod() == POST) {
+			int fd;
+
+			fd = open(clients[curr_event->ident].getURI().c_str(), O_WRONLY);
+			// todo open fail 처리
+			change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+			subrequest_fd.insert(std::pair<uintptr_t, uintptr_t>(fd, curr_event->ident));
+			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
+            std::cout << "file fd resister" << std::endl;
+		}
+		else {
+			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
+			change_events(curr_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+		}
 	}
 }
+
+
 
 /*
 ** send data to client
 */
 void Server::kqueueEventWrite() {
-	clients[curr_event->ident].reqPrint();
-	clients[curr_event->ident].resSendMessage();
-	// todo write buf 크기가 나눠져 있으면
-	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+	if (checkClientSocket(curr_event->ident) != -1) {
+		clients[curr_event->ident].reqPrint();
+		clients[curr_event->ident].resSendMessage();
+		// todo write buf 크기가 나눠져 있으면
+		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+	}
+	if (checkFileDescriptor(curr_event->ident) != -1) {
+		if (POSTMethod(curr_event->ident, clients[subrequest_fd[curr_event->ident]].getBody()) == 0) {
+			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DELETE);
+			change_events(subrequest_fd[curr_event->ident], EVFILT_WRITE, EV_ADD | EV_ENABLE);
+		}
+	}
 }
 
 /*

@@ -25,11 +25,13 @@ void HTTP::reqInputBuf(std::string const & str) {
         if (requestMessage.current == CLIENT_READ_REQ_BODY)
             if (process_request_body())
                 requestMessage.current = CLIENT_READ_FINISH;
-        if (requestMessage.current == CLIENT_READ_FINISH)
+        if (requestMessage.current == CLIENT_READ_FINISH) {
             std::cout << "method : [" << requestMessage.method << "]" << std::endl   //  apply config <- rewrite uri
                         << "path : [" << requestMessage.path << "]" << std::endl
                         << "content-length : ["<< requestMessage.header_in[CONTENT_LENGTH_STR] << "]" << std::endl;
+
             std::cout << std::endl << "<< CLIENT_READ_FINISH >> " << std::endl;
+        }
 
                 //  method setting <- if POST && NON_BODY => error! || if GET && uri not fie => error!
                 //  event resist
@@ -49,7 +51,7 @@ int HTTP::process_request_line() {
         return 0;
 
     std::string temp = requestMessage.buf.substr(0, found);
-    requestMessage.buf.substr(found + 2);
+    requestMessage.buf = requestMessage.buf.substr(found + 2);
 
     // method
     index = temp.find(' ');
@@ -84,7 +86,7 @@ int        HTTP::process_request_headers() {
         return 0;
 
     std::string temp = requestMessage.buf.substr(0, found);
-    requestMessage.buf.substr(found + 4);
+    requestMessage.buf = requestMessage.buf.substr(found + 4);
 
 
     ft_split(req_header_field_splited, temp, "\r\n");
@@ -103,57 +105,47 @@ int        HTTP::process_request_headers() {
 ** request body를 파싱하는 함수
 */
 int     HTTP::process_request_body() {
-    if (requestMessage.content_length >= 0)
-        requestMessage.reqBodyContentLength();
-    else if (requestMessage.content_length == -1)
-        requestMessage.reqBodyChunked(); // reqBodyChunked 함수 안에서 chunk가 완성되지 않은 채 들어올 경우도 고려해야함
-    if (requestMessage.current == CLIENT_READ_FINISH) {
-        std::cout << "REQ_FINISHED" << std::endl;
-        return 0;
+    requestMessage.content_length = std::strtod(requestMessage.header_in["Content-Length"].c_str(), 0);
+
+    std::cout << "content-length : " <<  requestMessage.content_length << std::endl;
+    if (requestMessage.content_length >= 0) {
+        if (reqBodyContentLength())
+            return 1;
     }
+    else if (requestMessage.content_length == -1) {
+        if (reqBodyChunked())
+            return 1; // reqBodyChunked 함수 안에서 chunk가 완성되지 않은 채 들어올 경우도 고려해야함
+    }
+    // if (requestMessage.current == CLIENT_READ_FINISH) {
+    //     std::cout << "REQ_FINISHED" << std::endl;
+    //     return 0;
+    // }
     std::cout << "REQ_NOT_FINISHED" << std::endl;
-    return 1;
-
-    // if (requestMessage.body_parsor == NULL)
-    //     if (set_body_parsor())
-    //         throw 1;
-    //  else
-    //     if (requestMessage.*body_parsor)())
-    //         ;
-}
-
-int     HTTP::set_body_parsor() {
-    if (requestMessage.content_length != -1 && requestMessage.chunked)
-        return 1;   // error;
-    else if (requestMessage.content_length != -1)
-        requestMessage.body_parsor = &RequestMessage::reqBodyContentLength;
-    else if (requestMessage.chunked)
-        requestMessage.body_parsor = &RequestMessage::reqBodyChunked;
-    else
-        requestMessage.non_body = true;
     return 0;
 }
 
 /*
 ** request message - content-length를 받는 함수
 */
-int RequestMessage::reqBodyContentLength() {
-    
-    body += buf;
-    if (body.length() >= std::strtod(header_in["Content-Length"].c_str(), 0))
-        return 0;
-    return 1;
+int HTTP::reqBodyContentLength() {
+    size_t len = std::strtod(requestMessage.header_in["Content-Length"].c_str(), 0);
+
+    requestMessage.body += requestMessage.buf.substr(0, len - requestMessage.body.size());
+    std::cout << "requestMessage.body : " << requestMessage.body << std::endl;
+    if (requestMessage.body.size() >= len)
+        return 1;
+    return 0;
 }
 
 /*
 ** request message - chunked body를 받는 함수
 */
-int RequestMessage::reqBodyChunked() {
+int HTTP::reqBodyChunked() {
     std::stringstream stream;
 
-    if (chunk.length == 0) {
-        if (buf == "") {
-            current = CLIENT_READ_FINISH;
+    if (requestMessage.chunk.length == 0) {
+        if (requestMessage.buf == "") {
+            requestMessage.current = CLIENT_READ_FINISH;
             return 1;
         }
     }
@@ -171,6 +163,27 @@ int RequestMessage::reqBodyChunked() {
     return 0;
 }
 
+/*
+** request message가 완료되었나 체크하는 함수
+** true : 완료, false : 미완료
+*/
+bool HTTP::reqCheckFinished() {
+	if (requestMessage.current == CLIENT_READ_FINISH)
+		return true;
+	else
+		return false;
+}
+
+/*
+** request message print
+*/
+void HTTP::reqPrint() {
+    std::cout << "message : " << requestMessage.method << std::endl;
+    std::cout << "path : " << requestMessage.path << std::endl;
+    for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
+        std::cout << it->first << ": " << it->second << std::endl;
+    std::cout << "body : " << requestMessage.body << std::endl;
+}
 
 
 // void     HTTP::content_phase() {
@@ -240,27 +253,6 @@ int RequestMessage::reqBodyChunked() {
 //     }
 // }
 
-/*
-** request message가 완료되었나 체크하는 함수
-** true : 완료, false : 미완료
-*/
-bool HTTP::reqCheckFinished() {
-	if (requestMessage.current == CLIENT_READ_FINISH)
-		return true;
-	else
-		return false;
-}
-
-/*
-** request message print
-*/
-void HTTP::reqPrint() {
-    std::cout << "message : " << requestMessage.method << std::endl;
-    std::cout << "path : " << requestMessage.path << std::endl;
-    for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
-        std::cout << it->first << ": " << it->second << std::endl;
-    std::cout << "body : " << requestMessage.body << std::endl;
-}
 
 
 /*

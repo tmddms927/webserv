@@ -17,7 +17,7 @@ int	GETMethod(uintptr_t fd, std::string & body) {
         return 1;
     }
     body += buf;
-    std::cout << "[" << buf << "]" << std::endl;
+    std::cout << "GET Method " << "[" << buf << "]" << std::endl;
 	return 0;
 }
 
@@ -26,7 +26,10 @@ int	POSTMethod(uintptr_t fd, std::string & body) {
 	int		written_len;
 
 	// std::memset(buf, 0, SOCKET_READ_BUF);
-	written_len = write(fd, body.c_str(), SOCKET_READ_BUF - 1);
+	std::cout << "POST body : " << body << std::endl;
+	// written_len = write(fd, body.c_str(), SOCKET_READ_BUF - 1);
+	written_len = write(fd, body.c_str(), body.size());
+
 	if (written_len == 0) {
 		std::cerr << "client read error!" << std::endl;
 		return -1;

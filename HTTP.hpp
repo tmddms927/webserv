@@ -47,7 +47,6 @@ struct  RequestMessage {
     /* request header */
 
     /* request body */
-    int (RequestMessage::*body_parsor)(void);
     std::string             body;
     Chunk                   chunk;
     /* request body */
@@ -61,8 +60,6 @@ struct  RequestMessage {
     int                     current;
 
 public:
-    int reqBodyContentLength();
-    int reqBodyChunked();
 
 };
 
@@ -76,20 +73,11 @@ struct ResponseMessage {
 class HTTP {
 private:
     const servers   server;
-    uintptr_t       socket_fd;
+    uintptr_t       socket_fd; // 필요없는 것 같음
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
     int             status;
     int             protocol_minor_version;
-public:
-    HTTP();
-    HTTP(servers const & _server, uintptr_t _socket_fd);
-
-    /* request function */
-    void reqInputBuf(std::string const & str);
-    // bool reqbufCheck();
-    // void reqParsing();
-    // void reqParsingHeaderField(std::string const & temp);
 
     int     process_request_line();
     int     process_request_headers();
@@ -97,10 +85,28 @@ public:
     int     set_body_parsor();
     void    content_phase();
 
+    int     reqBodyContentLength();
+    int     reqBodyChunked();
+
+public:
+    HTTP();
+    HTTP(servers const & _server, uintptr_t _socket_fd);
+
+    /* request function */
+    void reqInputBuf(std::string const & str);
+
+    /* getter */
+    std::string const & getMethod() const;
+    std::string const & getURI() const;
+    std::string & getBody();
+
+    /* */
+    void reqPrint();
+    bool reqCheckFinished();
+
+
     // int reqBodyContentLength();
     // int reqBodyChunked();
-    bool reqCheckFinished();
-    void reqPrint();
     // void reqChunkInit();
 
     /* valid */
@@ -112,9 +118,10 @@ public:
     void resSendMessage();
 
 
-    std::string const & getMethod() const;
-    std::string const & getURI() const;
-    std::string & getBody();
+
+    // bool reqbufCheck();
+    // void reqParsing();
+    // void reqParsingHeaderField(std::string const & temp);
 };
 
 
