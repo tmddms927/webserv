@@ -22,6 +22,7 @@ void Server::kqueueEventRun() {
 
 	while (1) {
 		new_events = kevent(kq, &change_list[0], change_list.size(), event_list, 1024, NULL);
+        std::cout << "kqueueEventRun : event occur" << std::endl;
         change_list.clear();
 
 		for (int i = 0; i < new_events; ++i)
@@ -59,8 +60,12 @@ void Server::kqueueEventError(){
 void Server::kqueueEventRead() {
 	if (checkServerSocket(curr_event->ident) != -1)
 		kqueueConnectAccept();
-	else
-		kqueueEventReadClient();
+	// else
+	// 	kqueueEventReadClient();
+	else if (checkClientSocket(curr_event->ident) != -1)
+		kqueueEventReadClient(); //kqueueEventReadClientRequest()
+	else if (checkFileDescriptor(curr_event->ident) != -1)
+		GETMethod(curr_event->ident, clients[curr_event->ident].getBody());
 }
 
 /*
@@ -100,8 +105,18 @@ void Server::kqueueEventReadClient() {
 		else
 			clients[curr_event->ident].reqInputBuf(buf);
 	}
-	if (clients[curr_event->ident].reqCheckFinished())
-		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+	if (clients[curr_event->ident].reqCheckFinished()) {
+		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+		if (clients[curr_event->ident].getMethod() == GET) {
+			int fd;
+			
+			fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+			change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
+			subrequest_fd.insert(std::pair<uintptr_t, uintptr_t>(fd, curr_event->ident));
+			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
+            std::cout << "file fd resister" << std::endl;
+		}
+	}
 }
 
 /*
@@ -143,4 +158,16 @@ int Server::checkServerSocket(uintptr_t const & fd) {
 			return i;
 	}
 	return -1;
+}
+
+int	Server::checkClientSocket(uintptr_t const & fd) {
+	if (clients.find(fd) == clients.end())
+		return -1;
+	return 1;
+}
+
+int Server::checkFileDescriptor(uintptr_t const & fd) {
+	if (subrequest_fd.find(fd) == subrequest_fd.end())
+		return -1;
+	return 1;
 }

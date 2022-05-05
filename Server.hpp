@@ -18,6 +18,10 @@
 #define SOCKET_READ_BUF         16384
 #define KQUEUE_EVENT_LIST_SIZE  1024
 
+/* SOCKET TYPE */
+#define SOCKET_READ 0
+#define FILE_READ 1
+
 /*
 ** socket를 관리해주는 객체
 */
@@ -31,10 +35,14 @@ private:
 	// kqueue
 	int								kq;
 	struct kevent					event_list[KQUEUE_EVENT_LIST_SIZE];
-	std::vector<struct kevent>		change_list;
 	struct kevent*					curr_event;
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
+	std::vector<struct kevent>		change_list;
+	
+	//GET, POST, LOGGING, CGI?등 하위 요청을 처리하기 위한 file descriptior
+	std::map<uintptr_t, uintptr_t>	subrequest_fd;
+
 public:
 	Server(std::vector<servers> s, Config const & c);
 	/* Server_socket */
@@ -51,9 +59,21 @@ public:
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
 	void kqueueEventWrite();
-	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 	void disconnect_client();
+
 	int checkServerSocket(uintptr_t const & fd);
+	int	checkClientSocket(uintptr_t const & fd);
+	int checkFileDescriptor(uintptr_t const & fd);
+
+	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
+
+
+	void set_subrequest(uintptr_t const & file_id, uintptr_t const & client_id);
+	
 };
+
+/* method */
+int	GETMethod(uintptr_t fd, std::string & body);
+int	POSTMethod(uintptr_t fd, std::string & body);
 
 #endif

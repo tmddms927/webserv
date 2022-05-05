@@ -43,5 +43,5 @@ void HTTP::resSendMessage() {
     write(socket_fd, "\r\n", 2);
     write(socket_fd, responseMessage.body.c_str(), responseMessage.body.size());
     write(socket_fd, "\r\n", 2);
-    requestMessage.current = REQ_REQUEST_LINE;
+    // requestMessage.current = REQ_REQUEST_LINE;
 }

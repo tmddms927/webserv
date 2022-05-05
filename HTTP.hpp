@@ -8,20 +8,13 @@
 #include "Config.hpp"
 
 /* new phase level */
-#define PRE_READ_REQUEST_HEADER 0
-#define POST_READ_REQUEST_HEADER 1
+#define CLIENT_READ_REQ_LINE 0
+#define CLIENT_READ_REQ_HEADER 1
+#define CLIENT_READ_REQ_BODY 2
+#define CLIENT_READ_FINISH 3
 
 
-/* reqParsing */
-#define REQ_REQUEST_LINE        0
-#define REQ_HEADER_FIELD        1
-
-/* process */
-#define REQ_BODY                2
-#define REQ_CONTENT_LENGTH      3
-#define REQ_CHUNKED             4
-#define REQ_FINISHED            5
-
+/* status */
 #define BAD_REQUEST             -1
 #define NO_BODY                 -2
 
@@ -54,16 +47,23 @@ struct  RequestMessage {
     /* request header */
 
     /* request body */
+    int (RequestMessage::*body_parsor)(void);
     std::string             body;
     Chunk                   chunk;
     /* request body */
 
-
-    long                   content_length;
+    bool                    non_body;
+    long                    content_length;
+    bool                    chunked;
 //    std::string             buf;
     int                     err_num;
     // 공통으로 씀..?
     int                     current;
+
+public:
+    int reqBodyContentLength();
+    int reqBodyChunked();
+
 };
 
 struct ResponseMessage {
@@ -87,28 +87,37 @@ public:
 
     /* request function */
     void reqInputBuf(std::string const & str);
-    bool reqbufCheck();
-    void reqParsing();
-    void reqParsingRequestLine(std::string & temp);
-    void reqParsingHeaderField(std::string const & temp);
+    // bool reqbufCheck();
+    // void reqParsing();
+    // void reqParsingHeaderField(std::string const & temp);
 
-    int     process_request_headers(std::string const &req_header_field);
-    int     process_request_body(std::string const &req_header_field);
+    int     process_request_line();
+    int     process_request_headers();
+    int     process_request_body();
+    int     set_body_parsor();
     void    content_phase();
 
-    void reqBodyContentLength(std::string const & temp);
-    void reqBodyChunked(std::string const & temp);
+    // int reqBodyContentLength();
+    // int reqBodyChunked();
     bool reqCheckFinished();
     void reqPrint();
-    void reqChunkInit();
+    // void reqChunkInit();
 
     /* valid */
-    void reqGETHeaderCheck();
-    void reqPOSTHeaderCheck();
-    void bodyEncodingType();
+    // void reqGETHeaderCheck();
+    // void reqPOSTHeaderCheck();
+    // void bodyEncodingType();
 
     /* response function */
     void resSendMessage();
+
+
+    std::string const & getMethod() const;
+    std::string const & getURI() const;
+    std::string & getBody();
 };
+
+
+
 
 #endif
