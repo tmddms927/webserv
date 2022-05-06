@@ -3,7 +3,12 @@ project(untitled1)
 
 set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address")
-add_executable(untitled1 main.cpp  HTTP.cpp HTTP.hpp config/Config.cpp config/Config.hpp config/ServerBlock.cpp config/ServerBlock.hpp)
+add_executable(untitled1 main.cpp
+        Server_kqueue.cpp Server_socket.cpp HTTP_req.cpp
+        HTTPHeaderField.hpp Server.cpp Server.hpp
+        HTTP_res.cpp HeaderFieldInfo.hpp HeaderFieldInfo.cpp HTTP.cpp HTTP.hpp
+        config/Config.cpp config/Config.hpp config/ServerBlock.cpp config/ServerBlock.hpp
+        config/util.h config/constant.h)
 
 
 
