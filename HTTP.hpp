@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
-#include "Config.hpp"
+#include "config/Config.hpp"
 
 /* new phase level */
 #define CLIENT_READ_REQ_LINE 0

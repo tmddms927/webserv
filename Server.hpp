@@ -10,7 +10,7 @@
 #include <vector>
 #include <map>
 #include "HTTP.hpp"
-#include "Config.hpp"
+#include "config/Config.hpp"
 
 #define SOCKET_LISTEN_BACKLOG   5
 #define SOCKET_PORT             80
