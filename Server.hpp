@@ -28,22 +28,16 @@
 */
 class Server {
 private:
-	// socket
 	const std::vector<servers>		config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;
-	// kqueue
 	int								kq;
 	struct kevent					event_list[KQUEUE_EVENT_LIST_SIZE];
 	struct kevent*					curr_event;
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
-	
-	//GET, POST, LOGGING, CGI?등 하위 요청을 처리하기 위한 file descriptior
-	//<file_fd, socket_fd>
-	// std::map<uintptr_t, uintptr_t>	subrequest_fd;
 
 public:
 	Server(Config const & c);
@@ -64,12 +58,9 @@ public:
 	void finishedRead();
 	void kqueueEventWrite();
 	void disconnect_client();
-
+	void change_events(uintptr_t const & ident,
+			int16_t const & filter, uint16_t const & flags);
 	int checkServerSocket(uintptr_t const & fd);
-	// int	checkClientSocket(uintptr_t const & fd);
-	// int checkFileDescriptor(uintptr_t const & fd);
-
-	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 
 	/* Server_method */
     void findServerBlock();

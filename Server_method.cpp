@@ -46,7 +46,6 @@ void Server::setMethodGet() {
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setGETHeader();
-	std::cout << "get : file fd resister" << std::endl;
 }
 
 void Server::setMethodPost() {
@@ -64,11 +63,10 @@ void Server::setMethodPost() {
 
 	req_body = clients[curr_event->ident].getBody();
 	write(fd, req_body.c_str(), req_body.length());
-	clients[curr_event->ident].setResponseBody("");
+	clients[curr_event->ident].setResponseBody("hi");
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setGETHeader();
-	std::cout << "get : file fd resister" << std::endl;
 }
 
 void Server::resSendMessage() {
@@ -80,7 +78,6 @@ void Server::resSendMessage() {
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
 	message += "\r\n\r\n";
-	std::cout << "[" << message << "]" << std::endl;
+	// std::cout << "[" << message << "]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
-	std::cout << "hahahahah!" << std::endl;
 }

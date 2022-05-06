@@ -14,7 +14,7 @@ void HTTP::setResponseLine() {
 	responseMessage.step = CLIENT_RES_LINE;
 	responseMessage.response_line += "HTTP/1.1 ";
 	// responseMessage.response_line += this->status;
-	responseMessage.response_line += "200";
+	responseMessage.response_line += "201";
 	responseMessage.response_line += " ";
 	responseMessage.response_line += "haha";
 }

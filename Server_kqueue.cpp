@@ -91,6 +91,10 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
+	std::cout << "=====================\n";
+	std::cout <<  buf << std::endl;
+	std::cout << "=====================\n";
+
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client();
@@ -106,6 +110,7 @@ void Server::kqueueEventReadClient() {
 */
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
 	findServerBlock();
 	if (clients[curr_event->ident].getStatus() != 0)
@@ -121,7 +126,9 @@ void Server::finishedRead() {
 */
 void Server::kqueueEventWrite() {
 	resSendMessage();
+	clients[curr_event->ident].resetHTTP();
 	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+	change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
 }
 
 /*
