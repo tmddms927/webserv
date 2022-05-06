@@ -6,8 +6,8 @@
 #include <sstream>
 
 typedef std::vector<std::string> rawtxt;
-typedef std::vector<servers> conf;
-servers ServerBlock::parse(rawtxt &raw, servers conf) {
+
+servers ServerBlock::parse(rawtxt &raw, servers const & conf) {
     servers tmp;
     rawtxt::iterator it;
 
@@ -15,8 +15,8 @@ servers ServerBlock::parse(rawtxt &raw, servers conf) {
     it = raw.begin();
     ++it;
     while (!(*it).empty()) {
-        if ((*it).find(LOCATION) != std::string::npos) {
-            tmp.location = (*it).substr(strlen(LOCATION));
+        if ((*it).find(LOCATIONV) != std::string::npos) {
+            tmp.location = (*it).substr(strlen(LOCATIONV));
             tmp.host = tmp.location;
         }
         if ((*it).find(PORT) != std::string::npos) {
@@ -29,9 +29,19 @@ servers ServerBlock::parse(rawtxt &raw, servers conf) {
             tmp.root = (*it).substr(strlen(ROOT));
         it++;
     }
+    if (!checkVariables(tmp, conf))
+        throw InvalidServerBlock();
     if (tmp.port == 0)
         tmp.port = conf.port;
     return tmp;
+}
+
+bool ServerBlock::checkVariables(const servers &tmp, const servers &src) {
+    bool res = true;
+    res |= (tmp.port != src.port)
+        || (tmp.root == "")
+        ;
+    return res;
 }
 
 const char *ServerBlock::InvalidServerBlock::what() const throw(){

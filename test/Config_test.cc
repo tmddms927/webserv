@@ -9,6 +9,7 @@ TEST(Config_test, readFileTest) {
         try {
             Config e;
             e.runParse();
+            std::cout << e << std::endl;
         } catch (std::exception const & e) {
             throw;
         }
