@@ -18,7 +18,8 @@ void HTTP::reqInputBuf(std::string const & str) {
         if (requestMessage.request_step == CLIENT_READ_REQ_LINE &&
                 process_request_line() == SUCCESS) {
             //isAllowedMethod()
-            if (requestMessage.method != GET && requestMessage.method != POST && requestMessage.method != DELETE)
+            if (requestMessage.method != GET && requestMessage.method != POST && requestMessage.method != DELETE &&
+                requestMessage.method != HEAD)
                 throw NOT_ALLOWED;
             requestMessage.request_step = CLIENT_READ_REQ_HEADER;
         }
@@ -38,10 +39,8 @@ void HTTP::reqInputBuf(std::string const & str) {
         if (requestMessage.request_step == CLIENT_READ_REQ_BODY &&
                 process_request_body() == SUCCESS)
             requestMessage.request_step = CLIENT_READ_FINISH;
-        if (requestMessage.request_step == CLIENT_READ_FINISH) {
-            std::cout << "  <<  CLIENT_READ_FINISH  >>  " << std::endl;
+        if (requestMessage.request_step == CLIENT_READ_FINISH)
             status = 0;
-        }
     } catch (int & err) {
         // 에러 발생 시 error 코드를 status에 할당
         std::cout << "  << CLIENT_READ_ERROR -->" << err  <<  "<-- >>  " << std::endl;
@@ -68,7 +67,7 @@ int HTTP::process_request_line() {
     ft_split(request_line_buf, temp, " ");
 
     if (request_line_buf.size() != 3)
-        throw ERROR;
+        throw NOT_ALLOWED;
 
     // HTTP-version
     requestMessage.http_version = request_line_buf.back();
@@ -148,18 +147,24 @@ int HTTP::reqBodyContentLength() {
 int HTTP::reqBodyChunked() {
     std::stringstream stream;
 
-    if (requestMessage.chunk.length == 0 &&
-        requestMessage.buf == "")
+    if (requestMessage.chunk.length == 0) {
+        size_t found = requestMessage.buf.find("\r\n");
+        if (found == std::string::npos)
+            return FAIL;
+        std::string temp = requestMessage.buf.substr(0, found);
+        if (temp == "") {
             return SUCCESS;
+        }
+    }
     if (requestMessage.chunk.length == -1) {
         size_t found = requestMessage.buf.find("\r\n");
         if (found == std::string::npos)
             return FAIL;
         std::string temp = requestMessage.buf.substr(0, found);
+        requestMessage.buf = requestMessage.buf.substr(found + 2);
 
         stream << temp;
         stream >> std::hex >> requestMessage.chunk.length;
-        std::cout << "requestMessage.chunk.length ! : " << requestMessage.chunk.length << std::endl;
     }
     else {
         std::string temp = requestMessage.buf.substr(0, requestMessage.chunk.length);

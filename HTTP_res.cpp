@@ -9,13 +9,17 @@ void HTTP::setResponseFileDirectory(std::string const & str) {
 /*
 ** set response line
 */
+#include <sstream>
 void HTTP::setResponseLine() {
 	// 수정
+
 	responseMessage.response_line = "HTTP/1.1 ";
-	// responseMessage.response_line += this->status;
-	responseMessage.response_line += "201";
+
+	std::stringstream stream;
+	stream << this->status;
+	responseMessage.response_line += stream.str();
 	responseMessage.response_line += " ";
-	responseMessage.response_line += "haha";
+	responseMessage.response_line += "haha hoho";
 }
 
 /*
@@ -54,6 +58,18 @@ void HTTP::setPOSTHeader() {
 
 	responseMessage.header += "Date: ";
 	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+
+
+	//////////////
+	responseMessage.header += "Content-Type: ";
+	responseMessage.header += "text/html";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Content-Length: ";
+	std::stringstream s;
+	s << responseMessage.body.length();
+	responseMessage.header += s.str();
 	responseMessage.header += "\r\n";
 }
 

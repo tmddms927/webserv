@@ -41,9 +41,8 @@ void Server::setMethodGet() {
 
 	buf[0] = 'h';
 	buf[1] = 'i';
-
+	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody(buf);
-
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setGETHeader();
@@ -64,10 +63,11 @@ void Server::setMethodPost() {
 
 	req_body = clients[curr_event->ident].getBody();
 	write(fd, req_body.c_str(), req_body.length());
-	clients[curr_event->ident].setResponseBody("hi");
+	clients[curr_event->ident].setStatus(405);
+	clients[curr_event->ident].setResponseBody("");
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
-	clients[curr_event->ident].setGETHeader();
+	clients[curr_event->ident].setPOSTHeader();
 }
 
 void Server::resSendMessage() {
@@ -78,7 +78,7 @@ void Server::resSendMessage() {
 	message += clients[curr_event->ident].getResponseHeader();
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
-	message += "\r\n\r\n";
+	// message += "\r\n\r\n";
 	std::cout << "[" << message << "]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
 }

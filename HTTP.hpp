@@ -29,6 +29,7 @@
 #define GET                     "GET"
 #define POST                    "POST"
 #define DELETE                  "DELETE"
+#define HEAD                    "HEAD"
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
