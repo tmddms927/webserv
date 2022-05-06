@@ -46,10 +46,11 @@ private:
 	// std::map<uintptr_t, uintptr_t>	subrequest_fd;
 
 public:
-	Server(std::vector<servers> s, Config const & c);
+	Server(Config const & c);
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
+	bool checkPort(int const & i, int const & port) const;
 
 	/* Server_kqueue */
 	void kqueueInit();

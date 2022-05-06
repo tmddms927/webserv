@@ -8,7 +8,7 @@ void Server::kqueueInit() {
 	if (this->kq == -1)
 		throw "kqueue() error!";
 
-	int size = config.size();
+	int size = server_socket.size();
 	for (int i = 0; i < size; ++i)
 		change_events(server_socket[i], EVFILT_READ, EV_ADD | EV_ENABLE);
 	std::cout << "<<< server started! >>>" << std::endl;
