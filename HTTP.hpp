@@ -7,16 +7,20 @@
 #include <sstream>
 #include "config/Config.hpp"
 
+#define ERROR   -1
+#define SUCCESS 0
+#define FAIL    1
+
 /* new phase level */
 #define CLIENT_READ_REQ_LINE 0
 #define CLIENT_READ_REQ_HEADER 1
 #define CLIENT_READ_REQ_BODY 2
 #define CLIENT_READ_FINISH 3
 
-
 /* status */
-#define BAD_REQUEST             -1
-#define NO_BODY                 -2
+#define BAD_REQUEST             400
+#define NOT_ALLOWED             405
+#define PATLOAD_TOO_LARGE       413
 
 #define GET                     "GET"
 #define POST                    "POST"
@@ -32,24 +36,20 @@ struct  Chunk {
 struct  RequestMessage {
     /* raw data */
     std::string             buf;           // storage of whole request message;
-    /* raw data */
 
     /* request_line */
     std::string             request_line;   //  original request line
     std::string             unparsed_uri;   //  original uri
     std::string             method;         // -> method name: method name string
-    //int                   method;         //  method's numeric value defined
+    std::string             http_version;
     std::string             path;           // -> uri : parsed uri(deferent with unparsed_uri)
-    /* request_line */
 
     /* request header */
     HTTPHeaderField         header_in;
-    /* request header */
 
     /* request body */
     std::string             body;
     Chunk                   chunk;
-    /* request body */
 
     bool                    non_body;
     long                    content_length;
@@ -57,10 +57,7 @@ struct  RequestMessage {
 //    std::string             buf;
     int                     err_num;
     // 공통으로 씀..?
-    int                     current;
-
-public:
-
+    int                     request_step;
 };
 
 struct ResponseMessage {
@@ -77,7 +74,6 @@ private:
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
     int             status;
-    int             protocol_minor_version;
 
     int     process_request_line();
     int     process_request_headers();
@@ -107,7 +103,7 @@ public:
 
     // int reqBodyContentLength();
     // int reqBodyChunked();
-    // void reqChunkInit();
+    void reqChunkInit();
 
     /* valid */
     // void reqGETHeaderCheck();

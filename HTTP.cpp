@@ -5,15 +5,16 @@
 ** HTTP class default constructor.
 */
 HTTP::HTTP() : server(servers()) {
-requestMessage.current = CLIENT_READ_REQ_LINE;
+requestMessage.request_step = CLIENT_READ_REQ_LINE;
     requestMessage.content_length = -1;
+    requestMessage.chunked = false;
 }
 
 /*
 ** HTTP class constructor. socket_fd값을 받아와서 저장.
 */
 HTTP::HTTP(servers const & _server, uintptr_t _socket_fd) : server(_server), socket_fd(_socket_fd) {
-    requestMessage.current = CLIENT_READ_REQ_LINE;
+    requestMessage.request_step = CLIENT_READ_REQ_LINE;
 }
 
 

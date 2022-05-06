@@ -17,6 +17,7 @@
 #define SOCKET_ADDR             INADDR_ANY
 #define SOCKET_READ_BUF         16384
 #define KQUEUE_EVENT_LIST_SIZE  1024
+#define RECIEVE_BODY_MAX_SIZE   16384
 
 /* SOCKET TYPE */
 #define SOCKET_READ 0
