@@ -10,7 +10,7 @@ void Server::kqueueInit() {
 
 	int size = config.size();
 	for (int i = 0; i < size; ++i)
-    	change_events(server_socket[i], EVFILT_READ, EV_ADD | EV_ENABLE);
+		change_events(server_socket[i], EVFILT_READ, EV_ADD | EV_ENABLE);
 	std::cout << "<<< server started! >>>" << std::endl;
 }
 
@@ -21,14 +21,14 @@ void Server::kqueueEventRun() {
 	int new_events;
 
 	while (1) {
-		new_events = kevent(kq, &change_list[0], change_list.size(), event_list, 1024, NULL);
-        std::cout << "kqueueEventRun : event occur" << std::endl;
-        change_list.clear();
+		new_events = kevent(kq, &change_list[0], change_list.size(), event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
+		change_list.clear();
 
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			
+			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
+
 			if (new_events == -1)
 				throw "kevent() error";
 			if (curr_event->flags & EV_ERROR)
@@ -60,14 +60,8 @@ void Server::kqueueEventError(){
 void Server::kqueueEventRead() {
 	if (checkServerSocket(curr_event->ident) != -1)
 		kqueueConnectAccept();
-	else if (checkClientSocket(curr_event->ident) != -1)
-		kqueueEventReadClient(); //kqueueEventReadClientRequest()
-	else if (checkFileDescriptor(curr_event->ident) != -1) {
-		if (GETMethod(curr_event->ident, clients[curr_event->ident].getBody()) == 0) {
-			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DELETE);
-			change_events(subrequest_fd[curr_event->ident], EVFILT_WRITE, EV_ADD | EV_ENABLE);
-		}
-	}
+	else
+		kqueueEventReadClient();
 }
 
 /*
@@ -117,35 +111,24 @@ void Server::kqueueEventReadClient() {
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 
-	// server block - todo uri access check
-	// status -> error
-	if (clients[curr_event->ident].getMethod() == GET)
-		methodGet();
+	// todo server block - todo uri access check
+	if (clients[curr_event->ident].getStatus() != 0)
+		setError();
+	else if (clients[curr_event->ident].getMethod() == GET)
+		setMethodGet();
 	else if (clients[curr_event->ident].getMethod() == POST)
-		methodPost();
-	else
-	{
-		// status가 에러인 경우 메세지 보내고 바로 끝
-		// change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
-		;
-	}
+		setMethodPost();
 }
 
 /*
 ** send data to client
 */
 void Server::kqueueEventWrite() {
-	if (checkClientSocket(curr_event->ident) != -1) {
-		clients[curr_event->ident].reqPrint();
-		clients[curr_event->ident].resSendMessage();
-		// todo write buf 크기가 나눠져 있으면
+	clients[curr_event->ident].resSendMessage();
+	if (clients[curr_event->ident].resCheckFinished()) {
+		close(clients[curr_event->ident].getResponseFd());
+		clients[curr_event->ident].resetHTTP();
 		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-	}
-	if (checkFileDescriptor(curr_event->ident) != -1) {
-		if (POSTMethod(curr_event->ident, clients[subrequest_fd[curr_event->ident]].getBody()) == 0) {
-			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DELETE);
-			change_events(subrequest_fd[curr_event->ident], EVFILT_WRITE, EV_ADD | EV_ENABLE);
-		}
 	}
 }
 
@@ -154,10 +137,10 @@ void Server::kqueueEventWrite() {
 */
 void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags)
 {
-    struct kevent temp_event;
+	struct kevent temp_event;
 
-    EV_SET(&temp_event, ident, filter, flags, 0, 0, NULL);
-    change_list.push_back(temp_event);
+	EV_SET(&temp_event, ident, filter, flags, 0, 0, NULL);
+	change_list.push_back(temp_event);
 }
 
 /*
@@ -165,9 +148,9 @@ void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint
 */
 void Server::disconnect_client()
 {
-    std::cout << "client disconnected: " << curr_event->ident << std::endl;
-    close(curr_event->ident);
-    clients.erase(curr_event->ident);
+	std::cout << "client disconnected: " << curr_event->ident << std::endl;
+	close(curr_event->ident);
+	clients.erase(curr_event->ident);
 }
 
 int Server::checkServerSocket(uintptr_t const & fd) {
@@ -178,16 +161,4 @@ int Server::checkServerSocket(uintptr_t const & fd) {
 			return i;
 	}
 	return -1;
-}
-
-int	Server::checkClientSocket(uintptr_t const & fd) {
-	if (clients.find(fd) == clients.end())
-		return -1;
-	return 1;
-}
-
-int Server::checkFileDescriptor(uintptr_t const & fd) {
-	if (subrequest_fd.find(fd) == subrequest_fd.end())
-		return -1;
-	return 1;
 }

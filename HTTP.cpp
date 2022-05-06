@@ -15,7 +15,6 @@ HTTP::HTTP(servers const & _server, uintptr_t _socket_fd) : server(_server), soc
     resetHTTP();
 }
 
-
 std::string const & HTTP::getMethod() const {
     return requestMessage.method;
 }
@@ -26,6 +25,22 @@ std::string const & HTTP::getURI() const {
 
 std::string & HTTP::getBody() {
     return requestMessage.body;
+}
+
+int const & HTTP::getStatus() {
+    return status;
+}
+
+void HTTP::setStatus(int const & s) {
+    this->status = s;
+}
+
+uintptr_t const & HTTP::getResponseFd() {
+    return response_fd;
+}
+
+void HTTP::setResponseFd(uintptr_t const & s) {
+    this->response_fd = s;
 }
 
 void HTTP::resetHTTP() {
@@ -48,4 +63,5 @@ void HTTP::resetHTTP() {
 
     status = 0;
     protocol_minor_version = 0;
+    response_fd = -1;
 }

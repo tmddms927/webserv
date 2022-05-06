@@ -17,6 +17,7 @@
 #define SOCKET_ADDR             INADDR_ANY
 #define SOCKET_READ_BUF         16384
 #define KQUEUE_EVENT_LIST_SIZE  1024
+#define RECIEVE_BODY_MAX_SIZE	16384
 
 /* SOCKET TYPE */
 #define SOCKET_READ 0
@@ -42,7 +43,7 @@ private:
 	
 	//GET, POST, LOGGING, CGI?등 하위 요청을 처리하기 위한 file descriptior
 	//<file_fd, socket_fd>
-	std::map<uintptr_t, uintptr_t>	subrequest_fd;
+	// std::map<uintptr_t, uintptr_t>	subrequest_fd;
 
 public:
 	Server(std::vector<servers> s, Config const & c);
@@ -64,15 +65,16 @@ public:
 	void disconnect_client();
 
 	int checkServerSocket(uintptr_t const & fd);
-	int	checkClientSocket(uintptr_t const & fd);
-	int checkFileDescriptor(uintptr_t const & fd);
+	// int	checkClientSocket(uintptr_t const & fd);
+	// int checkFileDescriptor(uintptr_t const & fd);
 
 	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 
 
 	/* Server_method */
-	void methodGet();
-	void methodPost();
+	void setError();
+	void setMethodGet();
+	void setMethodPost();
 };
 
 /* method */

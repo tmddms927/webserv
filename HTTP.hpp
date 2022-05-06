@@ -13,6 +13,10 @@
 #define CLIENT_READ_REQ_BODY 2
 #define CLIENT_READ_FINISH 3
 
+#define CLIENT_RES_LINE         10
+#define CLIENT_RES_HEADER       11
+#define CLIENT_RES_BODY         12
+#define CLIENT_RES_FINISH       13
 
 /* status */
 #define BAD_REQUEST             -1
@@ -58,10 +62,10 @@ struct  RequestMessage {
 };
 
 struct ResponseMessage {
-    // header field 저장을 request와 같이 map으로 변경
-    // HTTPHeaderField         header;
-    std::string header;
-    std::string body;
+    int                     step;
+    std::string             response_line;
+    std::string             header;
+    std::string             body;
 };
 
 class HTTP {
@@ -73,14 +77,16 @@ private:
     int             status;
     int             protocol_minor_version;
 
-    int     process_request_line();
-    int     process_request_headers();
-    int     process_request_body();
-    int     set_body_parsor();
-    void    content_phase();
+    uintptr_t             response_fd;
 
-    int     reqBodyContentLength();
-    int     reqBodyChunked();
+    int             process_request_line();
+    int             process_request_headers();
+    int             process_request_body();
+    int             set_body_parsor();
+    void            content_phase();
+
+    int             reqBodyContentLength();
+    int             reqBodyChunked();
 
 public:
     HTTP();
@@ -88,6 +94,11 @@ public:
     std::string const & getMethod() const;
     std::string const & getURI() const;
     std::string & getBody();
+    int const & getStatus();
+    uintptr_t const & getResponseFd();
+    void setResponseFd(uintptr_t const & s);
+    void setStatus(int const & s);
+
     void resetHTTP();
 
     /* request function */
@@ -108,7 +119,14 @@ public:
     // void bodyEncodingType();
 
     /* response function */
+    void setResponseLine();
+    void setGETHeader();
+    void setPOSTHeader();
+    void setErrorResponse();
     void resSendMessage();
+    bool resSendSize(size_t & remain, std::string & str);
+    bool resSendFD(size_t & remain);
+    bool resCheckFinished();
 
 
 

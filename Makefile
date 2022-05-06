@@ -9,6 +9,7 @@ SRCS	=	main.cpp\
 			HTTP_res.cpp\
 			Server_socket.cpp\
 			Server_kqueue.cpp\
+			Server_method.cpp\
 			Server.cpp\
 			HTTPMethod.cpp\
 			config/Config.cpp\

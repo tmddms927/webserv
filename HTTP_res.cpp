@@ -2,46 +2,125 @@
 #include "HTTPHeaderField.hpp"
 
 /*
-** response message를 socket fd에 write하는 함수
+** set response line
 */
-void HTTP::resSendMessage() {
-    responseMessage.header = "HTTP/1.1 200 OK\r\n"
-             "Server: nginx/1.21.6\r\n"
-             "Date: Tue, 26 Apr 2022 10:59:45 GMT\r\n"
-             "Content-Type: text/html\r\n"
-             "Content-Length: 615\r\n"
-             "Last-Modified: Tue, 25 Jan 2022 15:03:52 GMT\r\n"
-             "Connection: keep-alive\r\n"
-             "ETag: \"61f01158-267\"\r\n"
-             "Accept-Ranges: bytes\r\n";
-    responseMessage.body = "<!DOCTYPE html>\r\n"
-           "<html>\r\n"
-           "<head>\r\n"
-           "<title>Welcome to nginx!</title>\r\n"
-           "<style>\r\n"
-           "html { color-scheme: light dark; }\r\n"
-           "body { width: 35em; margin: 0 auto;\r\n"
-           "font-family: Tahoma, Verdana, Arial, sans-serif; }\r\n"
-           "</style>\r\n"
-           "</head>\r\n"
-           "<body>\r\n"
-           "<h1>Welcome to nginx!</h1>\r\n"
-           "<p>If you see this page, the nginx web server is successfully installed and\r\n"
-           "working. Further configuration is required.</p>\r\n"
-           "\r\n"
-           "<p>For online documentation and support please refer to\r\n"
-           "<a href=\"http://nginx.org/\">nginx.org</a>.<br/>\r\n"
-           "Commercial support is available at\r\n"
-           "<a href=\"http://nginx.com/\">nginx.com</a>.</p>\r\n"
-           "\r\n"
-           "<p><em>Thank you for using nginx.</em></p>\r\n"
-           "</body>\r\n"
-           "</html>\r\n";
+void HTTP::setResponseLine() {
+	responseMessage.step = CLIENT_RES_LINE;
+	responseMessage.response_line += "HTTP/1.1 ";
+	responseMessage.response_line += this->status;
+	responseMessage.response_line += " ";
+	responseMessage.response_line += "haha";
+}
 
-    // todo write fd error check!
-    write(socket_fd, responseMessage.header.c_str(), responseMessage.header.size());
-    write(socket_fd, "\r\n", 2);
-    write(socket_fd, responseMessage.body.c_str(), responseMessage.body.size());
-    write(socket_fd, "\r\n", 2);
-    // requestMessage.current = REQ_REQUEST_LINE;
+/*
+** GET header 설정
+*/
+void HTTP::setGETHeader() {
+	//todo 수정!
+	responseMessage.header += "Server: ";
+	responseMessage.header += "Webserv";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Date: ";
+	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Content-Type: ";
+	responseMessage.header += "text/html";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Transfer-Encoding: ";
+	responseMessage.header += "chunked\r\n";
+}
+
+/*
+** POST header 설정
+*/
+void HTTP::setPOSTHeader() {
+	//todo 수정!
+	responseMessage.header += "Server: ";
+	responseMessage.header += "Webserv";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Date: ";
+	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+}
+
+void HTTP::setErrorResponse() {
+	responseMessage.header += "Server: ";
+	responseMessage.header += "Webserv";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Date: ";
+	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+
+	//default error page 있으면
+}
+
+void HTTP::resSendMessage() {
+	size_t remain = 16384;
+
+	if (responseMessage.step == CLIENT_RES_LINE) {
+		if (resSendSize(remain, responseMessage.response_line))
+			responseMessage.step = CLIENT_RES_HEADER;
+	}
+	if (responseMessage.step == CLIENT_RES_HEADER && remain > 0) {
+		if (resSendSize(remain, responseMessage.header))
+			responseMessage.step = CLIENT_RES_BODY;
+	}
+	if (responseMessage.step == CLIENT_RES_BODY && remain > 0) {
+		if (response_fd != -1) {
+			std::cout << "wowo!" << std::endl;
+			if (resSendFD(remain))
+				responseMessage.step = CLIENT_RES_FINISH;
+		}
+		else {
+			if (resSendSize(remain, responseMessage.body))
+				responseMessage.step = CLIENT_RES_FINISH;
+		}
+	}
+}
+
+bool HTTP::resSendSize(size_t & remain, std::string & str) {
+	size_t len;
+
+	len = str.size();
+	std::cout << "[[" << str << "]]" << std::endl;
+	if (len > remain) {
+		write(socket_fd, str.c_str(), remain);
+		str.substr(remain);
+		remain = 0;
+		return false;
+	}
+	else {
+		write(socket_fd, str.c_str(), len);
+		remain = remain - len;
+		return true;
+	}
+}
+
+bool HTTP::resSendFD(size_t & remain) {
+	char buf[remain];
+	size_t len;
+
+	len = read(response_fd, buf, remain);
+	std::cout << "[[[" << buf << "]]]" << std::endl;
+	write(socket_fd, buf, len);
+	if (len == remain)
+		return false;
+	else
+		return true;
+}
+
+/*
+** response message가 완료되었나 체크하는 함수
+** true : 완료, false : 미완료
+*/
+bool HTTP::resCheckFinished() {
+	if (responseMessage.step == CLIENT_RES_FINISH)
+		return true;
+	else
+		return false;
 }

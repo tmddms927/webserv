@@ -20,11 +20,11 @@ int main() {
     seungoh_config_test(ss);
 
     Config conf;
-    try {
-        conf.runParse();
-    } catch (std::exception const &e) {
-        std::cerr << e.what() << std::endl;
-    }
+    // try {
+    //     conf.runParse();
+    // } catch (std::exception const &e) {
+    //     std::cerr << e.what() << std::endl;
+    // }
     run:
         try {
             Server server(ss, conf);
