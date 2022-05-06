@@ -4,15 +4,19 @@
 /*
 ** HTTP class default constructor.
 */
-HTTP::HTTP() : server(servers()) {
+HTTP::HTTP(){
     resetHTTP();
 }
 
 /*
 ** HTTP class constructor. socket_fd값을 받아와서 저장.
 */
-HTTP::HTTP(servers const & _server, uintptr_t _socket_fd) : server(_server), socket_fd(_socket_fd) {
+HTTP::HTTP(uintptr_t _server_fd) : server_fd(_server_fd) {
     resetHTTP();
+}
+
+uintptr_t const & HTTP::getServerFd() const {
+    return server_fd;
 }
 
 std::string const & HTTP::getMethod() const {
@@ -64,4 +68,17 @@ void HTTP::resetHTTP() {
     status = 0;
     protocol_minor_version = 0;
     response_fd = -1;
+}
+
+std::string const & HTTP::getResponseLine() {
+    return responseMessage.response_line;
+}
+
+
+std::string const & HTTP::getResponseHeader() {
+    return responseMessage.header;
+}
+
+std::string const & HTTP::getResponseBody() {
+    return responseMessage.body;
 }

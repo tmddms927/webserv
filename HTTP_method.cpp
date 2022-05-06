@@ -1,9 +1,8 @@
-#include <string>
 
 #include "Server.hpp"
 #include "unistd.h"
 
-int	GETMethod(uintptr_t fd, std::string & body) {
+int	HTTP::GETMethod(uintptr_t & fd, std::string & body) {
 	char	buf[SOCKET_READ_BUF];
 	int		read_len;
 
@@ -21,7 +20,7 @@ int	GETMethod(uintptr_t fd, std::string & body) {
 	return 0;
 }
 
-int	POSTMethod(uintptr_t fd, std::string & body) {
+int	HTTP::POSTMethod(uintptr_t & fd, std::string & body) {
 	// char	buf[SOCKET_READ_BUF];
 	int		written_len;
 

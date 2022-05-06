@@ -62,6 +62,7 @@ struct  RequestMessage {
 };
 
 struct ResponseMessage {
+    std::string             file_directory;
     int                     step;
     std::string             response_line;
     std::string             header;
@@ -70,14 +71,13 @@ struct ResponseMessage {
 
 class HTTP {
 private:
-    const servers   server;
-    uintptr_t       socket_fd; // 필요없는 것 같음
+    uintptr_t       server_fd;
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
     int             status;
     int             protocol_minor_version;
 
-    uintptr_t             response_fd;
+    uintptr_t       response_fd;
 
     int             process_request_line();
     int             process_request_headers();
@@ -90,7 +90,8 @@ private:
 
 public:
     HTTP();
-    HTTP(servers const & _server, uintptr_t _socket_fd);
+    HTTP(uintptr_t _server_fd);
+    uintptr_t const & getServerFd() const;
     std::string const & getMethod() const;
     std::string const & getURI() const;
     std::string & getBody();
@@ -98,6 +99,9 @@ public:
     uintptr_t const & getResponseFd();
     void setResponseFd(uintptr_t const & s);
     void setStatus(int const & s);
+    std::string const & getResponseLine();
+    std::string const & getResponseHeader();
+    std::string const & getResponseBody();
 
     void resetHTTP();
 
@@ -119,20 +123,18 @@ public:
     // void bodyEncodingType();
 
     /* response function */
+    void setResponseFileDirectory(std::string const & str);
     void setResponseLine();
     void setGETHeader();
     void setPOSTHeader();
+    void setResponseBody(std::string const & str);
     void setErrorResponse();
-    void resSendMessage();
-    bool resSendSize(size_t & remain, std::string & str);
-    bool resSendFD(size_t & remain);
-    bool resCheckFinished();
 
 
 
-    // bool reqbufCheck();
-    // void reqParsing();
-    // void reqParsingHeaderField(std::string const & temp);
+    /* response function */
+    // int	GETMethod(uintptr_t & fd, std::string & body);
+    // int	POSTMethod(uintptr_t & fd, std::string & body);
 };
 
 

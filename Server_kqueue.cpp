@@ -79,7 +79,7 @@ void Server::kqueueConnectAccept() {
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
-	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(config[server_index], static_cast<uintptr_t>(client_socket))));
+	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
 }
 
 /*
@@ -89,18 +89,14 @@ void Server::kqueueEventReadClient() {
 	char buf[SOCKET_READ_BUF];
 	int n;
 
-	while (1) {
-		std::memset(buf, 0, SOCKET_READ_BUF);
-		n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-		if (n == 0) {
-			std::cerr << "client read error!" << std::endl;
-			disconnect_client();
-		}
-		else if (n < 0)
-			break;
-		else
-			clients[curr_event->ident].reqInputBuf(buf);
+	std::memset(buf, 0, SOCKET_READ_BUF);
+	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
+	if (n == 0) {
+		std::cerr << "client read error!" << std::endl;
+		disconnect_client();
 	}
+	else
+		clients[curr_event->ident].reqInputBuf(buf);
 	if (clients[curr_event->ident].reqCheckFinished())
 		finishedRead();
 }
@@ -111,7 +107,7 @@ void Server::kqueueEventReadClient() {
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 
-	// todo server block - todo uri access check
+	findServerBlock();
 	if (clients[curr_event->ident].getStatus() != 0)
 		setError();
 	else if (clients[curr_event->ident].getMethod() == GET)
@@ -124,12 +120,8 @@ void Server::finishedRead() {
 ** send data to client
 */
 void Server::kqueueEventWrite() {
-	clients[curr_event->ident].resSendMessage();
-	if (clients[curr_event->ident].resCheckFinished()) {
-		close(clients[curr_event->ident].getResponseFd());
-		clients[curr_event->ident].resetHTTP();
-		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-	}
+	resSendMessage();
+	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 }
 
 /*

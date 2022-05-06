@@ -18,8 +18,11 @@ void Server::socketInit() {
 	size = config.size();
 	for (int i = 0; i < size; ++i)
 	{
-		if (checkPort(i, config[i].port))
+		fd = checkPort(i, config[i].port);
+		if (fd != -1) {
+			server_socket.push_back(server_socket[fd]);
 			continue;
+		}
 		if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
 			throw "socket() error!";
 
@@ -45,11 +48,11 @@ void Server::socketInit() {
 	std::cout << "server socker init complete!" << std::endl;
 }
 
-bool Server::checkPort(int const & i, int const & port) const {
+uintptr_t Server::checkPort(int const & i, int const & port) const {
 	for (int j = 0; j < i; ++j) {
 		if (config[j].port == port) {
-			return true;
+			return j;
 		}
 	}
-	return false;
+	return -1;
 }

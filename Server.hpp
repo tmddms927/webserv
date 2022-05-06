@@ -50,7 +50,7 @@ public:
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
-	bool checkPort(int const & i, int const & port) const;
+	uintptr_t checkPort(int const & i, int const & port) const;
 
 	/* Server_kqueue */
 	void kqueueInit();
@@ -71,15 +71,12 @@ public:
 
 	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 
-
 	/* Server_method */
+    void findServerBlock();
 	void setError();
 	void setMethodGet();
 	void setMethodPost();
+	void resSendMessage();
 };
-
-/* method */
-int	GETMethod(uintptr_t fd, std::string & body);
-int	POSTMethod(uintptr_t fd, std::string & body);
 
 #endif
