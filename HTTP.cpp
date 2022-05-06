@@ -60,7 +60,7 @@ void HTTP::resetHTTP() {
     requestMessage.non_body = false;
     requestMessage.content_length = -1;
     requestMessage.chunked = false;
-    requestMessage.current = CLIENT_READ_REQ_LINE;
+    requestMessage.request_step = CLIENT_READ_REQ_LINE;
 
     responseMessage.file_directory = "";
     responseMessage.step = -1;
@@ -69,14 +69,12 @@ void HTTP::resetHTTP() {
     responseMessage.body = "";
 
     status = 0;
-    protocol_minor_version = 0;
     response_fd = -1;
 }
 
 std::string const & HTTP::getResponseLine() {
     return responseMessage.response_line;
 }
-
 
 std::string const & HTTP::getResponseHeader() {
     return responseMessage.header;

@@ -11,7 +11,6 @@ void HTTP::setResponseFileDirectory(std::string const & str) {
 */
 void HTTP::setResponseLine() {
 	// 수정
-	responseMessage.step = CLIENT_RES_LINE;
 	responseMessage.response_line += "HTTP/1.1 ";
 	// responseMessage.response_line += this->status;
 	responseMessage.response_line += "201";

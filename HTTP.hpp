@@ -7,6 +7,10 @@
 #include <sstream>
 #include "config/Config.hpp"
 
+#define ERROR   -1
+#define SUCCESS 0
+#define FAIL    1
+
 /* new phase level */
 #define CLIENT_READ_REQ_LINE 0
 #define CLIENT_READ_REQ_HEADER 1
@@ -18,9 +22,9 @@
 #define CLIENT_RES_BODY         12
 #define CLIENT_RES_FINISH       13
 
-/* status */
-#define BAD_REQUEST             -1
-#define NO_BODY                 -2
+#define BAD_REQUEST             400
+#define NOT_ALLOWED             405
+#define PATLOAD_TOO_LARGE       413
 
 #define GET                     "GET"
 #define POST                    "POST"
@@ -36,29 +40,25 @@ struct  Chunk {
 struct  RequestMessage {
     /* raw data */
     std::string             buf;           // storage of whole request message;
-    /* raw data */
 
     /* request_line */
     std::string             request_line;   //  original request line
     std::string             unparsed_uri;   //  original uri
     std::string             method;         // -> method name: method name string
-    //int                   method;         //  method's numeric value defined
+    std::string             http_version;
     std::string             path;           // -> uri : parsed uri(deferent with unparsed_uri)
-    /* request_line */
 
     /* request header */
     HTTPHeaderField         header_in;
-    /* request header */
 
     /* request body */
     std::string             body;
     Chunk                   chunk;
-    /* request body */
 
     bool                    non_body;
     long                    content_length;
     bool                    chunked;
-    int                     current;
+    int                     request_step;
 };
 
 struct ResponseMessage {
@@ -75,8 +75,6 @@ private:
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
     int             status;
-    int             protocol_minor_version;
-
     uintptr_t       response_fd;
 
     int             process_request_line();
@@ -111,16 +109,8 @@ public:
     /* */
     void reqPrint();
     bool reqCheckFinished();
+    void reqChunkInit();
 
-
-    // int reqBodyContentLength();
-    // int reqBodyChunked();
-    // void reqChunkInit();
-
-    /* valid */
-    // void reqGETHeaderCheck();
-    // void reqPOSTHeaderCheck();
-    // void bodyEncodingType();
 
     /* response function */
     void setResponseFileDirectory(std::string const & str);
@@ -129,12 +119,6 @@ public:
     void setPOSTHeader();
     void setResponseBody(std::string const & str);
     void setErrorResponse();
-
-
-
-    /* response function */
-    // int	GETMethod(uintptr_t & fd, std::string & body);
-    // int	POSTMethod(uintptr_t & fd, std::string & body);
 };
 
 
