@@ -27,7 +27,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
+			// std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 
 			if (new_events == -1)
 				throw "kevent() error";
@@ -91,10 +91,9 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-	std::cout << "=====================\n";
-	std::cout <<  buf << std::endl;
-	std::cout << "=====================\n";
-
+	std::cout << "======================" << std::endl;
+	std::cout << buf << std::endl;
+	std::cout << "======================" << std::endl;
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client();

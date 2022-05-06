@@ -11,7 +11,7 @@ void HTTP::setResponseFileDirectory(std::string const & str) {
 */
 void HTTP::setResponseLine() {
 	// 수정
-	responseMessage.response_line += "HTTP/1.1 ";
+	responseMessage.response_line = "HTTP/1.1 ";
 	// responseMessage.response_line += this->status;
 	responseMessage.response_line += "201";
 	responseMessage.response_line += " ";
@@ -24,7 +24,7 @@ void HTTP::setResponseLine() {
 #include <sstream>
 void HTTP::setGETHeader() {
 	//todo 수정!
-	responseMessage.header += "Server: ";
+	responseMessage.header = "Server: ";
 	responseMessage.header += "Webserv";
 	responseMessage.header += "\r\n";
 
@@ -48,7 +48,7 @@ void HTTP::setGETHeader() {
 */
 void HTTP::setPOSTHeader() {
 	//todo 수정!
-	responseMessage.header += "Server: ";
+	responseMessage.header = "Server: ";
 	responseMessage.header += "Webserv";
 	responseMessage.header += "\r\n";
 
@@ -58,7 +58,7 @@ void HTTP::setPOSTHeader() {
 }
 
 void HTTP::setErrorResponse() {
-	responseMessage.header += "Server: ";
+	responseMessage.header = "Server: ";
 	responseMessage.header += "Webserv";
 	responseMessage.header += "\r\n";
 
