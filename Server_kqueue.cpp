@@ -67,7 +67,6 @@ void Server::kqueueEventRead() {
 			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DELETE);
 			change_events(subrequest_fd[curr_event->ident], EVFILT_WRITE, EV_ADD | EV_ENABLE);
 		}
-
 	}
 }
 
@@ -108,36 +107,29 @@ void Server::kqueueEventReadClient() {
 		else
 			clients[curr_event->ident].reqInputBuf(buf);
 	}
-	if (clients[curr_event->ident].reqCheckFinished()) {
-		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
-		// todo uri access check
-		if (clients[curr_event->ident].getMethod() == GET) {
-			int fd;
-			fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
-			// todo open fail 처리
-			change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
-			subrequest_fd.insert(std::pair<uintptr_t, uintptr_t>(fd, curr_event->ident));
-			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
-            std::cout << "file fd resister" << std::endl;
-		}
-		else if (clients[curr_event->ident].getMethod() == POST) {
-			int fd;
-
-			fd = open(clients[curr_event->ident].getURI().c_str(), O_WRONLY);
-			// todo open fail 처리
-			change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			subrequest_fd.insert(std::pair<uintptr_t, uintptr_t>(fd, curr_event->ident));
-			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
-            std::cout << "file fd resister" << std::endl;
-		}
-		else {
-			change_events(curr_event->ident, EVFILT_READ, EV_ADD | EV_DISABLE);
-			change_events(curr_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-		}
-	}
+	if (clients[curr_event->ident].reqCheckFinished())
+		finishedRead();
 }
 
+/*
+** read가 끝났을 때 처리
+*/
+void Server::finishedRead() {
+	change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 
+	// server block - todo uri access check
+	// status -> error
+	if (clients[curr_event->ident].getMethod() == GET)
+		methodGet();
+	else if (clients[curr_event->ident].getMethod() == POST)
+		methodPost();
+	else
+	{
+		// status가 에러인 경우 메세지 보내고 바로 끝
+		// change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
+		;
+	}
+}
 
 /*
 ** send data to client

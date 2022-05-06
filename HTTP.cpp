@@ -5,15 +5,14 @@
 ** HTTP class default constructor.
 */
 HTTP::HTTP() : server(servers()) {
-requestMessage.current = CLIENT_READ_REQ_LINE;
-    requestMessage.content_length = -1;
+    resetHTTP();
 }
 
 /*
 ** HTTP class constructor. socket_fd값을 받아와서 저장.
 */
 HTTP::HTTP(servers const & _server, uintptr_t _socket_fd) : server(_server), socket_fd(_socket_fd) {
-    requestMessage.current = CLIENT_READ_REQ_LINE;
+    resetHTTP();
 }
 
 
@@ -27,4 +26,26 @@ std::string const & HTTP::getURI() const {
 
 std::string & HTTP::getBody() {
     return requestMessage.body;
+}
+
+void HTTP::resetHTTP() {
+    requestMessage.buf = "";
+    requestMessage.request_line = "";
+    requestMessage.unparsed_uri = "";
+    requestMessage.method = "";
+    requestMessage.path = "";
+    requestMessage.header_in.clear();
+    requestMessage.body = "";
+    requestMessage.chunk.content = "";
+    requestMessage.chunk.length = -1;
+    requestMessage.non_body = false;
+    requestMessage.content_length = -1;
+    requestMessage.chunked = false;
+    requestMessage.current = CLIENT_READ_REQ_LINE;
+
+    responseMessage.header = "";
+    responseMessage.body = "";
+
+    status = 0;
+    protocol_minor_version = 0;
 }

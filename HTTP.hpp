@@ -25,7 +25,7 @@
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
 struct  Chunk {
-    size_t                  length;
+    long                    length;
     std::string             content;
 };
 
@@ -54,13 +54,7 @@ struct  RequestMessage {
     bool                    non_body;
     long                    content_length;
     bool                    chunked;
-//    std::string             buf;
-    int                     err_num;
-    // 공통으로 씀..?
     int                     current;
-
-public:
-
 };
 
 struct ResponseMessage {
@@ -91,14 +85,13 @@ private:
 public:
     HTTP();
     HTTP(servers const & _server, uintptr_t _socket_fd);
-
-    /* request function */
-    void reqInputBuf(std::string const & str);
-
-    /* getter */
     std::string const & getMethod() const;
     std::string const & getURI() const;
     std::string & getBody();
+    void resetHTTP();
+
+    /* request function */
+    void reqInputBuf(std::string const & str);
 
     /* */
     void reqPrint();

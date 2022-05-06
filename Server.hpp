@@ -59,6 +59,7 @@ public:
 	void kqueueEventRead();
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
+	void finishedRead();
 	void kqueueEventWrite();
 	void disconnect_client();
 
@@ -69,8 +70,9 @@ public:
 	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 
 
-	void set_subrequest(uintptr_t const & file_id, uintptr_t const & client_id);
-	
+	/* Server_method */
+	void methodGet();
+	void methodPost();
 };
 
 /* method */
