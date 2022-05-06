@@ -11,7 +11,8 @@ SRCS	=	main.cpp\
 			Server_kqueue.cpp\
 			Server.cpp\
 			HTTPMethod.cpp\
-			Config.cpp
+			config/Config.cpp\
+			config/ServerBlock.cpp
 OBJS	=	${SRCS:.cpp=.o}
 
 all		:	${OUT}
