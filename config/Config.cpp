@@ -37,17 +37,17 @@ void Config::eraseCompleted() {
 
 
 void Config::setGlobalConfig() {
-    if (raw[0].find("client_max_body_size ") != std::string::npos) {
-        std::stringstream ss(raw[0].substr(raw[0].find("client_max_body_size ") + strlen("client_max_body_size ")));
+    if (raw[0].find(CLIENT_BODY_SIZE) != std::string::npos) {
+        std::stringstream ss(raw[0].substr(strlen("client_max_body_size ")));
         ss >> global_config.client_max_body_size;
     }
-    if (raw[1].find("default_error_page ") != std::string::npos) {
-        global_config.err_page = raw[1].substr(raw[1].find("default_error_page ") + strlen("default_error_page "));
+    if (raw[1].find(DEFAULT_ERROR) != std::string::npos) {
+        global_config.err_page = raw[1].substr(strlen(DEFAULT_ERROR));
     }
-    if (raw[2].find("host ") != std::string::npos)
-        config[0].host = raw[2].substr(strlen("host "));
-    if (raw[3].find("port ") != std::string::npos) {
-        std::stringstream ss(raw[3].substr(strlen("port ")));
+    if (raw[2].find(HOSTV) != std::string::npos)
+        config[0].host = raw[2].substr(strlen(HOSTV));
+    if (raw[3].find(PORT) != std::string::npos) {
+        std::stringstream ss(raw[3].substr(strlen(PORT)));
         ss >> config[0].port;
         eraseCompleted();
         return;
@@ -55,18 +55,6 @@ void Config::setGlobalConfig() {
     throw GlobalConfigException();
 }
 
-/*
-void Config::serverCount() {
-    int i = 0;
-    int j = 0;
-    while (i < raw.size()) {
-        if (raw[i].find("server") != std::string::npos)
-            j++;
-        i++;
-    }
-    config.resize(j + 1);
-}
-*/
 void Config::validateServerVariables() {
     while (!raw.empty()) {
         std::vector<std::string>::iterator it = raw.begin();
@@ -75,18 +63,10 @@ void Config::validateServerVariables() {
             eraseCompleted();
         }
     }
-    for (int i = 0; i < config.size(); ) {
-        std::cout << "port " << config[i].port << std::endl;
-        std::cout << "host " << config[i].host << std::endl;
-        std::cout << "location " << config[i].location << std::endl;
-        std::cout << "root " << config[i].root << std::endl;
-        i++;
-    }
 }
 
 void Config::runParse() {
     readFile();
-    //serverCount();
     setGlobalConfig();
     validateServerVariables();
 }
@@ -98,40 +78,26 @@ global const & Config::getGlobal() const{
     return global_config;
 }
 
-//todo root location --> 초기값을 어케하지~
-/*
- *      todo parsing 규칙
- * 1. 최상위 서버블록의 이름은 http ✔
- * 2. 최상위 서버블록 이외의 서버블록은 하위 서버블록 없음! ✔
- * 3. 하위 서버블록의 구분은 tabspace! ✔
- * 4. parsing 시작시에 가장먼저 괄호 체크 ✔
- * 5. body size limit 추가 ✔
- * 6. default error page 추가 ✔
-*/
+std::ostream &operator<<(std::ostream &os, const Config &config) {
+    std::cout << "Config result" << std::endl;
+    std::cout << "=============================================="<< std::endl;
+    for (int i = 0; i < config.config.size(); ) {
+        std::cout << "--------------------------------------" << std::endl;
+        std::cout << "port : " << config.config[i].port << std::endl;
+        std::cout << "host : " << config.config[i].host << std::endl;
+        std::cout << "location : " << config.config[i].location << std::endl;
+        std::cout << "root : " << config.config[i].root << std::endl;
+        std::cout << "--------------------------------------" << std::endl;
+        i++;
+    }
+    std::cout << "==============================================";
+    return os;
+}
+
 const char *Config::GlobalConfigException::what() const throw(){
     return "Check global-value rule";
-}
-
-const char *Config::ParenthesisException::what() const throw() {
-    return "Check parenthesis";
-}
-
-const char *Config::FirstServerBlockException::what() const throw() {
-    return "First server block is \"http\"";
 }
 
 const char *Config::VariableRuleException::what() const throw() {
     return "Check config file rule";
 }
-/*
-if (raw[++i].find("port ") == std::string::npos)
-throw VariableRuleException();
-std::stringstream ss(raw[i].substr(raw[i].find("port ") + strlen("port ")));
-ss >> config[j].port;
-if (j != 0) {
-if (raw[++i].find("location ") == std::string::npos)
-throw VariableRuleException();
-config[j].location = raw[i].substr(raw[i].find("location ") + strlen("location "));
-config[j].location.erase(config[j].location.length() - 2, config[j].location.length());
-}
-*/

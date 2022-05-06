@@ -5,9 +5,9 @@
 #ifndef UNTITLED1_CONSTANT_H
 #define UNTITLED1_CONSTANT_H
 
-#define LOCATION "location "
+#define LOCATIONV "location "
 #define PORT "port "
-#define HOST "host "
+#define HOSTV "host "
 #define ROOT "root "
 #define CGI "cgi "
 #define CLIENT_BODY_SIZE "client_max_body_size "

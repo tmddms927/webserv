@@ -7,6 +7,7 @@
 
 #include "ServerBlock.hpp"
 #include <vector>
+#include <ostream>
 
 class Config {
 private:
@@ -15,19 +16,10 @@ private:
     std::vector<std::string>  raw;
     global                      global_config;
     void    readFile();
-    void    serverCount();
     void    setGlobalConfig();
     void    validateServerVariables();
     void    eraseCompleted();
     class   GlobalConfigException : public std::exception {
-    public:
-        const char *what() const throw();
-    };
-    class   ParenthesisException : public std::exception {
-    public:
-        const char *what() const throw();
-    };
-    class   FirstServerBlockException : public std::exception {
     public:
         const char *what() const throw();
     };
@@ -40,6 +32,8 @@ public:
     std::vector<servers> const & getConfig() const;
     global const & getGlobal() const;
     void    runParse();
+
+    friend std::ostream &operator<<(std::ostream &os, const Config &config);
 };
 
 #endif //UNTITLED1_CONFIG_HPP

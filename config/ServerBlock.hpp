@@ -14,8 +14,9 @@ private:
     class InvalidServerBlock : std::exception {
         const char *what() const throw();
     };
+    static bool checkVariables(servers const & tmp, servers const & src);
 public:
-    static servers parse(std::vector<std::string> & raw, servers conf);
+    static servers parse(std::vector<std::string> & raw, servers const & conf);
 };
 
 
