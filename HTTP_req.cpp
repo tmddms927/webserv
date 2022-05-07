@@ -116,7 +116,7 @@ int     HTTP::process_request_body() {
         return SUCCESS;
     }
     if (requestMessage.content_length >= 0) {
-    std::cout << "=========x=====process_request_body============" << std::endl;
+        std::cout << "=========x=====process_request_body============" << std::endl;
         if (reqBodyContentLength() == SUCCESS)
             return SUCCESS;
     }
@@ -159,11 +159,11 @@ int HTTP::reqBodyChunked() {
             requestMessage.chunk.setLength(requestMessage.buf.substr(0, found));
             requestMessage.buf = requestMessage.buf.substr(found + 2);
             continue;
-
         } else {
             left_len = requestMessage.chunk.getLength() - requestMessage.chunk.getContent().size();
 
-            if (left_len < requestMessage.chunk.appendContent(requestMessage.buf.substr(0, left_len))) {
+            found = requestMessage.chunk.appendContent(requestMessage.buf.substr(0, left_len));
+            if (left_len > found) {
                 requestMessage.buf = "";
                 return FAIL;
             } else {
@@ -171,8 +171,10 @@ int HTTP::reqBodyChunked() {
                 if (requestMessage.body.size() > RECIEVE_BODY_MAX_SIZE)
                     throw PATLOAD_TOO_LARGE;
             }
-            requestMessage.buf = requestMessage.buf.substr(left_len);
+            std::cout << "======================1 : " << found << ", " << requestMessage.buf.length() << std::endl;
+            requestMessage.buf = requestMessage.buf.substr(found);
             requestMessage.chunk.initChunk();
+            std::cout << "======================2" << std::endl;
             continue;
         }
     }
@@ -188,7 +190,7 @@ void Chunk::setLength(std::string const & len_str) {
 
 long Chunk::appendContent(std::string const & content_part) {
     content += content_part;
-    return content.size();
+    return content_part.size();
 }
 
 long const & Chunk::getLength() const {
