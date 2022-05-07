@@ -146,39 +146,56 @@ int HTTP::reqBodyContentLength() {
 ** request message - chunked body를 받는 함수
 */
 int HTTP::reqBodyChunked() {
-    std::stringstream stream;
+    size_t found;
+    size_t left_len;
 
-    if (requestMessage.chunk.length == 0) {
-        size_t found = requestMessage.buf.find("\r\n");
-        if (found == std::string::npos)
-            return FAIL;
-        std::string temp = requestMessage.buf.substr(0, found);
-        if (temp == "") {
+    while (!requestMessage.buf.empty()) {
+        if (requestMessage.chunk.getLength() == 0) {
             return SUCCESS;
-        }
-    }
-    if (requestMessage.chunk.length == -1) {
-        size_t found = requestMessage.buf.find("\r\n");
-        if (found == std::string::npos)
-            return FAIL;
-        std::string temp = requestMessage.buf.substr(0, found);
-        requestMessage.buf = requestMessage.buf.substr(found + 2);
+        } else if (requestMessage.chunk.getLength() == -1) {
+            found = requestMessage.buf.find("\r\n");
+            if (found == std::string::npos)
+                return FAIL;
+            requestMessage.chunk.setLength(requestMessage.buf.substr(0, found));
+            requestMessage.buf = requestMessage.buf.substr(found + 2);
+            continue;
 
-        stream << temp;
-        stream >> std::hex >> requestMessage.chunk.length;
-    }
-    else {
-        std::string temp = requestMessage.buf.substr(0, requestMessage.chunk.length);
-        requestMessage.chunk.content += temp;
-        requestMessage.chunk.length -= temp.length();
-        if (requestMessage.chunk.length <= 0) {
-            requestMessage.body += requestMessage.chunk.content;
-            if (requestMessage.body.size() > RECIEVE_BODY_MAX_SIZE)
-                throw PATLOAD_TOO_LARGE;
-            reqChunkInit();
+        } else {
+            left_len = requestMessage.chunk.getLength() - requestMessage.chunk.getContent().size();
+
+            if (left_len < requestMessage.chunk.appendContent(requestMessage.buf.substr(0, left_len))) {
+                requestMessage.buf = "";
+                return FAIL;
+            } else {
+                requestMessage.body += requestMessage.chunk.getContent();
+                if (requestMessage.body.size() > RECIEVE_BODY_MAX_SIZE)
+                    throw PATLOAD_TOO_LARGE;
+            }
+            requestMessage.buf = requestMessage.buf.substr(left_len);
+            requestMessage.chunk.initChunk();
+            continue;
         }
     }
     return FAIL;
+}
+
+void Chunk::setLength(std::string const & len_str) {
+    std::stringstream stream;
+
+    stream << len_str;
+    stream >> std::hex >> length;
+}
+
+long Chunk::appendContent(std::string const & content_part) {
+    content += content_part;
+    return content.size();
+}
+
+long const & Chunk::getLength() const {
+    return length;
+}
+std::string const & Chunk::getContent() const {
+    return content;
 }
 
 /*
@@ -193,6 +210,15 @@ bool HTTP::reqCheckFinished() {
 }
 
 /*
+ * chunk struct 초기화 하는 함수
+ * length = -1, content = ""
+ */
+void Chunk::initChunk() {
+    length = -1;
+    content = "";
+}
+
+/*
 ** request message print
 */
 void HTTP::reqPrint() {
@@ -203,14 +229,6 @@ void HTTP::reqPrint() {
     std::cout << "body : " << requestMessage.body << std::endl;
 }
 
-/*
- * chunk struct 초기화 하는 함수
- * length = -1, content = ""
- */
-void HTTP::reqChunkInit() {
-    requestMessage.chunk.length = -1;
-    requestMessage.chunk.content = "";
-}
 
 void    ft_split(std::vector<std::string> &dest, std::string const &src, std::string const &mark) {
     size_t start_pos = 0;
