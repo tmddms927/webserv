@@ -2,10 +2,12 @@
 #include "HeaderFieldInfo.hpp"
 #include "HTTP.hpp"
 
-int main() {
+int main(int argc, char *argv[]) {
     std::vector<servers> ss;
 
-    Config conf;
+    if (argc > 2)
+        exit(1);
+    Config conf(argv[1]);
     try {
         conf.runParse();
     } catch (std::exception const &e) {

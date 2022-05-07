@@ -7,7 +7,7 @@
 TEST(Config_test, readFileTest) {
     EXPECT_NO_THROW({
         try {
-            Config e;
+            Config e("../test.conf");
             e.runParse();
             std::cout << e << std::endl;
         } catch (std::exception const & e) {

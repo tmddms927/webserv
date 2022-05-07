@@ -15,10 +15,14 @@ private:
     std::vector<servers>      config;
     std::vector<std::string>  raw;
     global                      global_config;
+    std::string               conf_file;
+private:
     void    readFile();
-    void    setGlobalConfig();
+    void    setMainConfig();
     void    validateServerVariables();
     void    eraseCompleted();
+    void    isExist();
+    void    setRootDir();
     class   GlobalConfigException : public std::exception {
     public:
         const char *what() const throw();
@@ -28,7 +32,7 @@ private:
         const char *what() const throw();
     };
 public:
-    Config();
+    Config(std::string const & conf_file);
     std::vector<servers> const & getConfig() const;
     global const & getGlobal() const;
     void    runParse();
