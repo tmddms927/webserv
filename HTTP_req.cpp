@@ -1,5 +1,12 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
+#include "Server.hpp"
+
+#include <vector>
+#include <map>
+#include <utility>
+
+void    ft_split(std::vector<std::string> &dest, std::string const &src, std::string const &mark);
 
 /*
 ** request message가 왔을 경우 request.buf에 메시지 저장
@@ -7,189 +14,190 @@
 void HTTP::reqInputBuf(std::string const & str) {
     requestMessage.buf += str;
 
-    if (reqbufCheck() == true)
-        reqParsing();
-}
-
-/*
-** request message에 "\r\n"이 있는지 체크
-*/
-bool HTTP::reqbufCheck() {
-    if (requestMessage.buf.find("\r\n\r\n") == std::string::npos)
-        return false;
-    return true;
-}
-
-/*
-** parsing 시작하는 함수.
-** requestline, header field, body인지 구분하여 해당 함수 실행
-*/
-void HTTP::reqParsing() {
-    size_t index;
-    std::string temp;
-
-    while (1) {
-        // header field parsing 끝나면
-        if (requestMessage.current == REQ_BODY) {
-            // 각 메소드 별 함수 실행?
-             if (requestMessage.method == "GET")
-                reqGETHeaderCheck();
-             if (requestMessage.method == "POST")
-                reqPOSTHeaderCheck();
+    try { // 이 try문의 함수들은 에러 발생시 무조건 throw로 적절한 error 코드(400 Bad Request, 405 Not Allow 등)를 반환하여야 한다.
+        if (requestMessage.request_step == CLIENT_READ_REQ_LINE &&
+                process_request_line() == SUCCESS) {
+            //isAllowedMethod()
+            if (requestMessage.method != GET && requestMessage.method != POST && requestMessage.method != DELETE &&
+                requestMessage.method != HEAD && requestMessage.method != PUT)
+                throw NOT_ALLOWED;
+            requestMessage.request_step = CLIENT_READ_REQ_HEADER;
         }
-        index = requestMessage.buf.find("\r\n");
-        if (index == std::string::npos && requestMessage.current != REQ_CONTENT_LENGTH)
-            break;
-        temp = requestMessage.buf.substr(0, index);
-        if (requestMessage.current == REQ_REQUEST_LINE)
-            reqParsingRequestLine(temp);
-        else if (requestMessage.current == REQ_HEADER_FIELD)
-            reqParsingHeaderField(temp);
-        else if (requestMessage.current == REQ_CONTENT_LENGTH)
-            reqBodyContentLength(temp);
-        else if (requestMessage.current == REQ_CHUNKED)
-            reqBodyChunked(temp);
-        // todo (+ 2) 변경하기
-        requestMessage.buf = requestMessage.buf.substr(index + 2);
+        if (requestMessage.request_step == CLIENT_READ_REQ_HEADER &&
+                process_request_headers() == SUCCESS) {
+
+            HTTPHeaderField::iterator it_content_len = requestMessage.header_in.find(CONTENT_LENGTH_STR);
+            if (it_content_len != requestMessage.header_in.end())
+                requestMessage.content_length = std::strtod(it_content_len->second.c_str(), 0);
+
+            HTTPHeaderField::iterator it_transfer_enco = requestMessage.header_in.find(TRANSFER_ENCODING_STR);
+            if (it_transfer_enco != requestMessage.header_in.end() && it_transfer_enco->second == "chunked")
+                requestMessage.chunked = true;
+
+            requestMessage.request_step = CLIENT_READ_REQ_BODY;
+        }
+        if (requestMessage.request_step == CLIENT_READ_REQ_BODY &&
+                process_request_body() == SUCCESS) {
+            if (requestMessage.method == "POST" && requestMessage.body.size() == 0)
+                throw NOT_ALLOWED;
+            requestMessage.request_step = CLIENT_READ_FINISH;
+                }
+        if (requestMessage.request_step == CLIENT_READ_FINISH)
+            status = 0;
+    } catch (int & err) {
+        // 에러 발생 시 error 코드를 status에 할당
+        requestMessage.request_step = CLIENT_READ_FINISH;
+        std::cout << "  << CLIENT_READ_ERROR -->" << err  <<  "<-- >>  " << std::endl;
+        status = err;
     }
 }
-//todo 연결 끊어졌을때 HTTP객체도 제대로 없어져야해!!!!! 기억해!!!!! 꼭 고쳐!!!! 미래의 승은님
-//void    HTTP::reqMethodPostProcess() {
-//
-//}
 
 /*
 ** request message - request line를 파싱하는 함수
 */
-void HTTP::reqParsingRequestLine(std::string & temp) {
+int HTTP::process_request_line() {
     std::size_t index;
 
-    // method
-    index = temp.find(' ');
-    if (index == std::string::npos)
-        std::cout << "method error!" << index << '\n';
-    requestMessage.method = temp.substr(0, index);
-    temp = temp.substr(index + 1);
+    size_t found;
+    if ((found = requestMessage.buf.find("\r\n")) == std::string::npos)
+        return FAIL;
 
-    // request-uri
-    index = temp.find(' ');
-    if (index == std::string::npos)
-        std::cout << "request-uri error!" << index << '\n';
-    requestMessage.path = temp.substr(0,index);
-    temp = temp.substr(index + 1);
+    std::string temp = requestMessage.buf.substr(0, found);
+    requestMessage.buf = requestMessage.buf.substr(found + 2);
+
+    std::vector<std::string> request_line_buf;
+    ft_split(request_line_buf, temp, " ");
+
+    if (request_line_buf.size() != 3) {
+        // std::cout << "GGiyaaaakkkkkkkk!!!!! : [" << temp << "]" << std::endl;
+        throw NOT_ALLOWED;
+    }
 
     // HTTP-version
-    if (temp != "HTTP/1.1" && temp != "HTTP/1.0")
-        std::cout << "HTTP-version error!" << index << '\n';
-    protocol_minor_version = 1;
-    requestMessage.current = REQ_HEADER_FIELD;
+    requestMessage.http_version = request_line_buf.back();
+    request_line_buf.pop_back();
+    // request-uri
+    requestMessage.unparsed_uri = request_line_buf.back();
+    request_line_buf.pop_back();
+    // method
+    requestMessage.method = request_line_buf.back();
+    request_line_buf.pop_back();
+    return SUCCESS;
 }
 
-/*
-** request message - header field를 파싱하는 함수
+/* 
+** request header를 파싱하는 함수
 */
-void HTTP::reqParsingHeaderField(std::string const & temp) {
-    size_t index;
-    std::string first;
-    std::string second;
+int        HTTP::process_request_headers() {
+    std::vector<std::string> req_header_field_splited;
 
-    if (temp == "") {
-        requestMessage.current = REQ_BODY;
-        return ;
+    size_t found;
+    if ((found = requestMessage.buf.find("\r\n\r\n")) == std::string::npos)
+        return FAIL;
+    std::string temp = requestMessage.buf.substr(0, found);
+    requestMessage.buf = requestMessage.buf.substr(found + 4);
+
+    ft_split(req_header_field_splited, temp, "\r\n");
+    for (size_t i = 0; i < req_header_field_splited.size(); i++) {
+        std::vector<std::string> node;
+        ft_split(node , req_header_field_splited[i], ": ");
+        if (node.size() != 2)
+            throw BAD_REQUEST;
+        //isAllowdeHeader() -> if error occur -> return 400(bad reqeust)
+        requestMessage.header_in.insert(std::pair<std::string, std::string>(node[0], node[1]));
     }
-    index = temp.find(":");
-    if (!index)
-        std::cout << "HeaderField [key:value] error. there are no key!" << std::endl;
-    //todo !need to modify key and value validation check!
-    first = temp.substr(0, index);
-    second = temp.substr(index + 1);
-    requestMessage.header.insert(std::pair<std::string, std::string>(first, second));
+    return SUCCESS;
 }
 
-/*
- *  header field에서 body를 어떻게 받는지(chuncked인지, content-length인지)를 확인
- */
-// todo invalid header 이전 parsingHeader에서 체크
-void HTTP::bodyEncodingType(){
-    if (requestMessage.header.find(CONTENT_LENGTH_STR) !=  requestMessage.header.end()
-        && requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end())
-        throw BAD_REQUEST;
-    if (requestMessage.header.find(CONTENT_LENGTH_STR) ==  requestMessage.header.end()
-        && requestMessage.header.find(TRANSFER_ENCODING_STR) == requestMessage.header.end())
-        throw NO_BODY;
-    if (requestMessage.header.find(CONTENT_LENGTH_STR) !=  requestMessage.header.end())
-        throw REQ_CONTENT_LENGTH;
-    // todo transfer-encoding value가 chunked가 아닌 경우도 고려
-    if (requestMessage.header.find(TRANSFER_ENCODING_STR) != requestMessage.header.end()) {
-        reqChunkInit();
-        throw REQ_CHUNKED;
-    }
-}
-
-/*
-** request message - chunked body를 받는 함수
+/* 
+** request body를 파싱하는 함수
 */
-void HTTP::reqBodyChunked(std::string const & temp) {
-    std::stringstream stream;
-
-    if (requestMessage.chunk.length == 0) {
-        if (temp == "")
-            requestMessage.current = REQ_FINISHED;
+int     HTTP::process_request_body() {
+    if (requestMessage.content_length == -1 && !requestMessage.chunked) {
+        requestMessage.non_body = true;
+        return SUCCESS;
     }
-    // if (requestMessage.chunk.length == -1) {
-    //     stream << temp;
-    //     stream >> std::hex >> requestMessage.chunk.length;
-    //     std::cout << "requestMessage.chunk.length ! : " << requestMessage.chunk.length << std::endl;
-    // }
-    // else {
-    //     requestMessage.chunk.content += temp;
-    //     requestMessage.chunk.length -= temp.length();
-    //     if (requestMessage.chunk.length <= 0)
-    //         reqChunkInit();
-    // }
-}
-
-/*
-** get GET Header Check
-*/
-void HTTP::reqGETHeaderCheck() {
-    try {
-        bodyEncodingType();
+    if (requestMessage.content_length >= 0) {
+        std::cout << "=========x=====process_request_body============" << std::endl;
+        if (reqBodyContentLength() == SUCCESS)
+            return SUCCESS;
     }
-    catch (int const & status) {
-        if (status == BAD_REQUEST) //content-length, transfer-encoding both true
-            std::cout << "reqGETHeaderCheck : header error! (bad request)" << std::endl;
-        else if (status == NO_BODY) //content-length, transfer-encoding both false
-            requestMessage.current = REQ_FINISHED;
-        else
-            requestMessage.current = status;
+    // else if (requestMessage.chunked) {
+    else {
+        if (reqBodyChunked() == SUCCESS)
+            return SUCCESS; // reqBodyChunked 함수 안에서 chunk가 완성되지 않은 채 들어올 경우도 고려해야함
     }
-}
-
-/*
-** get POST Header Check
-*/
-void HTTP::reqPOSTHeaderCheck() {
-    try {
-        bodyEncodingType();
-    }
-    catch (int const & status) {
-        if (status == BAD_REQUEST) //content-length, transfer-encoding both true
-            std::cout << "reqGETHeaderCheck : header error! (bad request)" << std::endl;
-        else if (status == NO_BODY) //content-length, transfer-encoding both false
-            requestMessage.current = BAD_REQUEST; //todo error throw
-        else
-            requestMessage.current = status;
-    }
+    return FAIL;
+    //만약 content-length, chunked 둘다 true라면??
 }
 
 /*
 ** request message - content-length를 받는 함수
 */
-void HTTP::reqBodyContentLength(std::string const & temp) {
-    requestMessage.body += temp;
-    if (requestMessage.body.length() == std::strtod(requestMessage.header["Content-Length"].c_str(), 0))
-        requestMessage.current = REQ_FINISHED;
+int HTTP::reqBodyContentLength() {
+    if (requestMessage.content_length > REQUEST_BODY_MAX_SIZE) //content_length가 기준인지 읽어진 body 사이즈 기준인지 애매함
+        throw PATLOAD_TOO_LARGE;
+    requestMessage.body += requestMessage.buf.substr(0, requestMessage.content_length - requestMessage.body.size());
+    // std::cout << "requestMessage.body : " << requestMessage.body << std::endl;
+    if (requestMessage.body.size() >= requestMessage.content_length)
+        return SUCCESS;
+    return FAIL;
+}
+
+/*
+** request message - chunked body를 받는 함수
+*/
+int HTTP::reqBodyChunked() {
+    size_t found;
+    size_t left_len;
+
+    while (!requestMessage.buf.empty()) {
+        if (requestMessage.chunk.getLength() == 0) {
+            return SUCCESS;
+        } else if (requestMessage.chunk.getLength() == -1) {
+            found = requestMessage.buf.find("\r\n");
+            if (found == std::string::npos)
+                return FAIL;
+            requestMessage.chunk.setLength(requestMessage.buf.substr(0, found));
+            requestMessage.buf = requestMessage.buf.substr(found + 2);
+            continue;
+        } else {
+            left_len = requestMessage.chunk.getLength() - requestMessage.chunk.getContent().size();
+
+            found = requestMessage.chunk.appendContent(requestMessage.buf.substr(0, left_len));
+            if (left_len > found) {
+                requestMessage.buf = "";
+                return FAIL;
+            } else {
+                requestMessage.body += requestMessage.chunk.getContent();
+                if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
+                    throw PATLOAD_TOO_LARGE;
+            }
+            requestMessage.buf = requestMessage.buf.substr(found);
+            requestMessage.chunk.initChunk();
+            continue;
+        }
+    }
+    return FAIL;
+}
+
+void Chunk::setLength(std::string const & len_str) {
+    std::stringstream stream;
+
+    stream << len_str;
+    stream >> std::hex >> length;
+}
+
+long Chunk::appendContent(std::string const & content_part) {
+    content += content_part;
+    return content_part.size();
+}
+
+long const & Chunk::getLength() const {
+    return length;
+}
+std::string const & Chunk::getContent() const {
+    return content;
 }
 
 /*
@@ -197,10 +205,19 @@ void HTTP::reqBodyContentLength(std::string const & temp) {
 ** true : 완료, false : 미완료
 */
 bool HTTP::reqCheckFinished() {
-	if (requestMessage.current == REQ_FINISHED)
+	if (requestMessage.request_step == CLIENT_READ_FINISH)
 		return true;
 	else
 		return false;
+}
+
+/*
+ * chunk struct 초기화 하는 함수
+ * length = -1, content = ""
+ */
+void Chunk::initChunk() {
+    length = -1;
+    content = "";
 }
 
 /*
@@ -208,20 +225,29 @@ bool HTTP::reqCheckFinished() {
 */
 void HTTP::reqPrint() {
     std::cout << "message : " << requestMessage.method << std::endl;
-    std::cout << "path : " << requestMessage.path << std::endl;
-    for (std::map<std::string, std::string>::iterator it = requestMessage.header.begin(); it != requestMessage.header.end(); ++it)
+    std::cout << "path : " << requestMessage.unparsed_uri << std::endl;
+    for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
     std::cout << "body : " << requestMessage.body << std::endl;
 }
 
 
-/*
- * chunk struct 초기화 하는 함수
- * length = -1, content = ""
- */
-void HTTP::reqChunkInit() {
-    requestMessage.chunk.length = -1;
-    if (requestMessage.chunk.content.length() != 0)
-        requestMessage.body += requestMessage.chunk.content;
-    requestMessage.chunk.content = "";
+void    ft_split(std::vector<std::string> &dest, std::string const &src, std::string const &mark) {
+    size_t start_pos = 0;
+
+    for (int debug_count = 0;;debug_count++) {
+        size_t found;
+
+        if (start_pos >= src.size()) {
+            break;
+        }
+        found = src.find(mark, start_pos);
+        if (found == std::string::npos) {
+            std::string s = src.substr(start_pos);
+            dest.push_back(s);
+            break;
+        }
+        dest.push_back(src.substr(start_pos, found - start_pos));
+        start_pos = found + mark.size();
+    }
 }

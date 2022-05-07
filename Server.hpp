@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/event.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -11,35 +12,40 @@
 #include <map>
 #include "HTTP.hpp"
 #include "config/Config.hpp"
+#include "utils.hpp"
 
 #define SOCKET_LISTEN_BACKLOG   5
 #define SOCKET_PORT             80
 #define SOCKET_ADDR             INADDR_ANY
 #define SOCKET_READ_BUF         16384
 #define KQUEUE_EVENT_LIST_SIZE  1024
+#define REQUEST_BODY_MAX_SIZE   100000001
+#define RECIEVE_BODY_MAX_SIZE   16384
+#define SERVER_DEFAULT_NAME		"webserv"
 
 /*
 ** socket를 관리해주는 객체
 */
 class Server {
 private:
-	// socket
-	const std::vector<servers>		config;
+	//config const로 바꾸기
+	std::vector<servers>		config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;
-	// kqueue
 	int								kq;
 	struct kevent					event_list[KQUEUE_EVENT_LIST_SIZE];
-	std::vector<struct kevent>		change_list;
 	struct kevent*					curr_event;
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
+	std::vector<struct kevent>		change_list;
+
 public:
-	Server(std::vector<servers> s, Config const & c);
+	Server(Config const & c);
 	/* Server_socket */
 	void socketInit();
 	void socketRun();
+	uintptr_t checkPort(int const & i, int const & port) const;
 
 	/* Server_kqueue */
 	void kqueueInit();
@@ -50,10 +56,27 @@ public:
 	void kqueueEventRead();
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
+	void finishedRead();
 	void kqueueEventWrite();
-	void change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags);
 	void disconnect_client();
+	void change_events(uintptr_t const & ident,
+			int16_t const & filter, uint16_t const & flags);
 	int checkServerSocket(uintptr_t const & fd);
+
+	/* Server_method */
+    void findServerBlock();
+
+	void setResErrorMes();
+	void setResMethodGET();
+	void setResMethodPOST();
+	void setResMethodPUT();
+	void setResMethodDELETE();
+	void setResMethodHEAD();
+	void sendResMessage();
+	void setResDefaultHeaderField();
+	void changeStatusToError(int st);
+	void isFile(); 
 };
+
 
 #endif

@@ -7,80 +7,125 @@
 #include <sstream>
 #include "config/Config.hpp"
 
-#define REQ_REQUEST_LINE        0
-#define REQ_HEADER_FIELD        1
-#define REQ_BODY                2
-#define REQ_CONTENT_LENGTH      3
-#define REQ_CHUNKED             4
-#define REQ_FINISHED            5
+#define ERROR   -1
+#define SUCCESS 0
+#define FAIL    1
 
-#define BAD_REQUEST             -1
-#define NO_BODY                 -2
+/* new phase level */
+#define CLIENT_READ_REQ_LINE 0
+#define CLIENT_READ_REQ_HEADER 1
+#define CLIENT_READ_REQ_BODY 2
+#define CLIENT_READ_FINISH 3
+
+#define CLIENT_RES_LINE         10
+#define CLIENT_RES_HEADER       11
+#define CLIENT_RES_BODY         12
+#define CLIENT_RES_FINISH       13
+
+#define BAD_REQUEST             400
+#define NOT_ALLOWED             405
+#define PATLOAD_TOO_LARGE       413
 
 #define GET                     "GET"
 #define POST                    "POST"
 #define DELETE                  "DELETE"
+#define HEAD                    "HEAD"
+#define PUT                     "PUT"
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
-struct  Chunk {
-    size_t                  length;
-    std::string             content;
+class  Chunk {
+private:
+	long                    length;
+	std::string             content;
+public:
+	void initChunk();
+	void setLength(std::string const & len_str);
+	long appendContent(std::string const & content_part);
+
+	long const & getLength() const;
+	std::string const & getContent() const;
 };
 
 struct  RequestMessage {
-    // 공통으로 씀
-    std::string             method;
-    // 공통으로 씀..?
-    std::string             path;
-    HTTPHeaderField         header;
-    std::string             body;
-    Chunk                   chunk;
-    //long                   content_length;
-    std::string             buf;
-    int                     err_num;
-    // 공통으로 씀..?
-    int                     current;
+	/* raw data */
+	std::string             buf;           // storage of whole request message;
+
+	/* request_line */
+	std::string             request_line;   //  original request line
+	std::string             unparsed_uri;   //  original uri
+	std::string             method;         // -> method name: method name string
+	std::string             http_version;
+
+	/* request header */
+	HTTPHeaderField         header_in;
+
+	/* request body */
+	std::string             body;
+	Chunk                   chunk;
+
+	bool                    non_body;
+	long                    content_length;
+	bool                    chunked;
+	int                     request_step;
 };
 
 struct ResponseMessage {
-    // header field 저장을 request와 같이 map으로 변경
-    // HTTPHeaderField         header;
-    std::string header;
-    std::string body;
+	std::string             file_directory;
+	std::string             response_line;
+	std::string             header;
+	std::string             body;
 };
 
 class HTTP {
 private:
-    const servers   server;
-    uintptr_t       socket_fd;
-    RequestMessage  requestMessage;
-    ResponseMessage responseMessage;
-    int             status;
-    int             protocol_minor_version;
+	uintptr_t       server_fd;
+	RequestMessage  requestMessage;
+	ResponseMessage responseMessage;
+	int             status;
+
+	int             process_request_line();
+	int             process_request_headers();
+	int             process_request_body();
+	int             set_body_parsor();
+	void            content_phase();
+
+	int             reqBodyContentLength();
+	int             reqBodyChunked();
+
 public:
-    HTTP();
-    HTTP(servers const & _server, uintptr_t _socket_fd);
+	HTTP();
+	HTTP(uintptr_t _server_fd);
+	uintptr_t const & getServerFd() const;
+	std::string const & getMethod() const;
+	std::string const & getURI() const;
+	std::string & getBody();
+	int const & getStatus();
+	// uintptr_t const & getResponseFd();
+	// void setResponseFd(uintptr_t const & s);
+	void setStatus(int const & s);
+	std::string const & getResponseLine();
+	std::string const & getResponseHeader();
+	std::string const & getResponseBody();
+	void setResponseHeader(std::string const & key, std::string const & value);
 
-    /* request function */
-    void reqInputBuf(std::string const & str);
-    bool reqbufCheck();
-    void reqParsing();
-    void reqParsingRequestLine(std::string & temp);
-    void reqParsingHeaderField(std::string const & temp);
-    void reqBodyContentLength(std::string const & temp);
-    void reqBodyChunked(std::string const & temp);
-    bool reqCheckFinished();
-    void reqPrint();
-    void reqChunkInit();
+	void resetHTTP();
 
-    /* valid */
-    void reqGETHeaderCheck();
-    void reqPOSTHeaderCheck();
-    void bodyEncodingType();
+	/* request function */
+	void reqInputBuf(std::string const & str);
 
-    /* response function */
-    void resSendMessage();
+	/* */
+	void reqPrint();
+	bool reqCheckFinished();
+	void reqChunkInit();
+
+
+	/* response function */
+	void setResponseFileDirectory(std::string const & str);
+	std::string const & getResponseFileDirectory();
+	void setResponseLine();
+	void setResponseBody(std::string const & str);
+	bool checkStatusError();
 };
 
 #endif

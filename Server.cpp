@@ -1,6 +1,11 @@
 #include "Server.hpp"
 
-Server::Server(std::vector<servers> s, Config const & c) : config(s), global_config(c.getGlobal()) {
+/*
+** default constructor
+*/
+Server::Server(Config const & c) : config(c.getConfig()), global_config(c.getGlobal()) {
 	this->kq_timeout.tv_nsec = 0;
 	this->kq_timeout.tv_sec = 0;
+	///////////
+	config[0].root = "/Users/seungoh/webserv";
 }
