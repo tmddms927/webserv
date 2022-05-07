@@ -61,7 +61,6 @@ void HTTP::resetHTTP() {
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
 
     responseMessage.file_directory = "";
-    responseMessage.step = -1;
     responseMessage.response_line = "";
     responseMessage.header = "";
     responseMessage.body = "";

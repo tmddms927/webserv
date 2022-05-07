@@ -36,103 +36,101 @@ typedef std::map<std::string, std::string> HTTPHeaderField;
 
 class  Chunk {
 private:
-    long                    length;
-    std::string             content;
+	long                    length;
+	std::string             content;
 public:
-    void initChunk();
-    void setLength(std::string const & len_str);
-    long appendContent(std::string const & content_part);
+	void initChunk();
+	void setLength(std::string const & len_str);
+	long appendContent(std::string const & content_part);
 
-    long const & getLength() const;
-    std::string const & getContent() const;
+	long const & getLength() const;
+	std::string const & getContent() const;
 };
 
 struct  RequestMessage {
-    /* raw data */
-    std::string             buf;           // storage of whole request message;
+	/* raw data */
+	std::string             buf;           // storage of whole request message;
 
-    /* request_line */
-    std::string             request_line;   //  original request line
-    std::string             unparsed_uri;   //  original uri
-    std::string             method;         // -> method name: method name string
-    std::string             http_version;
+	/* request_line */
+	std::string             request_line;   //  original request line
+	std::string             unparsed_uri;   //  original uri
+	std::string             method;         // -> method name: method name string
+	std::string             http_version;
 
-    /* request header */
-    HTTPHeaderField         header_in;
+	/* request header */
+	HTTPHeaderField         header_in;
 
-    /* request body */
-    std::string             body;
-    Chunk                   chunk;
+	/* request body */
+	std::string             body;
+	Chunk                   chunk;
 
-    bool                    non_body;
-    long                    content_length;
-    bool                    chunked;
-    int                     request_step;
+	bool                    non_body;
+	long                    content_length;
+	bool                    chunked;
+	int                     request_step;
 };
 
 struct ResponseMessage {
-    std::string             file_directory;
-    int                     step;
-    std::string             response_line;
-    std::string             header;
-    std::string             body;
+	std::string             file_directory;
+	std::string             response_line;
+	std::string             header;
+	std::string             body;
 };
 
 class HTTP {
 private:
-    uintptr_t       server_fd;
-    RequestMessage  requestMessage;
-    ResponseMessage responseMessage;
-    int             status;
-    // uintptr_t       response_fd;
-    //temp error val
+	uintptr_t       server_fd;
+	RequestMessage  requestMessage;
+	ResponseMessage responseMessage;
+	int             status;
 
-    int             process_request_line();
-    int             process_request_headers();
-    int             process_request_body();
-    int             set_body_parsor();
-    void            content_phase();
+	int             process_request_line();
+	int             process_request_headers();
+	int             process_request_body();
+	int             set_body_parsor();
+	void            content_phase();
 
-    int             reqBodyContentLength();
-    int             reqBodyChunked();
+	int             reqBodyContentLength();
+	int             reqBodyChunked();
 
 public:
-    HTTP();
-    HTTP(uintptr_t _server_fd);
-    uintptr_t const & getServerFd() const;
-    std::string const & getMethod() const;
-    std::string const & getURI() const;
-    std::string & getBody();
-    int const & getStatus();
-    // uintptr_t const & getResponseFd();
-    // void setResponseFd(uintptr_t const & s);
-    void setStatus(int const & s);
-    std::string const & getResponseLine();
-    std::string const & getResponseHeader();
-    std::string const & getResponseBody();
+	HTTP();
+	HTTP(uintptr_t _server_fd);
+	uintptr_t const & getServerFd() const;
+	std::string const & getMethod() const;
+	std::string const & getURI() const;
+	std::string & getBody();
+	int const & getStatus();
+	// uintptr_t const & getResponseFd();
+	// void setResponseFd(uintptr_t const & s);
+	void setStatus(int const & s);
+	std::string const & getResponseLine();
+	std::string const & getResponseHeader();
+	std::string const & getResponseBody();
+	void setResponseHeader(std::string const & key, std::string const & value);
 
-    void resetHTTP();
+	void resetHTTP();
 
-    /* request function */
-    void reqInputBuf(std::string const & str);
+	/* request function */
+	void reqInputBuf(std::string const & str);
 
-    /* */
-    void reqPrint();
-    bool reqCheckFinished();
-    void reqChunkInit();
+	/* */
+	void reqPrint();
+	bool reqCheckFinished();
+	void reqChunkInit();
 
 
-    /* response function */
-    void setResponseFileDirectory(std::string const & str);
-    void setResponseLine();
-    void setGETHeader();
-    void setPOSTHeader();
-    void setHEADHeader();
-    void setPUTHeader();
-    void setDELETEHeader();
-    void setResponseBody(std::string const & str);
-    void setErrorResponse();
-    bool checkStatusError();
+	/* response function */
+	void setResponseFileDirectory(std::string const & str);
+	void setResponseLine();
+	void setGETHeader();
+	void setPOSTHeader();
+	void setHEADHeader();
+	void setPUTHeader();
+	void setDELETEHeader();
+	void setResponseBody(std::string const & str);
+	void setErrorResponse();
+	bool checkStatusError();
 };
 
 #endif

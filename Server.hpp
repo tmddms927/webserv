@@ -11,6 +11,7 @@
 #include <map>
 #include "HTTP.hpp"
 #include "config/Config.hpp"
+#include "utils.hpp"
 
 #define SOCKET_LISTEN_BACKLOG   5
 #define SOCKET_PORT             80
@@ -19,10 +20,7 @@
 #define KQUEUE_EVENT_LIST_SIZE  1024
 #define REQUEST_BODY_MAX_SIZE   100000001
 #define RECIEVE_BODY_MAX_SIZE   16384
-
-/* SOCKET TYPE */
-#define SOCKET_READ 0
-#define FILE_READ 1
+#define SERVER_DEFAULT_NAME		"webserv"
 
 /*
 ** socket를 관리해주는 객체
@@ -65,13 +63,16 @@ public:
 
 	/* Server_method */
     void findServerBlock();
-	void setError();
-	void setMethodGet();
-	void setMethodPost();
-	void setMethodPUT();
-	void setMethodDELETE();
-	void setMethodHEAD();
-	void resSendMessage();
+
+	void setResErrorMes();
+	void setResMethodGET();
+	void setResMethodPOST();
+	void setResMethodPUT();
+	void setResMethodDELETE();
+	void setResMethodHEAD();
+	void sendResMessage();
+	void setResDefaultHeaderField();
+	void changeStatusToError(int st);
 };
 
 #endif

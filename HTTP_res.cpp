@@ -25,26 +25,25 @@ void HTTP::setResponseLine() {
 /*
 ** GET header 설정
 */
-#include <sstream>
 void HTTP::setGETHeader() {
 	//todo 수정!
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Type: ";
-	responseMessage.header += "text/html";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Type: ";
+	// responseMessage.header += "text/html";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Length: ";
-	std::stringstream s;
-	s << responseMessage.body.length();
-	responseMessage.header += s.str();
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Length: ";
+	// std::stringstream s;
+	// s << responseMessage.body.length();
+	// responseMessage.header += s.str();
+	// responseMessage.header += "\r\n";
 }
 
 /*
@@ -52,25 +51,25 @@ void HTTP::setGETHeader() {
 */
 void HTTP::setPOSTHeader() {
 	//todo 수정!
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 
 
-	//////////////
-	responseMessage.header += "Content-Type: ";
-	responseMessage.header += "text/html";
-	responseMessage.header += "\r\n";
+	// //////////////
+	// responseMessage.header += "Content-Type: ";
+	// responseMessage.header += "text/html";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Length: ";
-	std::stringstream s;
-	s << responseMessage.body.length();
-	responseMessage.header += s.str();
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Length: ";
+	// std::stringstream s;
+	// s << responseMessage.body.length();
+	// responseMessage.header += s.str();
+	// responseMessage.header += "\r\n";
 }
 
 /*
@@ -78,73 +77,73 @@ void HTTP::setPOSTHeader() {
 */
 void HTTP::setPUTHeader() {
 	//todo 수정!
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Type: ";
-	responseMessage.header += "text/html";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Type: ";
+	// responseMessage.header += "text/html";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Length: ";
-	std::stringstream s;
-	s << responseMessage.body.length();
-	responseMessage.header += s.str();
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Length: ";
+	// std::stringstream s;
+	// s << responseMessage.body.length();
+	// responseMessage.header += s.str();
+	// responseMessage.header += "\r\n";
 }
 
 /*
 ** DELETE
 */
 void HTTP::setDELETEHeader() {
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 }
 
 /*
 ** HEAD
 */
 void HTTP::setHEADHeader() {
-	//todo 수정!
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// //todo 수정!
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 }
 
 /*
 ** Error
 */
 void HTTP::setErrorResponse() {
-	responseMessage.header = "Server: ";
-	responseMessage.header += "Webserv";
-	responseMessage.header += "\r\n";
+	// responseMessage.header = "Server: ";
+	// responseMessage.header += "Webserv";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Date: ";
-	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Date: ";
+	// responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Type: ";
-	responseMessage.header += "text/html";
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Type: ";
+	// responseMessage.header += "text/html";
+	// responseMessage.header += "\r\n";
 
-	responseMessage.header += "Content-Length: ";
-	std::stringstream s;
-	s << responseMessage.body.length();
-	responseMessage.header += s.str();
-	responseMessage.header += "\r\n";
+	// responseMessage.header += "Content-Length: ";
+	// std::stringstream s;
+	// s << responseMessage.body.length();
+	// responseMessage.header += s.str();
+	// responseMessage.header += "\r\n";
 }
 
 void HTTP::setResponseBody(std::string const & str) {
@@ -156,4 +155,11 @@ bool HTTP::checkStatusError() {
 		return true;
 	else
 		return false;
+}
+
+void HTTP::setResponseHeader(std::string const & key, std::string const & value) {
+	responseMessage.header += key;
+	responseMessage.header += ": ";
+	responseMessage.header += value;
+	responseMessage.header += "\r\n";
 }

@@ -10,6 +10,7 @@ int main() {
         conf.runParse();
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
+        exit(1);
     }
 
 
@@ -23,6 +24,7 @@ int main() {
     //     std::cout << aa[i].root << std::endl;
     // }
 
+    // std::cout << conf << std::endl;
 
     run:
         try {

@@ -12,7 +12,8 @@ SRCS	=	main.cpp\
 			Server_method.cpp\
 			Server.cpp\
 			config/Config.cpp\
-			config/ServerBlock.cpp
+			config/ServerBlock.cpp\
+			utils.cpp
 OBJS	=	${SRCS:.cpp=.o}
 
 all		:	${OUT}

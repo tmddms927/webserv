@@ -115,24 +115,24 @@ void Server::finishedRead() {
 
 	findServerBlock();
 	if (clients[curr_event->ident].getStatus() != 0)
-		setError();
+		setResErrorMes();
 	else if (clients[curr_event->ident].getMethod() == GET)
-		setMethodGet();
+		setResMethodGET();
 	else if (clients[curr_event->ident].getMethod() == POST)
-		setMethodPost();
+		setResMethodPOST();
 	else if (clients[curr_event->ident].getMethod() == DELETE)
-		setMethodDELETE();
+		setResMethodDELETE();
 	else if (clients[curr_event->ident].getMethod() == HEAD)
-		setMethodHEAD();
+		setResMethodHEAD();
 	else if (clients[curr_event->ident].getMethod() == PUT)
-		setMethodPUT();
+		setResMethodPUT();
 }
 
 /*
 ** send data to client
 */
 void Server::kqueueEventWrite() {
-	resSendMessage();
+	sendResMessage();
 	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 	change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
 	clients[curr_event->ident].resetHTTP();

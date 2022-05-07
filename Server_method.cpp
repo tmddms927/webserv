@@ -41,14 +41,26 @@ void Server::findServerBlock() {
 	clients[curr_event->ident].setResponseFileDirectory(config[0].location + uri);
 }
 
-void Server::setError() {
-	clients[curr_event->ident].setResponseBody("error!");
+/*
+** set error response message
+*/
+void Server::setResErrorMes() {
+	int fd;
+	char buf[RECIEVE_BODY_MAX_SIZE];
+	int len;
+
+	fd = open(global_config.err_page.c_str(), O_RDONLY);
+	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE);
+	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE);
+
+	setResDefaultHeaderField();
+	clients[curr_event->ident].setResponseBody(buf);
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setGETHeader();
 	clients[curr_event->ident].setErrorResponse();
 }
 
-void Server::setMethodGet() {
+void Server::setResMethodGET() {
 	int fd;
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
 	int len;
@@ -56,82 +68,75 @@ void Server::setMethodGet() {
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
-	if (fd < 0) {
-		clients[curr_event->ident].setStatus(404);
-		setError();
-	}
+	if (fd < 0)
+		return changeStatusToError(404);
 
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
 	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
-	if (len > RECIEVE_BODY_MAX_SIZE) {
-		// 내용물이 너무 큼
-		clients[curr_event->ident].setStatus(404);
-		setError();
-	}
+	if (len > RECIEVE_BODY_MAX_SIZE)
+		return changeStatusToError(404);
+	else if (len < 0)
+		return changeStatusToError(500);
 
-	buf[0] = 'h';
-	buf[1] = 'i';
+	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody(buf);
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[curr_event->ident].setResponseLine();
-	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
-	clients[curr_event->ident].setGETHeader();
+	clients[curr_event->ident].setErrorResponse();
 }
 
-void Server::setMethodPost() {
+void Server::setResMethodPOST() {
 	int fd;
-	int len;
 	std::string req_body;
 
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
-	if (fd < 0) {
-		clients[curr_event->ident].setStatus(404);
-		setError();
-	}
+	if (fd < 0)
+		return changeStatusToError(404);
 
 	req_body = clients[curr_event->ident].getBody();
 	write(fd, req_body.c_str(), req_body.length());
+
+	// post body 있어야되나..?
+	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody("");
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
-	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
-	clients[curr_event->ident].setPOSTHeader();
-	// exit(1);
+	clients[curr_event->ident].setErrorResponse();
 }
 
-void Server::setMethodDELETE() {
-	// int fd;
-	// int len;
+void Server::setResMethodPUT() {
+	clients[curr_event->ident].setStatus(200);
+	clients[curr_event->ident].setResponseBody("");
+	setResDefaultHeaderField();
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
+	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setDELETEHeader();
+}
+
+void Server::setResMethodDELETE() {
+	int fd;
 	std::string req_body;
 
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
-	// fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
-	// if (fd < 0) {
-	// 	clients[curr_event->ident].setStatus(404);
-	// 	setError();
-	// }
-
-	req_body = clients[curr_event->ident].getBody();
-	// write(fd, req_body.c_str(), req_body.length());
+	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	if (fd < 0)
+		return changeStatusToError(404);
+	
+	// post body 있어야되나..?
+	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(405);
 	clients[curr_event->ident].setResponseBody("");
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
-	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setDELETEHeader();
 }
 
-void Server::setMethodPUT() {
-	clients[curr_event->ident].setStatus(200);
-	clients[curr_event->ident].setResponseBody("good!");
-	// setError();
-	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setPUTHeader();
-}
-
-void Server::setMethodHEAD() {
+void Server::setResMethodHEAD() {
 	int fd;
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
 	int len;
@@ -139,25 +144,21 @@ void Server::setMethodHEAD() {
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
-	if (fd < 0) {
-		clients[curr_event->ident].setStatus(404);
-		setError();
-	}
+	if (fd < 0)
+		return changeStatusToError(404);
 
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
 	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
-	if (len > RECIEVE_BODY_MAX_SIZE) {
-		// 내용물이 너무 큼
-		clients[curr_event->ident].setStatus(404);
-		setError();
-	}
+	if (len > RECIEVE_BODY_MAX_SIZE)
+		return changeStatusToError(404);
 
-	clients[curr_event->ident].setStatus(405);
+	setResDefaultHeaderField();
+	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setHEADHeader();
+	clients[curr_event->ident].setErrorResponse();
 }
 
-void Server::resSendMessage() {
+void Server::sendResMessage() {
 	std::string message;
 
 	message = clients[curr_event->ident].getResponseLine();
@@ -165,8 +166,25 @@ void Server::resSendMessage() {
 	message += clients[curr_event->ident].getResponseHeader();
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
-	// message += "\r\n\r\n";
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
+}
+
+/*
+** input default response header field
+*/
+void Server::setResDefaultHeaderField() {
+	std::string str;
+
+	clients[curr_event->ident].setResponseHeader("Server", SERVER_DEFAULT_NAME);
+	clients[curr_event->ident].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
+}
+
+/*
+** change status to error status
+*/
+void Server::changeStatusToError(int st) {
+	clients[curr_event->ident].setStatus(st);
+	setResErrorMes();
 }
