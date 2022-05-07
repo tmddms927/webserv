@@ -124,13 +124,7 @@ public:
 	void setResponseFileDirectory(std::string const & str);
 	std::string const & getResponseFileDirectory();
 	void setResponseLine();
-	void setGETHeader();
-	void setPOSTHeader();
-	void setHEADHeader();
-	void setPUTHeader();
-	void setDELETEHeader();
 	void setResponseBody(std::string const & str);
-	void setErrorResponse();
 	bool checkStatusError();
 };
 

@@ -48,7 +48,6 @@ void Server::setResErrorMes() {
 	clients[curr_event->ident].setResponseBody(buf);
 	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setErrorResponse();
 }
 
 void Server::setResMethodGET() {
@@ -74,7 +73,6 @@ void Server::setResMethodGET() {
 	clients[curr_event->ident].setResponseBody(buf);
 	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setErrorResponse();
 }
 
 void Server::setResMethodPOST() {
@@ -96,16 +94,14 @@ void Server::setResMethodPOST() {
 	clients[curr_event->ident].setResponseBody("");
 	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setErrorResponse();
 }
 
 void Server::setResMethodPUT() {
+	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody("");
-	setResDefaultHeaderField();
 	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setDELETEHeader();
 }
 
 void Server::setResMethodDELETE() {
@@ -124,7 +120,6 @@ void Server::setResMethodDELETE() {
 	clients[curr_event->ident].setResponseBody("");
 	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setDELETEHeader();
 }
 
 void Server::setResMethodHEAD() {
@@ -150,7 +145,6 @@ return changeStatusToError(405);
 	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setErrorResponse();
 }
 
 void Server::sendResMessage() {
