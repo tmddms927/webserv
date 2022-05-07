@@ -188,3 +188,12 @@ void Server::changeStatusToError(int st) {
 	clients[curr_event->ident].setStatus(st);
 	setResErrorMes();
 }
+
+
+bool isFile(std::string const & path) {
+	struct stat ss;
+
+	if (!stat(path.c_str(), &ss) && S_ISREG(ss.st_mode))
+		return true;
+	return false;
+}
