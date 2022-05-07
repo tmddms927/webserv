@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/event.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -71,5 +72,7 @@ public:
 	void setMethodHEAD();
 	void resSendMessage();
 };
+
+bool isFile(std::string const & path); 
 
 #endif

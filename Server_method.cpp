@@ -139,3 +139,12 @@ void Server::resSendMessage() {
 	std::cout << "[" << message << "]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
 }
+
+
+bool isFile(std::string const & path) {
+	struct stat ss;
+
+	if (!stat(path.c_str(), &ss) && S_ISREG(ss.st_mode))
+		return true;
+	return false;
+}
