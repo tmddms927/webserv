@@ -85,6 +85,16 @@ void HTTP::setPUTHeader() {
 	responseMessage.header += "Date: ";
 	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
 	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Content-Type: ";
+	responseMessage.header += "text/html";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Content-Length: ";
+	std::stringstream s;
+	s << responseMessage.body.length();
+	responseMessage.header += s.str();
+	responseMessage.header += "\r\n";
 }
 
 /*
@@ -139,4 +149,11 @@ void HTTP::setErrorResponse() {
 
 void HTTP::setResponseBody(std::string const & str) {
 	responseMessage.body = str;
+}
+
+bool HTTP::checkStatusError() {
+	if (status >= 400)
+		return true;
+	else
+		return false;
 }

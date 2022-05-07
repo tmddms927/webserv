@@ -13,7 +13,7 @@ int main() {
     }
 
 
-    const std::vector<servers> & aa = conf.getConfig();
+    // const std::vector<servers> & aa = conf.getConfig();
     // for (int i = 0; i < aa.size(); ++i)
 	// {
     //     std::cout << aa[i].cgi << ", ";

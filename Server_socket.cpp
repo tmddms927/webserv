@@ -1,5 +1,8 @@
 #include "Server.hpp"
 
+/*
+** server socket 구동하기
+*/
 void Server::socketRun() {
 	try {
 		socketInit();
@@ -11,6 +14,9 @@ void Server::socketRun() {
 	}
 }
 
+/*
+** server socket init
+*/
 void Server::socketInit() {
 	int size;
 	int fd;
@@ -48,6 +54,9 @@ void Server::socketInit() {
 	std::cout << "server socker init complete!" << std::endl;
 }
 
+/*
+** request가 어떤 port로 들어왔는지 찾아주기
+*/
 uintptr_t Server::checkPort(int const & i, int const & port) const {
 	for (int j = 0; j < i; ++j) {
 		if (config[j].port == port) {

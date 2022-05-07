@@ -85,6 +85,7 @@ private:
     ResponseMessage responseMessage;
     int             status;
     // uintptr_t       response_fd;
+    //temp error val
 
     int             process_request_line();
     int             process_request_headers();
@@ -131,9 +132,7 @@ public:
     void setDELETEHeader();
     void setResponseBody(std::string const & str);
     void setErrorResponse();
+    bool checkStatusError();
 };
-
-
-
 
 #endif

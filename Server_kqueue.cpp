@@ -31,7 +31,9 @@ void Server::kqueueEventRun() {
 
 			if (new_events == -1)
 				throw "kevent() error";
-			if (curr_event->flags & EV_ERROR)
+			// if (curr_event->flags & EV_ERROR)
+			// 	kqueueEventError();
+			if (curr_event->flags & EV_EOF)
 				kqueueEventError();
 			if (curr_event->filter == EVFILT_READ)
 				kqueueEventRead();
@@ -91,8 +93,9 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-	// std::cout << "[ request message! ]" << std::endl;
-	// std::cout << "[" << buf << "]" << std::endl;
+	// std::cout << "===============================" << std::endl;
+	// std::cout << "[[[[" << buf << "]]]]" << std::endl;
+	// std::cout << "===============================" << std::endl;
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client();
@@ -130,9 +133,9 @@ void Server::finishedRead() {
 */
 void Server::kqueueEventWrite() {
 	resSendMessage();
-	clients[curr_event->ident].resetHTTP();
 	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 	change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
+	clients[curr_event->ident].resetHTTP();
 }
 
 /*
@@ -152,6 +155,7 @@ void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint
 void Server::disconnect_client()
 {
 	std::cout << "client disconnected: " << curr_event->ident << std::endl;
+
 	close(curr_event->ident);
 	clients.erase(curr_event->ident);
 }

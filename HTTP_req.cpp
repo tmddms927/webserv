@@ -28,7 +28,7 @@ void HTTP::reqInputBuf(std::string const & str) {
 
             HTTPHeaderField::iterator it_content_len = requestMessage.header_in.find(CONTENT_LENGTH_STR);
             if (it_content_len != requestMessage.header_in.end())
-                requestMessage.content_length =  std::strtod(it_content_len->second.c_str(), 0);
+                requestMessage.content_length = std::strtod(it_content_len->second.c_str(), 0);
 
             HTTPHeaderField::iterator it_transfer_enco = requestMessage.header_in.find(TRANSFER_ENCODING_STR);
             if (it_transfer_enco != requestMessage.header_in.end() && it_transfer_enco->second == "chunked")
@@ -37,8 +37,11 @@ void HTTP::reqInputBuf(std::string const & str) {
             requestMessage.request_step = CLIENT_READ_REQ_BODY;
         }
         if (requestMessage.request_step == CLIENT_READ_REQ_BODY &&
-                process_request_body() == SUCCESS)
+                process_request_body() == SUCCESS) {
+            if (requestMessage.method == "POST" && requestMessage.body.size() == 0)
+                throw NOT_ALLOWED;
             requestMessage.request_step = CLIENT_READ_FINISH;
+                }
         if (requestMessage.request_step == CLIENT_READ_FINISH)
             status = 0;
     } catch (int & err) {
@@ -55,8 +58,6 @@ void HTTP::reqInputBuf(std::string const & str) {
 int HTTP::process_request_line() {
     std::size_t index;
 
-    // std::cout << "=====================\n" <<  requestMessage.buf << std::endl << "=====================\n";
-
     size_t found;
     if ((found = requestMessage.buf.find("\r\n")) == std::string::npos)
         return FAIL;
@@ -67,8 +68,10 @@ int HTTP::process_request_line() {
     std::vector<std::string> request_line_buf;
     ft_split(request_line_buf, temp, " ");
 
-    if (request_line_buf.size() != 3)
+    if (request_line_buf.size() != 3) {
+        // std::cout << "GGiyaaaakkkkkkkk!!!!! : [" << temp << "]" << std::endl;
         throw NOT_ALLOWED;
+    }
 
     // HTTP-version
     requestMessage.http_version = request_line_buf.back();
@@ -91,7 +94,6 @@ int        HTTP::process_request_headers() {
     size_t found;
     if ((found = requestMessage.buf.find("\r\n\r\n")) == std::string::npos)
         return FAIL;
-
     std::string temp = requestMessage.buf.substr(0, found);
     requestMessage.buf = requestMessage.buf.substr(found + 4);
 
@@ -133,10 +135,10 @@ int     HTTP::process_request_body() {
 ** request message - content-length를 받는 함수
 */
 int HTTP::reqBodyContentLength() {
-    if (requestMessage.content_length > RECIEVE_BODY_MAX_SIZE) //content_length가 기준인지 읽어진 body 사이즈 기준인지 애매함
+    if (requestMessage.content_length > REQUEST_BODY_MAX_SIZE) //content_length가 기준인지 읽어진 body 사이즈 기준인지 애매함
         throw PATLOAD_TOO_LARGE;
     requestMessage.body += requestMessage.buf.substr(0, requestMessage.content_length - requestMessage.body.size());
-    std::cout << "requestMessage.body : " << requestMessage.body << std::endl;
+    // std::cout << "requestMessage.body : " << requestMessage.body << std::endl;
     if (requestMessage.body.size() >= requestMessage.content_length)
         return SUCCESS;
     return FAIL;
@@ -168,13 +170,11 @@ int HTTP::reqBodyChunked() {
                 return FAIL;
             } else {
                 requestMessage.body += requestMessage.chunk.getContent();
-                if (requestMessage.body.size() > RECIEVE_BODY_MAX_SIZE)
+                if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
                     throw PATLOAD_TOO_LARGE;
             }
-            std::cout << "======================1 : " << found << ", " << requestMessage.buf.length() << std::endl;
             requestMessage.buf = requestMessage.buf.substr(found);
             requestMessage.chunk.initChunk();
-            std::cout << "======================2" << std::endl;
             continue;
         }
     }

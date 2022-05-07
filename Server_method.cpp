@@ -93,11 +93,12 @@ void Server::setMethodPost() {
 
 	req_body = clients[curr_event->ident].getBody();
 	write(fd, req_body.c_str(), req_body.length());
-	clients[curr_event->ident].setStatus(405);
+	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody("");
 	clients[curr_event->ident].setResponseLine();
 	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setPOSTHeader();
+	// exit(1);
 }
 
 void Server::setMethodDELETE() {
@@ -123,12 +124,11 @@ void Server::setMethodDELETE() {
 }
 
 void Server::setMethodPUT() {
-	std::cout << "=====================" << clients[curr_event->ident].getStatus() << std::endl;
-
-	clients[curr_event->ident].setStatus(204);
+	clients[curr_event->ident].setStatus(200);
+	clients[curr_event->ident].setResponseBody("good!");
 	// setError();
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setDELETEHeader();
+	clients[curr_event->ident].setPUTHeader();
 }
 
 void Server::setMethodHEAD() {
@@ -166,7 +166,7 @@ void Server::resSendMessage() {
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
 	// message += "\r\n\r\n";
-	std::cout << "[ response message! ]" << std::endl;
-	std::cout << "[" << message << "]" << std::endl;
+	std::cout << "[[[[ response message! ]]]]" << std::endl;
+	std::cout << "[[[[" << message << "]]]]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
 }
