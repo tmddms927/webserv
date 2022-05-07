@@ -19,7 +19,7 @@ void HTTP::reqInputBuf(std::string const & str) {
                 process_request_line() == SUCCESS) {
             //isAllowedMethod()
             if (requestMessage.method != GET && requestMessage.method != POST && requestMessage.method != DELETE &&
-                requestMessage.method != HEAD)
+                requestMessage.method != HEAD && requestMessage.method != PUT)
                 throw NOT_ALLOWED;
             requestMessage.request_step = CLIENT_READ_REQ_HEADER;
         }
@@ -197,7 +197,7 @@ bool HTTP::reqCheckFinished() {
 */
 void HTTP::reqPrint() {
     std::cout << "message : " << requestMessage.method << std::endl;
-    std::cout << "path : " << requestMessage.path << std::endl;
+    std::cout << "path : " << requestMessage.unparsed_uri << std::endl;
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
     std::cout << "body : " << requestMessage.body << std::endl;

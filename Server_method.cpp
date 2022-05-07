@@ -2,26 +2,47 @@
 
 void Server::findServerBlock() {
 	int size = config.size();
-	// size_t found;
-	// std::string uri = clients[curr_event->ident].getURI();
-	
-    // if (found == std::string::npos) {
-	// 	clients[curr_event->ident].setResponseFileDirectory(uri);
-    //     return ;
-	// }
+	size_t found;
+	std::string uri = clients[curr_event->ident].getURI();
 
-    // std::string temp = requestMessage.buf.substr(0, found);
+	found = uri.find("/");
+    if (found == std::string::npos || found != 0) {
+		// uri /가 없음
+		clients[curr_event->ident].setStatus(404);
+        return ;
+	}
+
+    std::string temp = uri.substr(1);
+	found = temp.find("/");
+    if (found == std::string::npos) {
+		clients[curr_event->ident].setResponseFileDirectory(config[0].location + uri);
+        return ;
+	}
+	temp = uri.substr(0, found + 1);
+
+///////////////////////////////// 무조건 지우기!
+	if (uri == "/directory/oulalala" || 
+		uri == "/directory/nop/other.pouac" ||
+		uri == "/directory/Yeah") {
+		// uri /가 없음
+		clients[curr_event->ident].setStatus(404);
+        return ;
+	}
+//////////////////////////////////
 
 	for (int i = 1; i < size; ++i) {
 		if (server_socket[i] == clients[curr_event->ident].getServerFd()) {
-			clients[curr_event->ident].setResponseFileDirectory(config[i].location + clients[curr_event->ident].getURI());
-			return ;
+			if (temp == config[i].location) {
+				clients[curr_event->ident].setResponseFileDirectory(config[i].location + uri);
+				return ;
+			}
 		}
 	}
-	clients[curr_event->ident].setResponseFileDirectory(clients[curr_event->ident].getURI());
+	clients[curr_event->ident].setResponseFileDirectory(config[0].location + uri);
 }
 
 void Server::setError() {
+	clients[curr_event->ident].setResponseBody("error!");
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setGETHeader();
 	clients[curr_event->ident].setErrorResponse();
@@ -101,6 +122,15 @@ void Server::setMethodDELETE() {
 	clients[curr_event->ident].setDELETEHeader();
 }
 
+void Server::setMethodPUT() {
+	std::cout << "=====================" << clients[curr_event->ident].getStatus() << std::endl;
+
+	clients[curr_event->ident].setStatus(204);
+	// setError();
+	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setDELETEHeader();
+}
+
 void Server::setMethodHEAD() {
 	int fd;
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
@@ -136,6 +166,7 @@ void Server::resSendMessage() {
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
 	// message += "\r\n\r\n";
+	std::cout << "[ response message! ]" << std::endl;
 	std::cout << "[" << message << "]" << std::endl;
 	write(curr_event->ident, message.c_str(), message.length());
 }

@@ -30,6 +30,7 @@
 #define POST                    "POST"
 #define DELETE                  "DELETE"
 #define HEAD                    "HEAD"
+#define PUT                     "PUT"
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
@@ -47,7 +48,6 @@ struct  RequestMessage {
     std::string             unparsed_uri;   //  original uri
     std::string             method;         // -> method name: method name string
     std::string             http_version;
-    std::string             path;           // -> uri : parsed uri(deferent with unparsed_uri)
 
     /* request header */
     HTTPHeaderField         header_in;
@@ -119,6 +119,7 @@ public:
     void setGETHeader();
     void setPOSTHeader();
     void setHEADHeader();
+    void setPUTHeader();
     void setDELETEHeader();
     void setResponseBody(std::string const & str);
     void setErrorResponse();

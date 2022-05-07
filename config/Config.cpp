@@ -12,7 +12,7 @@ Config::Config() : str(), config(1), raw(), global_config(){
 
 void Config::readFile() {
     // std::ifstream file("../test.conf");
-    std::ifstream file("/Users/jeokim/Documents/webserv/test.conf");
+    std::ifstream file("/Users/seungoh/webserv/test.conf");
 
     if (file.is_open()) {
         std::string buf;

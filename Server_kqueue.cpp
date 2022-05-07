@@ -91,9 +91,8 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-	std::cout << "======================" << std::endl;
-	std::cout << buf << std::endl;
-	std::cout << "======================" << std::endl;
+	std::cout << "[ request message! ]" << std::endl;
+	std::cout << "[" << buf << "]" << std::endl;
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client();
@@ -122,6 +121,8 @@ void Server::finishedRead() {
 		setMethodDELETE();
 	else if (clients[curr_event->ident].getMethod() == HEAD)
 		setMethodHEAD();
+	else if (clients[curr_event->ident].getMethod() == PUT)
+		setMethodPUT();
 }
 
 /*

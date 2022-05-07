@@ -24,7 +24,7 @@ std::string const & HTTP::getMethod() const {
 }
 
 std::string const & HTTP::getURI() const {
-    return requestMessage.path;
+    return requestMessage.unparsed_uri;
 }
 
 std::string & HTTP::getBody() {
@@ -52,7 +52,6 @@ void HTTP::resetHTTP() {
     requestMessage.request_line = "";
     requestMessage.unparsed_uri = "";
     requestMessage.method = "";
-    requestMessage.path = "";
     requestMessage.header_in.clear();
     requestMessage.body = "";
     requestMessage.chunk.content = "";
