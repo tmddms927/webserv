@@ -13,19 +13,6 @@ int main() {
         exit(1);
     }
 
-
-    // const std::vector<servers> & aa = conf.getConfig();
-    // for (int i = 0; i < aa.size(); ++i)
-	// {
-    //     std::cout << aa[i].cgi << ", ";
-    //     std::cout << aa[i].host << ", ";
-    //     std::cout << aa[i].location << ", ";
-    //     std::cout << aa[i].port << ", ";
-    //     std::cout << aa[i].root << std::endl;
-    // }
-
-    // std::cout << conf << std::endl;
-
     run:
         try {
             Server server(conf);

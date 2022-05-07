@@ -6,6 +6,10 @@ void HTTP::setResponseFileDirectory(std::string const & str) {
 	responseMessage.file_directory = str;
 }
 
+std::string const & HTTP::getResponseFileDirectory() {
+	return responseMessage.file_directory;
+}
+
 /*
 ** set response line
 */

@@ -7,7 +7,6 @@ void Server::findServerBlock() {
 
 	found = uri.find("/");
     if (found == std::string::npos || found != 0) {
-		// uri /가 없음
 		clients[curr_event->ident].setStatus(404);
         return ;
 	}
@@ -15,30 +14,22 @@ void Server::findServerBlock() {
     std::string temp = uri.substr(1);
 	found = temp.find("/");
     if (found == std::string::npos) {
-		clients[curr_event->ident].setResponseFileDirectory(config[0].location + uri);
+		clients[curr_event->ident].setResponseFileDirectory(config[0].root + uri);
+		isFile();
         return ;
 	}
 	temp = uri.substr(0, found + 1);
 
-///////////////////////////////// 무조건 지우기!
-	if (uri == "/directory/oulalala" || 
-		uri == "/directory/nop/other.pouac" ||
-		uri == "/directory/Yeah") {
-		// uri /가 없음
-		clients[curr_event->ident].setStatus(404);
-        return ;
-	}
-//////////////////////////////////
-
 	for (int i = 1; i < size; ++i) {
 		if (server_socket[i] == clients[curr_event->ident].getServerFd()) {
 			if (temp == config[i].location) {
-				clients[curr_event->ident].setResponseFileDirectory(config[i].location + uri);
+				clients[curr_event->ident].setResponseFileDirectory(config[i].root + uri);
+				isFile();
 				return ;
 			}
 		}
 	}
-	clients[curr_event->ident].setResponseFileDirectory(config[0].location + uri);
+	// isFile();
 }
 
 /*
@@ -67,7 +58,7 @@ void Server::setResMethodGET() {
 
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
-	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
 
@@ -92,7 +83,7 @@ void Server::setResMethodPOST() {
 
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
-	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
 
@@ -123,7 +114,7 @@ void Server::setResMethodDELETE() {
 
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
-	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
 	
@@ -141,9 +132,13 @@ void Server::setResMethodHEAD() {
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
 	int len;
 
+/////////
+return changeStatusToError(405);
+/////////
+
 	// todo 파일인지 경로인지 확인 필요!
 	// 경로면 서버의 인덱스 확인
-	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
 
@@ -190,10 +185,16 @@ void Server::changeStatusToError(int st) {
 }
 
 
-bool isFile(std::string const & path) {
+void Server::isFile() {
+	std::string path = clients[curr_event->ident].getResponseFileDirectory();
 	struct stat ss;
 
-	if (!stat(path.c_str(), &ss) && S_ISREG(ss.st_mode))
-		return true;
-	return false;
+	if (stat(path.c_str(), &ss) == -1) {
+		return changeStatusToError(401);
+	}
+	// directory
+	if (S_ISDIR(ss.st_mode)) {
+		// global_config.index = "index"
+		clients[curr_event->ident].setResponseFileDirectory(path + "index");
+	}
 }

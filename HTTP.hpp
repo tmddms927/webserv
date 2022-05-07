@@ -122,6 +122,7 @@ public:
 
 	/* response function */
 	void setResponseFileDirectory(std::string const & str);
+	std::string const & getResponseFileDirectory();
 	void setResponseLine();
 	void setGETHeader();
 	void setPOSTHeader();

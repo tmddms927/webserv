@@ -28,7 +28,8 @@
 */
 class Server {
 private:
-	const std::vector<servers>		config;
+	//config const로 바꾸기
+	std::vector<servers>		config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;
@@ -74,8 +75,8 @@ public:
 	void sendResMessage();
 	void setResDefaultHeaderField();
 	void changeStatusToError(int st);
+	void isFile(); 
 };
 
-bool isFile(std::string const & path); 
 
 #endif
