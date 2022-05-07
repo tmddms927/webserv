@@ -18,9 +18,11 @@ private:
     std::string               conf_file;
 private:
     void    readFile();
-    void    setGlobalConfig();
+    void    setMainConfig();
     void    validateServerVariables();
     void    eraseCompleted();
+    void    isExist();
+    void    setRootDir();
     class   GlobalConfigException : public std::exception {
     public:
         const char *what() const throw();

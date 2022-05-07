@@ -5,13 +5,11 @@
 #include <iostream>
 #include <sstream>
 #include "Config.hpp"
+#include "unistd.h"
 
-Config::Config(std::string const & conf_file) : str(), config(1), raw(), global_config(), conf_file(conf_file){
-
-}
+Config::Config(std::string const & conf_file) : str(), config(1), raw(), global_config(), conf_file(conf_file){}
 
 void Config::readFile() {
-    // std::ifstream file("../test.conf");
     std::ifstream file(conf_file);
 
     if (file.is_open()) {
@@ -37,18 +35,20 @@ void Config::eraseCompleted() {
 }
 
 
-void Config::setGlobalConfig() {
+void Config::setMainConfig() {
+    setRootDir();
     if (raw[0].find(CLIENT_BODY_SIZE) != std::string::npos) {
         std::stringstream ss(raw[0].substr(strlen("client_max_body_size ")));
         ss >> global_config.client_max_body_size;
     }
-    if (raw[1].find(DEFAULT_ERROR) != std::string::npos) {
+    if (raw[1].find(DEFAULT_ERROR) != std::string::npos)
         global_config.err_page = raw[1].substr(strlen(DEFAULT_ERROR));
-    }
-    if (raw[2].find(HOSTV) != std::string::npos)
-        config[0].host = raw[2].substr(strlen(HOSTV));
-    if (raw[3].find(PORT) != std::string::npos) {
-        std::stringstream ss(raw[3].substr(strlen(PORT)));
+    if (raw[2].find(INDEXV) != std::string::npos)
+        global_config.index = raw[2].substr(strlen(INDEXV));
+    if (raw[3].find(HOSTV) != std::string::npos)
+        config[0].host = raw[3].substr(strlen(HOSTV));
+    if (raw[4].find(PORT) != std::string::npos) {
+        std::stringstream ss(raw[4].substr(strlen(PORT)));
         ss >> config[0].port;
         eraseCompleted();
         return;
@@ -56,6 +56,26 @@ void Config::setGlobalConfig() {
     throw GlobalConfigException();
 }
 
+void Config::isExist() {
+    std::vector<std::string> files;
+    files.push_back(global_config.index);
+    files.push_back(global_config.err_page);
+
+    for (int i = 0; i < files.size(); i++) {
+        std::ifstream file(files[i]);
+        if (file.is_open()) {
+            file.close();
+            continue;
+        }
+        throw GlobalConfigException();
+    }
+}
+void Config::setRootDir() {
+    char buf[1024];
+    std::memset(buf, 0, 1024);
+    getcwd(buf, 1024);
+    config[0].root = buf;
+}
 void Config::validateServerVariables() {
     while (!raw.empty()) {
         std::vector<std::string>::iterator it = raw.begin();
@@ -68,7 +88,8 @@ void Config::validateServerVariables() {
 
 void Config::runParse() {
     readFile();
-    setGlobalConfig();
+    setMainConfig();
+    isExist();
     validateServerVariables();
 }
 
@@ -82,6 +103,11 @@ global const & Config::getGlobal() const{
 std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "Config result" << std::endl;
     std::cout << "=============================================="<< std::endl;
+    std::cout << "--------------------------------------" << std::endl;
+    std::cout << "client_max_body_size : " << config.global_config.client_max_body_size << std::endl;
+    std::cout << "default_error_page : " << config.global_config.err_page << std::endl;
+    std::cout << "index : " << config.global_config.index << std::endl;
+    std::cout << "--------------------------------------" << std::endl;
     for (int i = 0; i < config.config.size(); ) {
         std::cout << "--------------------------------------" << std::endl;
         std::cout << "port : " << config.config[i].port << std::endl;
@@ -94,6 +120,8 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "==============================================";
     return os;
 }
+
+
 
 const char *Config::GlobalConfigException::what() const throw(){
     return "Check global-value rule";

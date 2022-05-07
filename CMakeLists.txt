@@ -3,12 +3,9 @@ project(untitled1)
 
 set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address")
-add_executable(untitled1 main.cpp
-        Server_kqueue.cpp Server_socket.cpp HTTP_req.cpp
-        HTTPHeaderField.hpp Server.cpp Server.hpp
-        HTTP_res.cpp HeaderFieldInfo.hpp HeaderFieldInfo.cpp HTTP.cpp HTTP.hpp
-        config/Config.cpp config/Config.hpp config/ServerBlock.cpp config/ServerBlock.hpp
-        config/util.h config/constant.h)
+file(GLOB SRC ./*.h ./*.hpp ./*.cpp config/*.h config/*.cpp config/*.hpp)
+file(GLOB CONF_TEST_SRC config/*.h config/*.cpp config/*.hpp)
+add_executable(untitled1 ${SRC})
 
 
 
@@ -22,7 +19,7 @@ include_directories(gtest/googletest/include)
 include_directories(gtest/googlemock/include)
 
 #######################################################################test_config
-add_executable(config config/Config.cpp config/Config.hpp config/ServerBlock.cpp config/ServerBlock.hpp test/Config_test.cc config/util.h config/constant.h)
+add_executable(config test/Config_test.cc ${CONF_TEST_SRC})
 
 #Link with GoogleTest
 target_link_libraries(config gtest gtest_main)

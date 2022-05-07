@@ -12,5 +12,6 @@
 #define CGI "cgi "
 #define CLIENT_BODY_SIZE "client_max_body_size "
 #define DEFAULT_ERROR "default_error_page "
+#define INDEXV "index "
 
 #endif //UNTITLED1_CONSTANT_H

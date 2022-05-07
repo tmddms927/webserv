@@ -9,6 +9,7 @@
 typedef struct  global_s {
     std::string err_page;
     int         client_max_body_size;
+    std::string index;
 }               global;
 
 typedef struct  servers_s {
