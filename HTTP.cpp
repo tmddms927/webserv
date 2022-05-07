@@ -39,13 +39,13 @@ void HTTP::setStatus(int const & s) {
     this->status = s;
 }
 
-uintptr_t const & HTTP::getResponseFd() {
-    return response_fd;
-}
+// uintptr_t const & HTTP::getResponseFd() {
+//     return response_fd;
+// }
 
-void HTTP::setResponseFd(uintptr_t const & s) {
-    this->response_fd = s;
-}
+// void HTTP::setResponseFd(uintptr_t const & s) {
+//     this->response_fd = s;
+// }
 
 void HTTP::resetHTTP() {
     requestMessage.buf = "";
@@ -69,7 +69,7 @@ void HTTP::resetHTTP() {
     responseMessage.body = "";
 
     status = 0;
-    response_fd = -1;
+    // response_fd = -1;
 }
 
 std::string const & HTTP::getResponseLine() {

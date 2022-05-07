@@ -118,6 +118,10 @@ void Server::finishedRead() {
 		setMethodGet();
 	else if (clients[curr_event->ident].getMethod() == POST)
 		setMethodPost();
+	else if (clients[curr_event->ident].getMethod() == DELETE)
+		setMethodDELETE();
+	else if (clients[curr_event->ident].getMethod() == HEAD)
+		setMethodHEAD();
 }
 
 /*

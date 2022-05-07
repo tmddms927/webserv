@@ -2,6 +2,15 @@
 
 void Server::findServerBlock() {
 	int size = config.size();
+	// size_t found;
+	// std::string uri = clients[curr_event->ident].getURI();
+	
+    // if (found == std::string::npos) {
+	// 	clients[curr_event->ident].setResponseFileDirectory(uri);
+    //     return ;
+	// }
+
+    // std::string temp = requestMessage.buf.substr(0, found);
 
 	for (int i = 1; i < size; ++i) {
 		if (server_socket[i] == clients[curr_event->ident].getServerFd()) {
@@ -44,7 +53,7 @@ void Server::setMethodGet() {
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseBody(buf);
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
+	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setGETHeader();
 }
 
@@ -66,8 +75,56 @@ void Server::setMethodPost() {
 	clients[curr_event->ident].setStatus(405);
 	clients[curr_event->ident].setResponseBody("");
 	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
+	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
 	clients[curr_event->ident].setPOSTHeader();
+}
+
+void Server::setMethodDELETE() {
+	// int fd;
+	// int len;
+	std::string req_body;
+
+	// todo 파일인지 경로인지 확인 필요!
+	// 경로면 서버의 인덱스 확인
+	// fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	// if (fd < 0) {
+	// 	clients[curr_event->ident].setStatus(404);
+	// 	setError();
+	// }
+
+	req_body = clients[curr_event->ident].getBody();
+	// write(fd, req_body.c_str(), req_body.length());
+	clients[curr_event->ident].setStatus(405);
+	clients[curr_event->ident].setResponseBody("");
+	clients[curr_event->ident].setResponseLine();
+	// clients[curr_event->ident].setResponseFd(static_cast<uintptr_t>(fd));
+	clients[curr_event->ident].setDELETEHeader();
+}
+
+void Server::setMethodHEAD() {
+	int fd;
+	char buf[RECIEVE_BODY_MAX_SIZE + 2];
+	int len;
+
+	// todo 파일인지 경로인지 확인 필요!
+	// 경로면 서버의 인덱스 확인
+	fd = open(clients[curr_event->ident].getURI().c_str(), O_RDONLY);
+	if (fd < 0) {
+		clients[curr_event->ident].setStatus(404);
+		setError();
+	}
+
+	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
+	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
+	if (len > RECIEVE_BODY_MAX_SIZE) {
+		// 내용물이 너무 큼
+		clients[curr_event->ident].setStatus(404);
+		setError();
+	}
+
+	clients[curr_event->ident].setStatus(405);
+	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setHEADHeader();
 }
 
 void Server::resSendMessage() {

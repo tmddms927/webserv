@@ -43,6 +43,7 @@ void HTTP::reqInputBuf(std::string const & str) {
             status = 0;
     } catch (int & err) {
         // 에러 발생 시 error 코드를 status에 할당
+        requestMessage.request_step = CLIENT_READ_FINISH;
         std::cout << "  << CLIENT_READ_ERROR -->" << err  <<  "<-- >>  " << std::endl;
         status = err;
     }

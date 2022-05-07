@@ -73,6 +73,33 @@ void HTTP::setPOSTHeader() {
 	responseMessage.header += "\r\n";
 }
 
+/*
+** DELETE
+*/
+void HTTP::setDELETEHeader() {
+	responseMessage.header = "Server: ";
+	responseMessage.header += "Webserv";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Date: ";
+	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+}
+
+/*
+** HEAD
+*/
+void HTTP::setHEADHeader() {
+	//todo 수정!
+	responseMessage.header = "Server: ";
+	responseMessage.header += "Webserv";
+	responseMessage.header += "\r\n";
+
+	responseMessage.header += "Date: ";
+	responseMessage.header += "Tue, 26 Apr 2022 10:59:45 GMT";
+	responseMessage.header += "\r\n";
+}
+
 void HTTP::setErrorResponse() {
 	responseMessage.header = "Server: ";
 	responseMessage.header += "Webserv";

@@ -67,6 +67,8 @@ public:
 	void setError();
 	void setMethodGet();
 	void setMethodPost();
+	void setMethodDELETE();
+	void setMethodHEAD();
 	void resSendMessage();
 };
 

@@ -76,7 +76,7 @@ private:
     RequestMessage  requestMessage;
     ResponseMessage responseMessage;
     int             status;
-    uintptr_t       response_fd;
+    // uintptr_t       response_fd;
 
     int             process_request_line();
     int             process_request_headers();
@@ -95,8 +95,8 @@ public:
     std::string const & getURI() const;
     std::string & getBody();
     int const & getStatus();
-    uintptr_t const & getResponseFd();
-    void setResponseFd(uintptr_t const & s);
+    // uintptr_t const & getResponseFd();
+    // void setResponseFd(uintptr_t const & s);
     void setStatus(int const & s);
     std::string const & getResponseLine();
     std::string const & getResponseHeader();
@@ -118,6 +118,8 @@ public:
     void setResponseLine();
     void setGETHeader();
     void setPOSTHeader();
+    void setHEADHeader();
+    void setDELETEHeader();
     void setResponseBody(std::string const & str);
     void setErrorResponse();
 };
