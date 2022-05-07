@@ -54,8 +54,7 @@ void HTTP::resetHTTP() {
     requestMessage.method = "";
     requestMessage.header_in.clear();
     requestMessage.body = "";
-    requestMessage.chunk.content = "";
-    requestMessage.chunk.length = -1;
+    requestMessage.chunk.initChunk();
     requestMessage.non_body = false;
     requestMessage.content_length = -1;
     requestMessage.chunked = false;

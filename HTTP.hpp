@@ -34,9 +34,17 @@
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
 
-struct  Chunk {
+class  Chunk {
+private:
     long                    length;
     std::string             content;
+public:
+    void initChunk();
+    void setLength(std::string const & len_str);
+    long appendContent(std::string const & content_part);
+
+    long const & getLength() const;
+    std::string const & getContent() const;
 };
 
 struct  RequestMessage {
