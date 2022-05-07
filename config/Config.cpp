@@ -6,13 +6,13 @@
 #include <sstream>
 #include "Config.hpp"
 
-Config::Config() : str(), config(1), raw(), global_config(){
+Config::Config(std::string const & conf_file) : str(), config(1), raw(), global_config(), conf_file(conf_file){
 
 }
 
 void Config::readFile() {
     // std::ifstream file("../test.conf");
-    std::ifstream file("/Users/seungoh/webserv/test.conf");
+    std::ifstream file(conf_file);
 
     if (file.is_open()) {
         std::string buf;
