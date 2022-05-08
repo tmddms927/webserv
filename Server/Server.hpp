@@ -30,6 +30,7 @@ private:
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
+	std::map<uintptr_t, size_t>		file_fd;
 
 public:
 	/* Server.cpp */
@@ -52,26 +53,35 @@ public:
 	void kqueueEventRead();
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
+	void kqueueEventReadFileFd();
 	void finishedRead();
 	void checkMethod();
 	void kqueueEventWrite();
 	void change_events(uintptr_t const & ident,
 			int16_t const & filter, uint16_t const & flags);
 	void disconnect_client();
-	int checkServerSocket(uintptr_t const & fd);
+	int checkServerSocket(uintptr_t const & fd) const;
+	bool checkFileFd() const;
+	void disconnect_file_fd(int const & flag);
 
 	/* Server_method */
     void findServerBlock();
 
-	void setResErrorMes();
+	void setResErrorMes(int const & client);
 	void setResMethodGET();
 	void setResMethodPOST();
 	void setResMethodPUT();
 	void setResMethodDELETE();
 	void setResMethodHEAD();
+
+	void readResErrorFile();
+	void readResGETFile();
+	void writeResPOSTFile();
+	void readResHEADFile();
+
 	void sendResMessage();
 	void setResDefaultHeaderField();
-	void changeStatusToError(int const & st);
+	void changeStatusToError(int const & client, int const & st);
 	void isFile(); 
 };
 

@@ -1,7 +1,9 @@
 #include "Server.hpp"
+#include <stdio.h>
 
 /*
 ** find server block
+** 아예 수정해야 됨!
 */
 void Server::findServerBlock() {
 	int size = config.size();
@@ -39,19 +41,18 @@ void Server::findServerBlock() {
 /*
 ** set error response message
 */
-void Server::setResErrorMes() {
+void Server::setResErrorMes(int const & client) {
 	int fd;
-	char buf[RECIEVE_BODY_MAX_SIZE];
-	int len;
 
 	fd = open(global_config.err_page.c_str(), O_RDONLY);
-	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE);
-	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE);
-
-	setResDefaultHeaderField();
-	clients[curr_event->ident].setResponseBody(buf);
-	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
-	clients[curr_event->ident].setResponseLine();
+	if (fd < 0) {
+		setResDefaultHeaderField();
+		clients[client].setResponseLine();
+	}
+	else {
+		file_fd[fd] = client;
+		change_events(client, EVFILT_READ, EV_ADD | EV_ENABLE);
+	}
 }
 
 /*
@@ -59,25 +60,14 @@ void Server::setResErrorMes() {
 */
 void Server::setResMethodGET() {
 	int fd;
-	char buf[RECIEVE_BODY_MAX_SIZE + 2];
-	int len;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
-		return changeStatusToError(404);
-
-	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
-	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
-	if (len > RECIEVE_BODY_MAX_SIZE)
-		return changeStatusToError(404);
-	else if (len < 0)
-		return changeStatusToError(500);
-
-	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(200);
-	clients[curr_event->ident].setResponseBody(buf);
-	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
-	clients[curr_event->ident].setResponseLine();
+		changeStatusToError(curr_event->ident, 404);
+	else {
+		file_fd[fd] = curr_event->ident;
+		change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
+	}
 }
 
 /*
@@ -85,24 +75,14 @@ void Server::setResMethodGET() {
 */
 void Server::setResMethodPOST() {
 	int fd;
-	std::string req_body;
-	size_t		len;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
-		return changeStatusToError(404);
-
-	req_body = clients[curr_event->ident].getBody();
-	len = write(fd, req_body.c_str(), req_body.length());
-	if (len != req_body.length())
-		return changeStatusToError(404);
-
-	// post body 있어야되나..?
-	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(200);
-	// clients[curr_event->ident].setResponseBody("");
-	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
-	clients[curr_event->ident].setResponseLine();
+		changeStatusToError(curr_event->ident, 404);
+	else {
+		file_fd[fd] = curr_event->ident;
+		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+	}
 }
 
 /*
@@ -120,18 +100,11 @@ void Server::setResMethodPUT() {
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
-	int fd;
-	std::string req_body;
+	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
+		return changeStatusToError(curr_event->ident, 404);
 
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
-	if (fd < 0)
-		return changeStatusToError(404);
-	
-	// post body 있어야되나..?
 	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(405);
-	clients[curr_event->ident].setResponseBody("");
-	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
+	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
 }
 
@@ -140,25 +113,97 @@ void Server::setResMethodDELETE() {
 */
 void Server::setResMethodHEAD() {
 	int fd;
-	char buf[RECIEVE_BODY_MAX_SIZE + 2];
-	int len;
-
-/////////
-return changeStatusToError(405);
-/////////
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
-		return changeStatusToError(404);
+		changeStatusToError(curr_event->ident, 404);
+	else {
+		file_fd[fd] = curr_event->ident;
+		change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
+	}
+}
 
-	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
-	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
-	if (len > RECIEVE_BODY_MAX_SIZE)
-		return changeStatusToError(404);
+/*
+** read ERROR file
+*/
+void Server::readResErrorFile() {
+	char buf[RECIEVE_BODY_MAX_SIZE + 1];
+	size_t len;
 
+	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
+	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0) {
+		clients[curr_event->ident].setResponseBody(buf);
+		clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
+	}
 	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
+}
+
+/*
+** read GET file
+*/
+void Server::readResGETFile() {
+	char buf[RECIEVE_BODY_MAX_SIZE + 1];
+	size_t len;
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
+	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	if (len > RECIEVE_BODY_MAX_SIZE)
+		return changeStatusToError(fd, 404);
+	else if (len < 0)
+		return changeStatusToError(fd, 500);
+
+	clients[fd].setStatus(200);
+	clients[fd].setResponseBody(buf);
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
+	setResDefaultHeaderField();
+	clients[fd].setResponseLine();
+}
+
+/*
+** write POST file
+*/
+void Server::writeResPOSTFile() {
+	std::string req_body;
+	size_t		len;
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	req_body = clients[fd].getBody();
+	len = write(curr_event->ident, req_body.c_str(), req_body.length());
+	if (len != req_body.length())
+		return changeStatusToError(fd, 404);
+
+	clients[fd].setStatus(200);
+	// post body 있어야되나..?
+	setResDefaultHeaderField();
+	clients[fd].setResponseBody("");
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
+	clients[fd].setResponseLine();
+}
+
+/*
+** read HEAD file
+*/
+void Server::readResHEADFile() {
+	char buf[RECIEVE_BODY_MAX_SIZE + 1];
+	size_t len;
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
+	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	if (len > RECIEVE_BODY_MAX_SIZE)
+		return changeStatusToError(fd, 404);
+	else if (len < 0)
+		return changeStatusToError(fd, 500);
+
+	clients[fd].setStatus(200);
+	setResDefaultHeaderField();
+	clients[fd].setResponseLine();
 }
 
 /*
@@ -172,14 +217,16 @@ void Server::sendResMessage() {
 	message += clients[curr_event->ident].getResponseHeader();
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
+
 	/////////////////////////////////////////////////////
 	std::cout << "==========================" << std::endl;
-	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	std::cout << "[[[[ request message! ]]]]" << std::endl;
-	clients[curr_event->ident].reqPrint();
+	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	// std::cout << "[[[[ request message! ]]]]" << std::endl;
+	// clients[curr_event->ident].reqPrint();
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
 	/////////////////////////////////////////////////////
+
 	write(curr_event->ident, message.c_str(), message.length());
 }
 
@@ -196,9 +243,9 @@ void Server::setResDefaultHeaderField() {
 /*
 ** change status to error status
 */
-void Server::changeStatusToError(int const & st) {
-	clients[curr_event->ident].setStatus(st);
-	setResErrorMes();
+void Server::changeStatusToError(int const & client, int const & st) {
+	clients[client].setStatus(st);
+	setResErrorMes(client);
 }
 
 /*
@@ -209,7 +256,7 @@ void Server::isFile() {
 	struct stat ss;
 
 	if (stat(path.c_str(), &ss) == -1)
-		return changeStatusToError(401);
+		return changeStatusToError(curr_event->ident, 401);
 	if (S_ISDIR(ss.st_mode))
 		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
 }

@@ -75,6 +75,8 @@ void Server::kqueueEventError() {
 void Server::kqueueEventRead() {
 	if (checkServerSocket(curr_event->ident) != -1)
 		kqueueConnectAccept();
+	else if (checkFileFd())
+		kqueueEventReadFileFd();
 	else
 		kqueueEventReadClient();
 }
@@ -117,14 +119,42 @@ void Server::kqueueEventReadClient() {
 }
 
 /*
+** read data from fd
+*/
+void Server::kqueueEventReadFileFd() {
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	if (clients[fd].getStatus() != 0) {
+		readResErrorFile();
+		disconnect_file_fd(EVFILT_READ);
+	}
+	else if (clients[fd].getMethod() == GET) {
+		readResGETFile();
+		disconnect_file_fd(EVFILT_READ);
+	}
+	else if (clients[fd].getMethod() == POST) {
+		writeResPOSTFile();
+		disconnect_file_fd(EVFILT_WRITE);
+	}
+	else if (clients[fd].getMethod() == HEAD) {
+		readResHEADFile();
+		disconnect_file_fd(EVFILT_READ);
+	}
+	change_events(fd, EVFILT_WRITE, EV_ENABLE);
+}
+
+/*
 ** read가 끝났을 때 처리
 */
 void Server::finishedRead() {
-	change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+	// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
 	findServerBlock();
 	checkMethod();
+	if (clients[curr_event->ident].getStatus() != -1)
+		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 }
 
 /*
@@ -132,7 +162,7 @@ void Server::finishedRead() {
 */
 void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() != 0)
-		setResErrorMes();
+		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET)
 		setResMethodGET();
 	else if (clients[curr_event->ident].getMethod() == POST)
@@ -170,8 +200,7 @@ void Server::change_events(uintptr_t const & ident, int16_t const & filter,
 /*
 ** disconnect client : close fd & erase fd at fd_list
 */
-void Server::disconnect_client()
-{
+void Server::disconnect_client() {
 	std::cout << "client disconnected: " << curr_event->ident << std::endl;
 
 	close(curr_event->ident);
@@ -181,7 +210,7 @@ void Server::disconnect_client()
 /*
 ** server block 확인
 */
-int Server::checkServerSocket(uintptr_t const & fd) {
+int Server::checkServerSocket(uintptr_t const & fd) const {
 	int size = config.size();
 
 	for (int i = 0; i < size; ++i) {
@@ -189,4 +218,23 @@ int Server::checkServerSocket(uintptr_t const & fd) {
 			return i;
 	}
 	return -1;
+}
+
+/*
+** file fd인지 확인
+*/
+bool Server::checkFileFd() const {
+	if (file_fd.find(curr_event->ident) != file_fd.end())
+		return true;
+	else
+		return false;
+}
+
+/*
+** disconnect file fd : close fd & erase fd at file_fd
+*/
+void Server::disconnect_file_fd(int const & flag) {
+	change_events(file_fd[curr_event->ident], flag, EV_ENABLE);
+	close(curr_event->ident);
+	file_fd.erase(curr_event->ident);
 }
