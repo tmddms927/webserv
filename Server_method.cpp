@@ -60,7 +60,6 @@ void Server::setResMethodGET() {
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
-
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 2);
 	len = read(fd, buf, RECIEVE_BODY_MAX_SIZE + 2);
 	if (len > RECIEVE_BODY_MAX_SIZE)
@@ -84,7 +83,6 @@ void Server::setResMethodPOST() {
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
-
 	req_body = clients[curr_event->ident].getBody();
 	write(fd, req_body.c_str(), req_body.length());
 
@@ -184,7 +182,7 @@ void Server::isFile() {
 	struct stat ss;
 
 	if (stat(path.c_str(), &ss) == -1) {
-		return changeStatusToError(401);
+		return changeStatusToError(404);
 	}
 	// directory
 	if (S_ISDIR(ss.st_mode)) {

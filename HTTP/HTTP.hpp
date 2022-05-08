@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
-#include "config/Config.hpp"
+#include "../config/Config.hpp"
 
 #define ERROR   -1
 #define SUCCESS 0
@@ -36,15 +36,21 @@ typedef std::map<std::string, std::string> HTTPHeaderField;
 
 class  Chunk {
 private:
+	bool					isEnd;
 	long                    length;
 	std::string             content;
-public:
-	void initChunk();
-	void setLength(std::string const & len_str);
-	long appendContent(std::string const & content_part);
 
-	long const & getLength() const;
+public:
+	void				initChunk();
+
+	bool				isEndChunk();
+	void				setChunkEnd();
+
+	long const &		getLength() const;
 	std::string const & getContent() const;
+
+	void				setLength(std::string const & len_str);
+	long				appendContent(std::string const & content_part);
 };
 
 struct  RequestMessage {
@@ -112,7 +118,16 @@ public:
 	void resetHTTP();
 
 	/* request function */
-	void reqInputBuf(std::string const & str);
+	void	reqInputBuf(std::string const & str);
+	bool	isReadyRequestLine();
+	bool	isReadyRequestHeader();
+	bool	isReadyRequestBody();
+	void	parseRequestLine();
+	void	parseRequestHeader();
+	bool	parseRequestBody(); // body가 끝까지 읽은 것을 체크하기 위해 boolean을 리턴
+	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
+	void    addHeader(std::string line);
+
 
 	/* */
 	void reqPrint();
