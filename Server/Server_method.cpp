@@ -1,16 +1,21 @@
 #include "Server.hpp"
 
+/*
+** find server block
+*/
 void Server::findServerBlock() {
 	int size = config.size();
 	size_t found;
 	std::string uri = clients[curr_event->ident].getURI();
 
+	// 처음에 / 없을 때
 	found = uri.find("/");
     if (found == std::string::npos || found != 0) {
 		clients[curr_event->ident].setStatus(404);
         return ;
 	}
 
+	// server block이 없을 경우
     std::string temp = uri.substr(1);
 	found = temp.find("/");
     if (found == std::string::npos) {
@@ -29,7 +34,6 @@ void Server::findServerBlock() {
 			}
 		}
 	}
-	// isFile();
 }
 
 /*
@@ -50,13 +54,14 @@ void Server::setResErrorMes() {
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** set GET response message
+*/
 void Server::setResMethodGET() {
 	int fd;
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
 	int len;
 
-	// todo 파일인지 경로인지 확인 필요!
-	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
@@ -75,27 +80,34 @@ void Server::setResMethodGET() {
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** set POST response message
+*/
 void Server::setResMethodPOST() {
 	int fd;
 	std::string req_body;
+	size_t		len;
 
-	// todo 파일인지 경로인지 확인 필요!
-	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
 
 	req_body = clients[curr_event->ident].getBody();
-	write(fd, req_body.c_str(), req_body.length());
+	len = write(fd, req_body.c_str(), req_body.length());
+	if (len != req_body.length())
+		return changeStatusToError(404);
 
 	// post body 있어야되나..?
 	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
-	clients[curr_event->ident].setResponseBody("");
-	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
+	// clients[curr_event->ident].setResponseBody("");
+	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** set PUT response message
+*/
 void Server::setResMethodPUT() {
 	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
@@ -104,12 +116,13 @@ void Server::setResMethodPUT() {
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** set DELETE response message
+*/
 void Server::setResMethodDELETE() {
 	int fd;
 	std::string req_body;
 
-	// todo 파일인지 경로인지 확인 필요!
-	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
@@ -122,6 +135,9 @@ void Server::setResMethodDELETE() {
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** set HEAD response message
+*/
 void Server::setResMethodHEAD() {
 	int fd;
 	char buf[RECIEVE_BODY_MAX_SIZE + 2];
@@ -131,8 +147,6 @@ void Server::setResMethodHEAD() {
 return changeStatusToError(405);
 /////////
 
-	// todo 파일인지 경로인지 확인 필요!
-	// 경로면 서버의 인덱스 확인
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		return changeStatusToError(404);
@@ -147,6 +161,9 @@ return changeStatusToError(405);
 	clients[curr_event->ident].setResponseLine();
 }
 
+/*
+** send response message to client
+*/
 void Server::sendResMessage() {
 	std::string message;
 
@@ -155,8 +172,14 @@ void Server::sendResMessage() {
 	message += clients[curr_event->ident].getResponseHeader();
 	message += "\r\n";
 	message += clients[curr_event->ident].getResponseBody();
+	/////////////////////////////////////////////////////
+	std::cout << "==========================" << std::endl;
+	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	std::cout << "[[[[ request message! ]]]]" << std::endl;
+	clients[curr_event->ident].reqPrint();
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
+	/////////////////////////////////////////////////////
 	write(curr_event->ident, message.c_str(), message.length());
 }
 
@@ -173,22 +196,20 @@ void Server::setResDefaultHeaderField() {
 /*
 ** change status to error status
 */
-void Server::changeStatusToError(int st) {
+void Server::changeStatusToError(int const & st) {
 	clients[curr_event->ident].setStatus(st);
 	setResErrorMes();
 }
 
-
+/*
+** directory이면 index file 붙여주기
+*/
 void Server::isFile() {
 	std::string path = clients[curr_event->ident].getResponseFileDirectory();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1) {
+	if (stat(path.c_str(), &ss) == -1)
 		return changeStatusToError(401);
-	}
-	// directory
-	if (S_ISDIR(ss.st_mode)) {
-		// global_config.index = "index"
-		clients[curr_event->ident].setResponseFileDirectory(path + "index");
-	}
+	if (S_ISDIR(ss.st_mode))
+		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
 }

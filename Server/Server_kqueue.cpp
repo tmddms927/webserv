@@ -7,11 +7,18 @@ void Server::kqueueInit() {
 	this->kq = kqueue();
 	if (this->kq == -1)
 		throw "kqueue() error!";
+	addServerSocketKevent();
+}
 
+/*
+** server socket를 kqueue에 이벤트 등록
+*/
+void Server::addServerSocketKevent() {
 	int size = server_socket.size();
+
 	for (int i = 0; i < size; ++i)
 		change_events(server_socket[i], EVFILT_READ, EV_ADD | EV_ENABLE);
-	std::cout << "<<< server started! >>>" << std::endl;
+	std::cout << "<<< server started!!! >>>" << std::endl;
 }
 
 /*
@@ -21,32 +28,38 @@ void Server::kqueueEventRun() {
 	int new_events;
 
 	while (1) {
-		new_events = kevent(kq, &change_list[0], change_list.size(), event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
+		new_events = kevent(kq, &change_list[0], change_list.size(),
+							event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
 		change_list.clear();
 
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			// std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
-
 			if (new_events == -1)
 				throw "kevent() error";
-			// if (curr_event->flags & EV_ERROR)
-			// 	kqueueEventError();
-			if (curr_event->flags & EV_EOF)
-				kqueueEventError();
-			if (curr_event->filter == EVFILT_READ)
-				kqueueEventRead();
-			if (curr_event->filter == EVFILT_WRITE)
-				kqueueEventWrite();
+			checkKeventFilter();
 		}
 	}
 }
 
 /*
+** check kqueue filter
+*/
+void Server::checkKeventFilter() {
+	// if (curr_event->flags & EV_ERROR)
+	// 	kqueueEventError();
+	if (curr_event->flags & EV_EOF)
+		kqueueEventError();
+	if (curr_event->filter == EVFILT_READ)
+		kqueueEventRead();
+	if (curr_event->filter == EVFILT_WRITE)
+		kqueueEventWrite();
+}
+
+/*
 ** kqueue에서 error가 난 경우.
 */
-void Server::kqueueEventError(){
+void Server::kqueueEventError() {
 	if (checkServerSocket(curr_event->ident) != -1)
 		throw "server socket error";
 	else
@@ -93,9 +106,6 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-	// std::cout << "===============================" << std::endl;
-	// std::cout << "[[[[" << buf << "]]]]" << std::endl;
-	// std::cout << "===============================" << std::endl;
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client();
@@ -114,6 +124,13 @@ void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
 	findServerBlock();
+	checkMethod();
+}
+
+/*
+** check method
+*/
+void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() != 0)
 		setResErrorMes();
 	else if (clients[curr_event->ident].getMethod() == GET)
@@ -141,7 +158,8 @@ void Server::kqueueEventWrite() {
 /*
 ** connect client : add kqueue event & add fd_list
 */
-void Server::change_events(uintptr_t const & ident, int16_t const & filter, uint16_t const & flags)
+void Server::change_events(uintptr_t const & ident, int16_t const & filter,
+								uint16_t const & flags)
 {
 	struct kevent temp_event;
 
@@ -160,6 +178,9 @@ void Server::disconnect_client()
 	clients.erase(curr_event->ident);
 }
 
+/*
+** server block 확인
+*/
 int Server::checkServerSocket(uintptr_t const & fd) {
 	int size = config.size();
 

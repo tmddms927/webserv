@@ -10,26 +10,17 @@
 #include <fcntl.h>
 #include <vector>
 #include <map>
-#include "HTTP.hpp"
-#include "config/Config.hpp"
-#include "utils.hpp"
-
-#define SOCKET_LISTEN_BACKLOG   5
-#define SOCKET_PORT             80
-#define SOCKET_ADDR             INADDR_ANY
-#define SOCKET_READ_BUF         16384
-#define KQUEUE_EVENT_LIST_SIZE  1024
-#define REQUEST_BODY_MAX_SIZE   100000001
-#define RECIEVE_BODY_MAX_SIZE   16384
-#define SERVER_DEFAULT_NAME		"webserv"
+#include "../HTTP.hpp"
+#include "../config/Config.hpp"
+#include "../utils.hpp"
+#include "Server_define.hpp"
 
 /*
 ** socket를 관리해주는 객체
 */
 class Server {
 private:
-	//config const로 바꾸기
-	std::vector<servers>		config;
+	const std::vector<servers>		config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;
@@ -41,26 +32,32 @@ private:
 	std::vector<struct kevent>		change_list;
 
 public:
+	/* Server.cpp */
 	Server(Config const & c);
-	/* Server_socket */
-	void socketInit();
+
+	/* Server_socket.cpp */
 	void socketRun();
+	void ServerSocketInit();
+	void socketInit(int const & i);
+	void removeBindError(int const & fd);
+	void setSockaddr_in(int const & i);
 	uintptr_t checkPort(int const & i, int const & port) const;
 
-	/* Server_kqueue */
+	/* Server_kqueue.cpp */
 	void kqueueInit();
+	void addServerSocketKevent();
 	void kqueueEventRun();
-
-	/* in kqueue eventRun */
+	void checkKeventFilter();
 	void kqueueEventError();
 	void kqueueEventRead();
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
 	void finishedRead();
+	void checkMethod();
 	void kqueueEventWrite();
-	void disconnect_client();
 	void change_events(uintptr_t const & ident,
 			int16_t const & filter, uint16_t const & flags);
+	void disconnect_client();
 	int checkServerSocket(uintptr_t const & fd);
 
 	/* Server_method */
@@ -74,9 +71,8 @@ public:
 	void setResMethodHEAD();
 	void sendResMessage();
 	void setResDefaultHeaderField();
-	void changeStatusToError(int st);
+	void changeStatusToError(int const & st);
 	void isFile(); 
 };
-
 
 #endif

@@ -1,6 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
-#include "Server.hpp"
+#include "Server/Server.hpp"
 
 #include <vector>
 #include <map>
@@ -114,6 +114,7 @@ int        HTTP::process_request_headers() {
 */
 int     HTTP::process_request_body() {
     if (requestMessage.content_length == -1 && !requestMessage.chunked) {
+
         requestMessage.non_body = true;
         return SUCCESS;
     }
