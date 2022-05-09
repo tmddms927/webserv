@@ -38,6 +38,19 @@ void Server::findServerBlock() {
 }
 
 /*
+** set OK response message - directory doesn't have index file
+*/
+void Server::setResOKMes() {
+	setResDefaultHeaderField();
+	clients[curr_event->ident].setResponseLine();
+
+	ContentType ct(clients[curr_event->ident].getResponseFileDirectory());
+	clients[curr_event->ident].setResponseHeader("Content-Type", ct.getContentType());
+	clients[curr_event->ident].setResponseBody("123");
+	clients[curr_event->ident].setResponseHeader("Content-Length", "3");
+}
+
+/*
 ** set error response message
 */
 void Server::setResErrorMes(int const & client) {
@@ -129,7 +142,11 @@ void Server::setResMethodHEAD() {
 	int fd;
 
 ////
-return changeStatusToError(curr_event->ident, 405);
+
+	setResDefaultHeaderField();
+	clients[curr_event->ident].setStatus(405);
+	clients[curr_event->ident].setResponseLine();
+	return ;
 ////
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
@@ -215,6 +232,7 @@ void Server::writeResPOSTFile() {
 ** read HEAD file
 */
 void Server::readResHEADFile() {
+	std::cout << "====================================================================" << std::endl;
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
 	size_t len;
 	int fd;
@@ -283,9 +301,13 @@ void Server::isFile() {
 
 	if (stat(path.c_str(), &ss) == -1) {
 	//  무조건 수정
-		return clients[curr_event->ident].setStatus(404);
-		// return clients[curr_event->ident].setStatus(200);
+		// clients[curr_event->ident].setStatus(404);
+		return clients[curr_event->ident].setStatus(200);
 	}
-	if (S_ISDIR(ss.st_mode))
-		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
+	else if (S_ISDIR(ss.st_mode)) {
+		if (global_config.index == "")
+			clients[curr_event->ident].setStatus(200);
+		else
+			clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
+	}
 }

@@ -61,6 +61,7 @@ public:
 	/* Server_method */
     void	findServerBlock();
 
+	void	setResOKMes();
 	void	setResErrorMes(int const & client);
 	void	setResMethodGET();
 	void	setResMethodPOST();

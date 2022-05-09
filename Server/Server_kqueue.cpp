@@ -146,15 +146,20 @@ void Server::finishedRead() {
 	checkAllowedMethod();
 	findServerBlock();
 	checkMethod();
-	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false) {
+		std::cout << "hihi!!!!!!!!!!!!!!!!!" << std::endl;
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+	}
 }
 
 /*
 ** check method
 */
 void Server::checkMethod() {
-	if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
+	std::cout << clients[curr_event->ident].getResponseHaveFileFd() << std::endl;
+	if (clients[curr_event->ident].getStatus() == 200)
+		setResOKMes();
+	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET)
 		setResMethodGET();
@@ -166,6 +171,7 @@ void Server::checkMethod() {
 		setResMethodHEAD();
 	else if (clients[curr_event->ident].getMethod() == PUT)
 		setResMethodPUT();
+	std::cout << clients[curr_event->ident].getResponseHaveFileFd() << std::endl;
 }
 
 /*
