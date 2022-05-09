@@ -51,6 +51,7 @@ void Server::setResErrorMes(int const & client) {
 	}
 	else {
 		file_fd[fd] = client;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
 		change_events(client, EVFILT_READ, EV_ADD | EV_ENABLE);
 	}
 }
@@ -66,6 +67,7 @@ void Server::setResMethodGET() {
 		changeStatusToError(curr_event->ident, 404);
 	else {
 		file_fd[fd] = curr_event->ident;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
 		change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	}
 }
@@ -81,6 +83,7 @@ void Server::setResMethodPOST() {
 		changeStatusToError(curr_event->ident, 404);
 	else {
 		file_fd[fd] = curr_event->ident;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
 		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	}
 }
@@ -119,6 +122,7 @@ void Server::setResMethodHEAD() {
 		changeStatusToError(curr_event->ident, 404);
 	else {
 		file_fd[fd] = curr_event->ident;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
 		change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	}
 }
@@ -156,10 +160,10 @@ void Server::readResGETFile() {
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
+	setResDefaultHeaderField();
 	clients[fd].setStatus(200);
 	clients[fd].setResponseBody(buf);
 	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
-	setResDefaultHeaderField();
 	clients[fd].setResponseLine();
 }
 
@@ -177,9 +181,9 @@ void Server::writeResPOSTFile() {
 	if (len != req_body.length())
 		return changeStatusToError(fd, 404);
 
+	setResDefaultHeaderField();
 	clients[fd].setStatus(200);
 	// post body 있어야되나..?
-	setResDefaultHeaderField();
 	clients[fd].setResponseBody("");
 	clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[fd].setResponseLine();

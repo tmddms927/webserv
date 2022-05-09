@@ -59,10 +59,11 @@ public:
 	void kqueueEventWrite();
 	void change_events(uintptr_t const & ident,
 			int16_t const & filter, uint16_t const & flags);
-	void disconnect_client();
+	void disconnect_client(uintptr_t fd);
 	int checkServerSocket(uintptr_t const & fd) const;
 	bool checkFileFd() const;
-	void disconnect_file_fd(int const & flag);
+	void disconnect_file_fd();
+	void checkClientTimeout();
 
 	/* Server_method */
     void findServerBlock();

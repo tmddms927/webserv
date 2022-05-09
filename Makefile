@@ -32,4 +32,7 @@ fclean	:	clean
 
 re		:	fclean all
 
+test	:	re
+		@ ./webserv test.conf
+
 .PHONY	:	all clean fclean re

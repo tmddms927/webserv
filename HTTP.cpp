@@ -1,5 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
+#include "utils.hpp"
 
 /*
 ** HTTP class default constructor.
@@ -48,6 +49,9 @@ void HTTP::setStatus(int const & s) {
 // }
 
 void HTTP::resetHTTP() {
+    status = 0;
+    req_finished_time = get_time();
+
     requestMessage.buf = "";
     requestMessage.request_line = "";
     requestMessage.unparsed_uri = "";
@@ -60,23 +64,33 @@ void HTTP::resetHTTP() {
     requestMessage.chunked = false;
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
 
+    responseMessage.have_file_fd = false;
     responseMessage.file_directory = "";
     responseMessage.response_line = "";
     responseMessage.header = "";
     responseMessage.body = "";
-
-    status = 0;
-    // response_fd = -1;
 }
 
-std::string const & HTTP::getResponseLine() {
+std::string const & HTTP::getResponseLine() const {
     return responseMessage.response_line;
 }
 
-std::string const & HTTP::getResponseHeader() {
+std::string const & HTTP::getResponseHeader() const {
     return responseMessage.header;
 }
 
-std::string const & HTTP::getResponseBody() {
+std::string const & HTTP::getResponseBody() const {
     return responseMessage.body;
+}
+
+bool const & HTTP::getResponseHaveFileFd() const {
+    return responseMessage.have_file_fd;
+}
+
+void HTTP::setResponseHaveFileFd(bool const & have) {
+    responseMessage.have_file_fd = have;
+}
+
+unsigned long const & HTTP::getReqFinishedTime() {
+    return req_finished_time;
 }

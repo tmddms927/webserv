@@ -35,10 +35,12 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
+			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1)
 				throw "kevent() error";
 			checkKeventFilter();
 		}
+		checkClientTimeout();
 	}
 }
 
@@ -65,7 +67,7 @@ void Server::kqueueEventError() {
 	else
 	{
 		std::cerr << "client socket error" << std::endl;
-		disconnect_client();
+		disconnect_client(curr_event->ident);
 	}
 }
 
@@ -108,9 +110,10 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
+
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
-		disconnect_client();
+		disconnect_client(curr_event->ident);
 	}
 	else
 		clients[curr_event->ident].reqInputBuf(buf);
@@ -127,21 +130,16 @@ void Server::kqueueEventReadFileFd() {
 	fd = file_fd[curr_event->ident];
 	if (clients[fd].getStatus() != 0) {
 		readResErrorFile();
-		disconnect_file_fd(EVFILT_READ);
+		disconnect_file_fd();
 	}
 	else if (clients[fd].getMethod() == GET) {
 		readResGETFile();
-		disconnect_file_fd(EVFILT_READ);
-	}
-	else if (clients[fd].getMethod() == POST) {
-		writeResPOSTFile();
-		disconnect_file_fd(EVFILT_WRITE);
+		disconnect_file_fd();
 	}
 	else if (clients[fd].getMethod() == HEAD) {
 		readResHEADFile();
-		disconnect_file_fd(EVFILT_READ);
+		disconnect_file_fd();
 	}
-	change_events(fd, EVFILT_WRITE, EV_ENABLE);
 }
 
 /*
@@ -153,7 +151,7 @@ void Server::finishedRead() {
 
 	findServerBlock();
 	checkMethod();
-	if (clients[curr_event->ident].getStatus() != -1)
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 }
 
@@ -179,10 +177,16 @@ void Server::checkMethod() {
 ** send data to client
 */
 void Server::kqueueEventWrite() {
-	sendResMessage();
-	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-	change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
-	clients[curr_event->ident].resetHTTP();
+	if (checkFileFd()) {
+		writeResPOSTFile();
+		disconnect_file_fd();
+	}
+	else {
+		sendResMessage();
+		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
+		clients[curr_event->ident].resetHTTP();
+	}
 }
 
 /*
@@ -200,11 +204,12 @@ void Server::change_events(uintptr_t const & ident, int16_t const & filter,
 /*
 ** disconnect client : close fd & erase fd at fd_list
 */
-void Server::disconnect_client() {
-	std::cout << "client disconnected: " << curr_event->ident << std::endl;
+void Server::disconnect_client(uintptr_t fd) {
+	std::cout << "client disconnected: " << fd << std::endl;
 
-	close(curr_event->ident);
-	clients.erase(curr_event->ident);
+	close(fd);
+	clients[fd].resetHTTP();
+	clients.erase(fd);
 }
 
 /*
@@ -233,8 +238,25 @@ bool Server::checkFileFd() const {
 /*
 ** disconnect file fd : close fd & erase fd at file_fd
 */
-void Server::disconnect_file_fd(int const & flag) {
-	change_events(file_fd[curr_event->ident], flag, EV_ENABLE);
+void Server::disconnect_file_fd() {
+	change_events(file_fd[curr_event->ident], EVFILT_WRITE, EV_ENABLE);
 	close(curr_event->ident);
 	file_fd.erase(curr_event->ident);
+}
+
+/*
+** timeout 확인하기
+*/
+void Server::checkClientTimeout() {
+	long current_time = get_time();
+	std::vector<uintptr_t> fd(clients.size());
+	int i = 0;
+
+	for (std::map<uintptr_t, HTTP>::iterator it = clients.begin();
+		it != clients.end(); ++it) {
+			if (current_time - it->second.getReqFinishedTime() > TIME_OUT)
+				fd[i++] = it->first;
+	}
+	for (int j = 0; j < i; ++j)
+		disconnect_client(fd[j]);
 }
