@@ -7,9 +7,10 @@
 #include "constant.h"
 
 typedef struct  global_s {
-    std::string err_page;
-    int         client_max_body_size;
-    std::string index;
+    std::string                 err_page;
+    int                         client_max_body_size;
+    std::string                 index;
+    char                        allowed_method;
 }               global;
 
 typedef struct  servers_s {

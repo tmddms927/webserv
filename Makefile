@@ -12,6 +12,8 @@ SRCS	=	main.cpp\
 			Server/Server_socket.cpp\
 			Server/Server_kqueue.cpp\
 			Server/Server_method.cpp\
+			Server/Server_utils.cpp\
+			Server/ContentType/ContentType.cpp\
 			Server/Server.cpp\
 			config/Config.cpp\
 			config/ServerBlock.cpp\

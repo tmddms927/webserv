@@ -11,7 +11,6 @@ Config::Config(std::string const & conf_file) : str(), config(1), raw(), global_
 
 void Config::readFile() {
     std::ifstream file(conf_file);
-
     if (file.is_open()) {
         std::string buf;
         while (std::getline(file, buf)) {
@@ -45,10 +44,12 @@ void Config::setMainConfig() {
         global_config.err_page = raw[1].substr(strlen(DEFAULT_ERROR));
     if (raw[2].find(INDEXV) != std::string::npos)
         global_config.index = raw[2].substr(strlen(INDEXV));
-    if (raw[3].find(HOSTV) != std::string::npos)
-        config[0].host = raw[3].substr(strlen(HOSTV));
-    if (raw[4].find(PORT) != std::string::npos) {
-        std::stringstream ss(raw[4].substr(strlen(PORT)));
+    if (raw[3].find(ALLOWED_METHODV) != std::string::npos)
+        validMethod(raw[3].substr(strlen(ALLOWED_METHODV)));
+    if (raw[4].find(HOSTV) != std::string::npos)
+        config[0].host = raw[4].substr(strlen(HOSTV));
+    if (raw[5].find(PORT) != std::string::npos) {
+        std::stringstream ss(raw[5].substr(strlen(PORT)));
         ss >> config[0].port;
         eraseCompleted();
         return;
@@ -70,6 +71,34 @@ void Config::isExist() {
         throw GlobalConfigException();
     }
 }
+
+void Config::validMethod(std::string const & methods) {
+    std::string tmp = methods;
+    if (tmp.find(CONF_GET) != std::string::npos) {
+        global_config.allowed_method |= GET_BIT;
+        tmp.replace(tmp.find(CONF_GET), strlen(CONF_GET), "");
+    }
+    if (tmp.find(CONF_POST) != std::string::npos) {
+        global_config.allowed_method |= POST_BIT;
+        tmp.replace(tmp.find(CONF_POST), strlen(CONF_POST), "");
+    }
+    if (tmp.find(CONF_DELETE) != std::string::npos) {
+        global_config.allowed_method |= DELETE_BIT;
+        tmp.replace(tmp.find(CONF_DELETE), strlen(CONF_DELETE), "");
+    }
+    if (tmp.find(CONF_PUT) != std::string::npos) {
+        global_config.allowed_method |= PUT_BIT;
+        tmp.replace(tmp.find(CONF_PUT), strlen(CONF_PUT), "");
+    }
+    if (tmp.find(CONF_HEAD) != std::string::npos) {
+        global_config.allowed_method |= HEAD_BIT;
+        tmp.replace(tmp.find(CONF_HEAD), strlen(CONF_HEAD), "");
+    }
+    if (!tmp.empty())
+        throw VariableRuleException();
+
+}
+
 void Config::setRootDir() {
     char buf[1024];
     std::memset(buf, 0, 1024);
@@ -107,6 +136,7 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "client_max_body_size : " << config.global_config.client_max_body_size << std::endl;
     std::cout << "default_error_page : " << config.global_config.err_page << std::endl;
     std::cout << "index : " << config.global_config.index << std::endl;
+    std::cout << "allowed_method : " << (int)config.global_config.allowed_method << std::endl;
     std::cout << "--------------------------------------" << std::endl;
     for (int i = 0; i < config.config.size(); ) {
         std::cout << "--------------------------------------" << std::endl;
@@ -120,7 +150,6 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "==============================================";
     return os;
 }
-
 
 
 const char *Config::GlobalConfigException::what() const throw(){
