@@ -77,6 +77,7 @@ struct  RequestMessage {
 };
 
 struct ResponseMessage {
+	bool					have_file_fd;
 	std::string             file_directory;
 	std::string             response_line;
 	std::string             header;
@@ -89,6 +90,7 @@ private:
 	RequestMessage  requestMessage;
 	ResponseMessage responseMessage;
 	int             status;
+	unsigned long	req_finished_time;
 
 	int             process_request_line();
 	int             process_request_headers();
@@ -110,12 +112,14 @@ public:
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);
 	void setStatus(int const & s);
-	std::string const & getResponseLine();
-	std::string const & getResponseHeader();
-	std::string const & getResponseBody();
+	std::string const & getResponseLine() const;
+	std::string const & getResponseHeader() const;
+	std::string const & getResponseBody() const;
+	bool const & getResponseHaveFileFd() const;
 	void setResponseHeader(std::string const & key, std::string const & value);
-
+	void setResponseHaveFileFd(bool const & have);
 	void resetHTTP();
+	unsigned long const & getReqFinishedTime();
 
 	/* request function */
 	void	reqInputBuf(std::string const & str);

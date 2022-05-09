@@ -8,10 +8,11 @@ SRCS	=	main.cpp\
 			HTTP/HTTP_Chunk.cpp\
 			HTTP/HTTP_req.cpp\
 			HTTP/HTTP_res.cpp\
-			Server_socket.cpp\
-			Server_kqueue.cpp\
-			Server_method.cpp\
-			Server.cpp\
+			Server/ContentType/ContentType.cpp\
+			Server/Server_socket.cpp\
+			Server/Server_kqueue.cpp\
+			Server/Server_method.cpp\
+			Server/Server.cpp\
 			config/Config.cpp\
 			config/ServerBlock.cpp\
 			utils.cpp
@@ -32,5 +33,8 @@ fclean	:	clean
 		@rm -rf ${OUT}
 
 re		:	fclean all
+
+test	:	re
+		@ ./webserv test.conf
 
 .PHONY	:	all clean fclean re

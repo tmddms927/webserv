@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <vector>
 #include <map>
+<<<<<<< HEAD:Server.hpp
 #include "HTTP/HTTP.hpp"
 #include "config/Config.hpp"
 #include "utils.hpp"
@@ -22,14 +23,19 @@
 #define REQUEST_BODY_MAX_SIZE   100000001
 #define RECIEVE_BODY_MAX_SIZE   16384
 #define SERVER_DEFAULT_NAME		"webserv"
+=======
+#include "../HTTP.hpp"
+#include "../config/Config.hpp"
+#include "../utils.hpp"
+#include "Server_define.hpp"
+>>>>>>> 7105c08d7c71e5e2881cff1c3f4bc42e87480915:Server/Server.hpp
 
 /*
 ** socket를 관리해주는 객체
 */
 class Server {
 private:
-	//config const로 바꾸기
-	std::vector<servers>		config;
+	const std::vector<servers>		config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;
@@ -39,44 +45,60 @@ private:
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
+	std::map<uintptr_t, size_t>		file_fd;
 
 public:
+	/* Server.cpp */
 	Server(Config const & c);
-	/* Server_socket */
-	void socketInit();
+
+	/* Server_socket.cpp */
 	void socketRun();
+	void ServerSocketInit();
+	void socketInit(int const & i);
+	void removeBindError(int const & fd);
+	void setSockaddr_in(int const & i);
 	uintptr_t checkPort(int const & i, int const & port) const;
 
-	/* Server_kqueue */
+	/* Server_kqueue.cpp */
 	void kqueueInit();
+	void addServerSocketKevent();
 	void kqueueEventRun();
-
-	/* in kqueue eventRun */
+	void checkKeventFilter();
 	void kqueueEventError();
 	void kqueueEventRead();
 	void kqueueConnectAccept();
 	void kqueueEventReadClient();
+	void kqueueEventReadFileFd();
 	void finishedRead();
+	void checkMethod();
 	void kqueueEventWrite();
-	void disconnect_client();
 	void change_events(uintptr_t const & ident,
 			int16_t const & filter, uint16_t const & flags);
-	int checkServerSocket(uintptr_t const & fd);
+	void disconnect_client(uintptr_t fd);
+	int checkServerSocket(uintptr_t const & fd) const;
+	bool checkFileFd() const;
+	void disconnect_file_fd();
+	void checkClientTimeout();
 
 	/* Server_method */
     void findServerBlock();
 
-	void setResErrorMes();
+	void setResErrorMes(int const & client);
 	void setResMethodGET();
 	void setResMethodPOST();
 	void setResMethodPUT();
 	void setResMethodDELETE();
 	void setResMethodHEAD();
+
+	void readResErrorFile();
+	void readResGETFile();
+	void writeResPOSTFile();
+	void readResHEADFile();
+
 	void sendResMessage();
 	void setResDefaultHeaderField();
-	void changeStatusToError(int st);
+	void changeStatusToError(int const & client, int const & st);
 	void isFile(); 
 };
-
 
 #endif
