@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <vector>
 #include <map>
-#include "HTTP.hpp"
+#include "HTTP/HTTP.hpp"
 #include "config/Config.hpp"
 #include "utils.hpp"
 
