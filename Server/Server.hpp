@@ -45,45 +45,48 @@ public:
 	uintptr_t checkPort(int const & i, int const & port) const;
 
 	/* Server_kqueue.cpp */
-	void kqueueInit();
-	void addServerSocketKevent();
-	void kqueueEventRun();
-	void checkKeventFilter();
-	void kqueueEventError();
-	void kqueueEventRead();
-	void kqueueConnectAccept();
-	void kqueueEventReadClient();
-	void kqueueEventReadFileFd();
-	void finishedRead();
-	void checkMethod();
-	void kqueueEventWrite();
-	void change_events(uintptr_t const & ident,
-			int16_t const & filter, uint16_t const & flags);
-	void disconnect_client(uintptr_t fd);
-	int checkServerSocket(uintptr_t const & fd) const;
-	bool checkFileFd() const;
-	void disconnect_file_fd();
-	void checkClientTimeout();
+	void	kqueueInit();
+	void	addServerSocketKevent();
+	void	kqueueEventRun();
+	void	checkKeventFilter();
+	void	kqueueEventError();
+	void	kqueueEventRead();
+	void	kqueueConnectAccept();
+	void	kqueueEventReadClient();
+	void	kqueueEventReadFileFd();
+	void	finishedRead();
+	void	checkMethod();
+	void	kqueueEventWrite();
 
 	/* Server_method */
-    void findServerBlock();
+    void	findServerBlock();
 
-	void setResErrorMes(int const & client);
-	void setResMethodGET();
-	void setResMethodPOST();
-	void setResMethodPUT();
-	void setResMethodDELETE();
-	void setResMethodHEAD();
+	void	setResErrorMes(int const & client);
+	void	setResMethodGET();
+	void	setResMethodPOST();
+	void	setResMethodPUT();
+	void	setResMethodDELETE();
+	void	setResMethodHEAD();
 
-	void readResErrorFile();
-	void readResGETFile();
-	void writeResPOSTFile();
-	void readResHEADFile();
+	void	readResErrorFile();
+	void	readResGETFile();
+	void	writeResPOSTFile();
+	void	readResHEADFile();
 
-	void sendResMessage();
-	void setResDefaultHeaderField();
-	void changeStatusToError(int const & client, int const & st);
-	void isFile(); 
+	void	sendResMessage();
+	void	setResDefaultHeaderField();
+	void	changeStatusToError(int const & client, int const & st);
+	void	isFile();
+
+	/* utils.cpp */
+	void	change_events(uintptr_t const & ident,
+			int16_t const & filter, uint16_t const & flags);
+	void	disconnect_client(uintptr_t fd);
+	int		checkServerSocket(uintptr_t const & fd) const;
+	bool	checkFileFd() const;
+	void	disconnect_file_fd();
+	void	checkClientTimeout();
+	void	checkAllowedMethod();
 };
 
 #endif
