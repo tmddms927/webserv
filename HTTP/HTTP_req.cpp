@@ -1,7 +1,7 @@
 #include "HTTP.hpp"
 #include "../utils.hpp"
 
-#include "../Server.hpp"
+#include "../Server/Server.hpp"
 #include "HTTPHeaderField.hpp"
 #include <vector>
 #include <utility>

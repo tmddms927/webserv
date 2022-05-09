@@ -53,6 +53,7 @@ void    ft_rtrim_space(std::string & str) {
         }
     }
     str = "";
+}
 
 /*
 ** 현재 시간을 반환

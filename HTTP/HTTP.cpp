@@ -1,6 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
-#include "utils.hpp"
+#include "../utils.hpp"
 
 /*
 ** HTTP class default constructor.

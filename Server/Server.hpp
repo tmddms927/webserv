@@ -10,25 +10,10 @@
 #include <fcntl.h>
 #include <vector>
 #include <map>
-<<<<<<< HEAD:Server.hpp
-#include "HTTP/HTTP.hpp"
-#include "config/Config.hpp"
-#include "utils.hpp"
-
-#define SOCKET_LISTEN_BACKLOG   5
-#define SOCKET_PORT             80
-#define SOCKET_ADDR             INADDR_ANY
-#define SOCKET_READ_BUF         16384
-#define KQUEUE_EVENT_LIST_SIZE  1024
-#define REQUEST_BODY_MAX_SIZE   100000001
-#define RECIEVE_BODY_MAX_SIZE   16384
-#define SERVER_DEFAULT_NAME		"webserv"
-=======
-#include "../HTTP.hpp"
+#include "../HTTP/HTTP.hpp"
 #include "../config/Config.hpp"
 #include "../utils.hpp"
 #include "Server_define.hpp"
->>>>>>> 7105c08d7c71e5e2881cff1c3f4bc42e87480915:Server/Server.hpp
 
 /*
 ** socket를 관리해주는 객체
