@@ -7,7 +7,6 @@ SRCS	=	main.cpp\
 			HTTP/HTTP.cpp\
 			HTTP/HTTP_Chunk.cpp\
 			HTTP/HTTP_req.cpp\
-			HTTP/HTTP_req2.cpp\
 			HTTP/HTTP_res.cpp\
 			Server_socket.cpp\
 			Server_kqueue.cpp\

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "../HTTP/HTTP.hpp"
+#include "HTTP.hpp"
 
 int main(int argc, char **argv) {
 	std::ifstream	testfile;
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 		file += buf;
 	}
 	std::cout << "################ file ################" << std::endl;
-	std::cout << file << std::endl;
+	std::cout << file << "<--------FILE END" << std::endl;
 	std::cout << "################ file ################" << std::endl;
 
 	

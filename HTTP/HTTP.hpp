@@ -126,6 +126,7 @@ public:
 	void	parseRequestHeader();
 	bool	parseRequestBody(); // body가 끝까지 읽은 것을 체크하기 위해 boolean을 리턴
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
+	bool    extractstr(std::string & dest, std::string & src, size_t len);
 	void    addHeader(std::string line);
 
 

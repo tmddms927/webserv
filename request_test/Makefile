@@ -16,10 +16,10 @@ OBJS	=	chunk_test.o\
 			../utils.o\
 
 
-all		:	${OUT}
+all		:	${OUT} clean
 
-# .cpp.o	:
-# 	@${CC} ${CFLAGS} -c ${<} -o ${<:.cpp=.o} 
+.cpp.o	:
+	@${CC} ${CFLAGS} -c ${<} -o ${<:.cpp=.o} 
 
 ${OUT}	:	${OBJS}
 		@${CC} ${CFLAGS} -o ${OUT} ${OBJS}

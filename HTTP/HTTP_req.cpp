@@ -8,11 +8,11 @@
 
 void    HTTP::addHeader(std::string line) {
     std::vector<std::string> v;
-    ft_split(v, line, ": ");
-    std::cout << "line : " << line << std::endl;
+    ft_split(v, line, ":");
     if (v.size() != 2)
         throw BAD_REQUEST;
-    std::cout << "v[0] : " << v[0] << ", " << "v[1] : " << v[1] << std::endl;
+    ft_trim_space(v[0]);
+    ft_trim_space(v[1]);
     requestMessage.header_in.insert(std::pair<std::string, std::string>(v[0], v[1]));
     //header validate
 }
@@ -28,6 +28,15 @@ bool    HTTP::extractstr(std::string & dest, std::string & src, std::string cons
         src = "";
     else
         src = src.substr(found + cut.size());
+    return true;
+}
+
+bool    HTTP::extractstr(std::string & dest, std::string & src, size_t len) {
+    dest = src.substr(0, len);
+    if (dest.size() == src.size())
+        src = "";
+    else
+        src = src.substr(len + 1);
     return true;
 }
 
@@ -55,6 +64,7 @@ void    HTTP::parseRequestLine() {
     std::string line;
     std::vector<std::string> v;
     extractstr(line, requestMessage.buf, "\r\n");
+    ft_trim_space(line);
     ft_split(v, line, " ");
     if (v.size() != 3)
         throw BAD_REQUEST;
@@ -72,7 +82,6 @@ void    HTTP::parseRequestHeader() {
     for (std::vector<std::string>::iterator
             it = v.begin(); it != v.end(); it++)
         addHeader(*it);
-    std::cout << requestMessage.header_in[TRANSFER_ENCODING_STR] << std::endl;
     if (requestMessage.header_in.find(CONTENT_LENGTH_STR) != requestMessage.header_in.end())
         requestMessage.content_length = std::strtod(requestMessage.header_in[CONTENT_LENGTH_STR].c_str(), 0);
     if (requestMessage.header_in[TRANSFER_ENCODING_STR] == "chunked")
@@ -87,7 +96,6 @@ bool    HTTP::parseRequestBody() {
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
         throw PATLOAD_TOO_LARGE;
     // Content-Length, Transfer-Encoding 모두 있을 경우, Content-Length를 우선함
-    std::cout << "======" << requestMessage.content_length << " : " << requestMessage.chunked << "======" << std::endl;
     if (requestMessage.content_length >= 0)
         ret = reqBodyContentLength();
     else if (requestMessage.chunked)
@@ -104,8 +112,10 @@ bool    HTTP::parseRequestBody() {
 */
 int HTTP::reqBodyContentLength() {
     size_t left_len = requestMessage.content_length - requestMessage.body.size();
+    std::string temp;
 
-    requestMessage.body += requestMessage.buf.substr(0, left_len);
+    extractstr(temp, requestMessage.buf, left_len);
+    requestMessage.body += temp;
     if (requestMessage.body.size() >= requestMessage.content_length)
         return SUCCESS;
     return FAIL;
@@ -128,17 +138,12 @@ int HTTP::reqBodyChunked() {
             return FAIL;
         if (requestMessage.chunk.isEndChunk()) {
             std::string const & s = requestMessage.chunk.getContent();
-            std::cout << "size : " << s.size() << std::endl;
             if (s.size()) {
                 requestMessage.body += s;
                 requestMessage.chunk.initChunk();
             }
-            else {
-                std::cout << "--------------> body <-------------------" <<std::endl;
-                std::cout << requestMessage.body << std::endl;
-                std::cout << "--------------> body <-------------------" <<std::endl;
+            else
                 return SUCCESS;
-            }
         }
     }
     return FAIL;
@@ -166,6 +171,9 @@ void    HTTP::reqInputBuf(std::string const & str) {
             parseRequestBody() == SUCCESS) {
             requestMessage.request_step = CLIENT_READ_FINISH;
             status = 0;
+            if (requestMessage.method == "POST" && requestMessage.body.empty())
+                throw NOT_ALLOWED;
+            reqPrint();
         }
     } catch (int & err) {
         requestMessage.buf = ""; //  buf 버리기
@@ -191,9 +199,12 @@ bool HTTP::reqCheckFinished() {
 ** request message print
 */
 void HTTP::reqPrint() {
-    std::cout << "message : " << requestMessage.method << std::endl;
-    std::cout << "path : " << requestMessage.unparsed_uri << std::endl;
+    std::cout << "==============<<  request parsing finish  >>==============" << std::endl; 
+    std::cout << requestMessage.method << " " << requestMessage.unparsed_uri << std::endl;
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
-    std::cout << "body : " << requestMessage.body << std::endl;
+    if (!requestMessage.non_body)
+                std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
+            else
+                std::cout << "************* there is no body ***************" << std::endl;
 }

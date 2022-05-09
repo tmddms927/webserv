@@ -182,7 +182,7 @@ void Server::isFile() {
 	struct stat ss;
 
 	if (stat(path.c_str(), &ss) == -1) {
-		return changeStatusToError(404);
+		return changeStatusToError(200);
 	}
 	// directory
 	if (S_ISDIR(ss.st_mode)) {
