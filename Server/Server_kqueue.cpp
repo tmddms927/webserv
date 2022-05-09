@@ -35,7 +35,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			// std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
+			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1)
 				throw "kevent() error";
 			checkKeventFilter();
@@ -128,7 +128,7 @@ void Server::kqueueEventReadFileFd() {
 	int fd;
 
 	fd = file_fd[curr_event->ident];
-	if (clients[fd].getStatus() != 0)
+	if (clients[fd].getStatus() != 0 && clients[fd].getStatus() != -1)
 		readResErrorFile();
 	else if (clients[fd].getMethod() == GET)
 		readResGETFile();
@@ -154,7 +154,7 @@ void Server::finishedRead() {
 ** check method
 */
 void Server::checkMethod() {
-	if (clients[curr_event->ident].getStatus() != 0)
+	if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET)
 		setResMethodGET();

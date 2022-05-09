@@ -17,7 +17,6 @@ void Server::findServerBlock() {
 		clients[curr_event->ident].setStatus(404);
         return ;
 	}
-
 	// server block이 없을 경우
     std::string temp = uri.substr(1);
 	found = temp.find("/");
@@ -27,7 +26,6 @@ void Server::findServerBlock() {
         return ;
 	}
 	temp = uri.substr(0, found + 1);
-
 	for (int i = 1; i < size; ++i) {
 		if (server_socket[i] == clients[curr_event->ident].getServerFd()) {
 			if (temp == config[i].location) {
@@ -53,7 +51,7 @@ void Server::setResErrorMes(int const & client) {
 	else {
 		file_fd[fd] = client;
 		clients[curr_event->ident].setResponseHaveFileFd(true);
-		change_events(client, EVFILT_READ, EV_ADD | EV_ENABLE);
+		change_events(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	}
 }
 
@@ -64,7 +62,7 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
-	if (fd < 0)
+	if (fd <= 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
 		file_fd[fd] = curr_event->ident;
@@ -77,6 +75,10 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
+
+////
+return changeStatusToError(curr_event->ident, 405);
+////
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
@@ -93,6 +95,10 @@ void Server::setResMethodPOST() {
 ** set PUT response message
 */
 void Server::setResMethodPUT() {
+
+////
+return changeStatusToError(curr_event->ident, 405);
+////
 	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
 	// clients[curr_event->ident].setResponseBody("");
@@ -104,6 +110,10 @@ void Server::setResMethodPUT() {
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
+
+////
+return changeStatusToError(curr_event->ident, 405);
+////
 	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
@@ -117,6 +127,10 @@ void Server::setResMethodDELETE() {
 */
 void Server::setResMethodHEAD() {
 	int fd;
+
+////
+return changeStatusToError(curr_event->ident, 405);
+////
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
@@ -267,8 +281,11 @@ void Server::isFile() {
 	std::string path = clients[curr_event->ident].getResponseFileDirectory();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1)
-		return changeStatusToError(curr_event->ident, 401);
+	if (stat(path.c_str(), &ss) == -1) {
+	//  무조건 수정
+		return clients[curr_event->ident].setStatus(404);
+		// return clients[curr_event->ident].setStatus(200);
+	}
 	if (S_ISDIR(ss.st_mode))
 		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
 }

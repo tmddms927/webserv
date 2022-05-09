@@ -29,8 +29,6 @@ void ContentType::set_content_type() {
 	}
 	temp = file.substr(index + 1);
 
-	std::cout << file << "," << temp << std::endl;
-
 	if (temp == "dwg")
 		content_type = "application/acad";
 	else if (temp == "ccad")
