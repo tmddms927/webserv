@@ -35,7 +35,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
+			// std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1)
 				throw "kevent() error";
 			checkKeventFilter();
@@ -252,6 +252,7 @@ void Server::checkClientTimeout() {
 	std::vector<uintptr_t> fd(clients.size());
 	int i = 0;
 
+	// todo req 중이면 끝내지 않기
 	for (std::map<uintptr_t, HTTP>::iterator it = clients.begin();
 		it != clients.end(); ++it) {
 			if (current_time - it->second.getReqFinishedTime() > TIME_OUT)

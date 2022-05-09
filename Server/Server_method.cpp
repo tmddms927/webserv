@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <stdio.h>
+#include "ContentType/ContentType.hpp"
 
 /*
 ** find server block
@@ -94,8 +95,8 @@ void Server::setResMethodPOST() {
 void Server::setResMethodPUT() {
 	setResDefaultHeaderField();
 	clients[curr_event->ident].setStatus(200);
-	clients[curr_event->ident].setResponseBody("");
-	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
+	// clients[curr_event->ident].setResponseBody("");
+	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[curr_event->ident].setResponseLine();
 }
 
@@ -133,15 +134,19 @@ void Server::setResMethodHEAD() {
 void Server::readResErrorFile() {
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
 	size_t len;
+	int fd;
 
+	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0) {
-		clients[curr_event->ident].setResponseBody(buf);
-		clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(len));
+		ContentType ct(clients[fd].getResponseFileDirectory());
+		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+		clients[fd].setResponseBody(buf);
+		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
 	setResDefaultHeaderField();
-	clients[curr_event->ident].setResponseLine();
+	clients[fd].setResponseLine();
 }
 
 /*
@@ -160,6 +165,9 @@ void Server::readResGETFile() {
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
+
+	ContentType ct(clients[fd].getResponseFileDirectory());
+	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
 	setResDefaultHeaderField();
 	clients[fd].setStatus(200);
 	clients[fd].setResponseBody(buf);
@@ -184,8 +192,8 @@ void Server::writeResPOSTFile() {
 	setResDefaultHeaderField();
 	clients[fd].setStatus(200);
 	// post body 있어야되나..?
-	clients[fd].setResponseBody("");
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
+	// clients[fd].setResponseBody("");
+	// clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[fd].setResponseLine();
 }
 
