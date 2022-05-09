@@ -281,8 +281,11 @@ void Server::isFile() {
 	std::string path = clients[curr_event->ident].getResponseFileDirectory();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1)
-		return clients[curr_event->ident].setStatus(401);
+	if (stat(path.c_str(), &ss) == -1) {
+	//  무조건 수정
+		return clients[curr_event->ident].setStatus(404);
+		// return clients[curr_event->ident].setStatus(200);
+	}
 	if (S_ISDIR(ss.st_mode))
 		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
 }

@@ -50,7 +50,6 @@ void HTTP::setStatus(int const & s) {
 
 void HTTP::resetHTTP() {
     status = 0;
-    pretreatment = false;
     req_finished_time = get_time();
 
     requestMessage.buf = "";
@@ -94,12 +93,4 @@ void HTTP::setResponseHaveFileFd(bool const & have) {
 
 unsigned long const & HTTP::getReqFinishedTime() {
     return req_finished_time;
-}
-
-void HTTP::setPretreatment(bool const & pre) {
-    pretreatment = pre;
-}
-
-bool const & HTTP::getPretreatment() {
-    return pretreatment;
 }
