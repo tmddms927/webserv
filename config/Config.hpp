@@ -22,6 +22,7 @@ private:
     void    validateServerVariables();
     void    eraseCompleted();
     void    isExist();
+    void    validMethod(std::string const & methods);
     void    setRootDir();
     class   GlobalConfigException : public std::exception {
     public:
