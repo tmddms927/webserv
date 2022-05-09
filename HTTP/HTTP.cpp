@@ -37,7 +37,8 @@ int const & HTTP::getStatus() {
 }
 
 void HTTP::setStatus(int const & s) {
-    this->status = s;
+    if (this->status == 0 || this->status == -1)
+        this->status = s;
 }
 
 // uintptr_t const & HTTP::getResponseFd() {

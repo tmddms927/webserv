@@ -2,14 +2,14 @@ OUT		=	chunk_test
 CC		=	clang++
 CFLAGS	=	-fsanitize=address -g -I../HTTP/
 #-Wall -Wextra -Werror -fsanitize=address -g
-SRCS	=	chunk_test.cpp\
+SRCS	=	request_test.cpp\
 			../HTTP/HTTPHeaderField.hpp\
 			../HTTP/HTTP_req.cpp\
 			../HTTP/HTTP.cpp\
 			../HTTP/HTTP_Chunk.cpp\
 			../utils.cpp\
 
-OBJS	=	chunk_test.o\
+OBJS	=	request_test.o\
 			../HTTP/HTTP_req.o\
 			../HTTP/HTTP.o\
 			../HTTP/HTTP_Chunk.o\

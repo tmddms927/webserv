@@ -10,7 +10,7 @@ void    HTTP::addHeader(std::string line) {
     std::vector<std::string> v;
     ft_split(v, line, ":");
     if (v.size() != 2)
-        throw BAD_REQUEST;
+        setStatus(BAD_REQUEST);
     ft_trim_space(v[0]);
     ft_trim_space(v[1]);
     requestMessage.header_in.insert(std::pair<std::string, std::string>(v[0], v[1]));
@@ -67,7 +67,7 @@ void    HTTP::parseRequestLine() {
     ft_trim_space(line);
     ft_split(v, line, " ");
     if (v.size() != 3)
-        throw BAD_REQUEST;
+        setStatus(BAD_REQUEST);
     requestMessage.method = v[0];
     requestMessage.unparsed_uri = v[1];
     requestMessage.http_version = v[2];
@@ -90,11 +90,12 @@ void    HTTP::parseRequestHeader() {
 
 bool    HTTP::parseRequestBody() {
     int ret;
-    //  if non_body일 경우
-    //      모든 body를 버리기
+    //  non_body일 경우, 모든 body를 버리기
+    if (requestMessage.non_body)
+        requestMessage.buf = "";
     //  body len 확인
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
-        throw PATLOAD_TOO_LARGE;
+        setStatus(PATLOAD_TOO_LARGE);
     // Content-Length, Transfer-Encoding 모두 있을 경우, Content-Length를 우선함
     if (requestMessage.content_length >= 0)
         ret = reqBodyContentLength();
@@ -149,38 +150,25 @@ int HTTP::reqBodyChunked() {
     return FAIL;
 }
 
-
-//set status
-
 void    HTTP::reqInputBuf(std::string const & str) {
-    //  if (isRequestEnd())
-    //      str 버리기;
-    //  else
     requestMessage.buf += str;
-    try {
-        //parse = read + store + validate check
-        if (isReadyRequestLine()) {
-            parseRequestLine();
-            requestMessage.request_step = CLIENT_READ_REQ_HEADER;
-            }
-        if (isReadyRequestHeader()) {
-            parseRequestHeader();
-            requestMessage.request_step = CLIENT_READ_REQ_BODY;
-            }
-        if (isReadyRequestBody() &&
-            parseRequestBody() == SUCCESS) {
-            requestMessage.request_step = CLIENT_READ_FINISH;
-            status = 0;
-            if (requestMessage.method == "POST" && requestMessage.body.empty())
-                throw NOT_ALLOWED;
-            reqPrint();
-        }
-    } catch (int & err) {
-        requestMessage.buf = ""; //  buf 버리기
-        requestMessage.request_step = CLIENT_READ_FINISH; //  request_step finish
-        status = err; // 에러 발생 시 error 코드를 status에 할당
-
-        std::cout << "  << CLIENT_READ_ERROR -->" << err  <<  "<-- >>  " << std::endl;
+    if (isReadyRequestLine()) {
+        parseRequestLine();
+        requestMessage.request_step = CLIENT_READ_REQ_HEADER;
+    }
+    if (isReadyRequestHeader()) {
+        parseRequestHeader();
+        requestMessage.request_step = CLIENT_READ_REQ_BODY;
+    }
+    if (isReadyRequestBody() &&
+        parseRequestBody() == SUCCESS) {
+        requestMessage.request_step = CLIENT_READ_FINISH;
+    }
+    if (requestMessage.request_step == CLIENT_READ_FINISH) {
+        if (requestMessage.method == "POST" && requestMessage.body.empty())
+            setStatus(NOT_ALLOWED);
+        setStatus(0);
+        reqPrint();
     }
 }
 
@@ -204,7 +192,8 @@ void HTTP::reqPrint() {
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
     if (!requestMessage.non_body)
-                std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
-            else
-                std::cout << "************* there is no body ***************" << std::endl;
+        std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
+    else
+        std::cout << "************* there is no body ***************" << std::endl;
+    std::cout << "==============<< ststus : " << status << " >>================" << std::endl;
 }
