@@ -1,6 +1,5 @@
 #include "HTTP.hpp"
 #include "../utils.hpp"
-
 #include "../Server/Server.hpp"
 #include "HTTPHeaderField.hpp"
 #include <vector>
@@ -12,8 +11,6 @@ void    HTTP::addHeader(std::pair<std::string, std::string> & header) {
     requestMessage.header_in.insert(header);
     //header validate
 }
-
-
 
 bool    HTTP::extractstr(std::string & dest, std::string & src, std::string const & cut) {
     size_t found;
@@ -87,10 +84,6 @@ void    HTTP::parseRequestHeader() {
         header = ft_slice_str(*it, found);
         addHeader(header);
     }
-    if (requestMessage.header_in.find(CONTENT_LENGTH_STR) != requestMessage.header_in.end())
-        requestMessage.content_length = std::strtod(requestMessage.header_in[CONTENT_LENGTH_STR].c_str(), 0);
-    if (requestMessage.header_in[TRANSFER_ENCODING_STR] == "chunked")
-        requestMessage.chunked = true;
 }
 
 bool    HTTP::parseRequestBody() {
@@ -102,7 +95,6 @@ bool    HTTP::parseRequestBody() {
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
         setStatus(PATLOAD_TOO_LARGE);       //  body_len이 REQUEST_BODY_MAX_SIZE보다 크면 error
 
-    
     if (requestMessage.content_length >= 0) //  Content-Length, Transfer-Encoding 모두 있을 경우
         ret = reqBodyContentLength();       //  Content-Length를 우선함
     else if (requestMessage.chunked)
@@ -156,6 +148,25 @@ int HTTP::reqBodyChunked() {
     return FAIL;
 }
 
+void    HTTP::additionalParseRequestHeader() {
+    if (requestMessage.header_in.find(CONTENT_LENGTH_STR) != requestMessage.header_in.end())
+        requestMessage.content_length = std::strtod(requestMessage.header_in[CONTENT_LENGTH_STR].c_str(), 0);
+
+    if (requestMessage.header_in[TRANSFER_ENCODING_STR] == "chunked")
+        requestMessage.chunked = true;
+
+    if (requestMessage.header_in.find(HOST_STR) != requestMessage.header_in.end()) {
+        std::string host = requestMessage.header_in[HOST_STR];
+        size_t      found = host.find(":");
+        if (found != std::string::npos)
+            requestMessage.port_num = static_cast<unsigned int>(std::strtod(ft_slice_str(host, found).second.c_str(), 0));
+    }
+
+    if (requestMessage.header_in.find(CONNECTION_STR) != requestMessage.header_in.end())
+        if (requestMessage.header_in[CONNECTION_STR] == "close")
+            requestMessage.keep_alive = false;
+}
+
 void    HTTP::reqInputBuf(std::string const & str) {
     requestMessage.buf += str;
     if (isReadyRequestLine()) {
@@ -164,6 +175,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
     }
     if (isReadyRequestHeader()) {
         parseRequestHeader();
+        additionalParseRequestHeader();
         requestMessage.request_step = CLIENT_READ_REQ_BODY;
     }
     if (isReadyRequestBody() &&
@@ -206,5 +218,9 @@ void HTTP::reqPrint() {
         std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
     else
         std::cout << "************* there is no body ***************" << std::endl;
+    std::cout << "port_num : " << requestMessage.port_num << std::endl
+                << "keep-alive : " << requestMessage.keep_alive << std::endl
+                << "content_length : " << requestMessage.content_length << std::endl
+                << "chunked : " << requestMessage.chunked << std::endl;
     std::cout << "==============<< ststus : " << status << " >>================" << std::endl;
 }

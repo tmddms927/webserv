@@ -47,6 +47,8 @@ struct  RequestMessage {
 
 	/* request header */
 	HTTPHeaderField         header_in;
+	unsigned int			port_num;
+	bool					keep_alive;
 
 	/* request body */
 	std::string             body;
@@ -80,6 +82,7 @@ private:
 	bool	isReadyRequestBody();
 	void	parseRequestLine();
 	void	parseRequestHeader();
+	void	additionalParseRequestHeader();
 	bool	parseRequestBody();
 	int     reqBodyChunked();
 	int     reqBodyContentLength();
