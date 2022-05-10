@@ -59,7 +59,7 @@ void    ft_rtrim_space(std::string & str) {
 ** 현재 시간을 반환
 ** 단위 : millisecond
 */
-unsigned long const get_time() {
+unsigned long get_time() {
 	struct timespec	time;
 
 	clock_gettime(CLOCK_REALTIME, &time);

@@ -144,12 +144,10 @@ void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
 	checkAllowedMethod();
-	findServerBlock();
+	uriParser();
 	checkMethod();
-	if (clients[curr_event->ident].getResponseHaveFileFd() == false) {
-		std::cout << "hihi!!!!!!!!!!!!!!!!!" << std::endl;
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
-	}
 }
 
 /*

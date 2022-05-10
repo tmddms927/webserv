@@ -59,7 +59,7 @@ public:
 	void	kqueueEventWrite();
 
 	/* Server_method */
-    void	findServerBlock();
+    void	uriParser();
 
 	void	setResOKMes();
 	void	setResErrorMes(int const & client);

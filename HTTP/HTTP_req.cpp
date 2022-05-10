@@ -116,7 +116,7 @@ int HTTP::reqBodyContentLength() {
 
     extractstr(temp, requestMessage.buf, left_len);
     requestMessage.body += temp;
-    if (requestMessage.body.size() >= requestMessage.content_length)
+    if (requestMessage.body.size() >= static_cast<size_t>(requestMessage.content_length))
         return SUCCESS;
     return FAIL;
 }
