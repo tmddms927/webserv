@@ -29,7 +29,7 @@
 class Server {
 private:
 	//config const로 바꾸기
-	std::vector<servers>		config;
+	std::vector<servers>		    config;
 	const global					global_config;
 	std::vector<uintptr_t>			server_socket;
 	sockaddr_in						server_addr;

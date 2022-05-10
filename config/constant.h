@@ -6,6 +6,7 @@
 #define UNTITLED1_CONSTANT_H
 
 #define LOCATIONV "location "
+#define SERVERV "server"
 #define PORT "port "
 #define HOSTV "host "
 #define ROOT "root "
