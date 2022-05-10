@@ -242,8 +242,6 @@ void Server::sendResMessage() {
 ** input default response header field
 */
 void Server::setResDefaultHeaderField() {
-	std::string str;
-
 	clients[curr_event->ident].setResponseHeader("Server", SERVER_DEFAULT_NAME);
 	clients[curr_event->ident].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
 }
