@@ -98,5 +98,6 @@ void Server::checkAllowedMethod() {
 ** check keep-alive
 */
 void Server::checkKeepAlive() {
-	if (clients[curr_event->ident].get)
+	if (clients[curr_event->ident].getKeepAlive() == false)
+		disconnect_client(curr_event->ident);
 }
