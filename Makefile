@@ -12,7 +12,7 @@ SRCS	=	main.cpp\
 			Server/Server_kqueue.cpp\
 			Server/Server_method.cpp\
 			Server/Server_utils.cpp\
-			Server/Server_uriParser.cpp\
+			Server/Server_reqHeader.cpp\
 			Server/ContentType/ContentType.cpp\
 			Server/Server.cpp\
 			config/Config.cpp\

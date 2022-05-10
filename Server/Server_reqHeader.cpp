@@ -1,6 +1,17 @@
 #include "Server.hpp"
 
 /*
+** check client request header 
+*/
+void Server::checkReqHeader() {
+	// server block check
+	// port check
+	// method check
+	// directory, file check -> index
+	// error(content not find) -> set status 404
+}
+
+/*
 ** find server block
 ** 아예 수정해야 됨!
 */

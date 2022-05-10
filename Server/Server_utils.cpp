@@ -89,7 +89,14 @@ void Server::checkAllowedMethod() {
 		return ;
 	if ((global_config.allowed_method & a) == PUT_BIT)
 		return ;
-	if ((global_config.allowed_method & HEAD_BIT) == HEAD_BIT)
+	if ((global_config.allowed_method & a) == HEAD_BIT)
 		return ;
 	changeStatusToError(curr_event->ident, 404);
+}
+
+/*
+** check keep-alive
+*/
+void Server::checkKeepAlive() {
+	if (clients[curr_event->ident].get)
 }

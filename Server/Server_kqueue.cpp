@@ -115,6 +115,8 @@ void Server::kqueueEventReadClient() {
 	}
 	else
 		clients[curr_event->ident].reqInputBuf(buf);
+	if (clients[curr_event->ident].reqCheckHeaderFinished())
+		checkReqHeader();
 	if (clients[curr_event->ident].reqCheckFinished())
 		finishedRead();
 }
@@ -152,7 +154,6 @@ void Server::finishedRead() {
 ** check method
 */
 void Server::checkMethod() {
-	std::cout << clients[curr_event->ident].getResponseHaveFileFd() << std::endl;
 	if (clients[curr_event->ident].getStatus() == 200)
 		setResOKMes();
 	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
@@ -167,7 +168,6 @@ void Server::checkMethod() {
 		setResMethodHEAD();
 	else if (clients[curr_event->ident].getMethod() == PUT)
 		setResMethodPUT();
-	std::cout << clients[curr_event->ident].getResponseHaveFileFd() << std::endl;
 }
 
 /*

@@ -88,6 +88,10 @@ public:
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkAllowedMethod();
+	void	checkKeepAlive();
+
+	/* request header parsing */
+	void checkReqHeader();
 };
 
 #endif

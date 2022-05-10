@@ -26,11 +26,12 @@ int main(int argc, char **argv) {
 		http.reqInputBuf(buf);
 		file += buf;
 	}
+	std::cout << "status : " << http.getStatus() << std::endl;
+
+
 	std::cout << "################ file ################" << std::endl;
 	std::cout << file << "<--------FILE END" << std::endl;
 	std::cout << "################ file ################" << std::endl;
-
-	
 
 	return 0;
 }

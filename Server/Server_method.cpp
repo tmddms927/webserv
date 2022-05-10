@@ -197,7 +197,6 @@ void Server::writeResPOSTFile() {
 ** read HEAD file
 */
 void Server::readResHEADFile() {
-	std::cout << "====================================================================" << std::endl;
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
 	size_t len;
 	int fd;

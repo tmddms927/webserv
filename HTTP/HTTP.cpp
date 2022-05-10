@@ -37,7 +37,8 @@ int const & HTTP::getStatus() {
 }
 
 void HTTP::setStatus(int const & s) {
-    this->status = s;
+    if (this->status == 0 || this->status == -1)
+        this->status = s;
 }
 
 // uintptr_t const & HTTP::getResponseFd() {
@@ -63,6 +64,8 @@ void HTTP::resetHTTP() {
     requestMessage.content_length = -1;
     requestMessage.chunked = false;
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
+    requestMessage.keep_alive = true;
+    requestMessage.port_num = 0;
 
     responseMessage.have_file_fd = false;
     responseMessage.file_directory = "";
