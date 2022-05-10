@@ -130,9 +130,9 @@ void Server::kqueueEventReadFileFd() {
 	fd = file_fd[curr_event->ident];
 	if (clients[fd].getStatus() != 0 && clients[fd].getStatus() != -1)
 		readResErrorFile();
-	else if (clients[fd].getMethod() == GET)
+	else if (clients[fd].getMethod() == GET_BIT)
 		readResGETFile();
-	else if (clients[fd].getMethod() == HEAD)
+	else if (clients[fd].getMethod() == HEAD_BIT)
 		readResHEADFile();
 	disconnect_file_fd();
 }
@@ -156,15 +156,15 @@ void Server::finishedRead() {
 void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
-	else if (clients[curr_event->ident].getMethod() == GET)
+	else if (clients[curr_event->ident].getMethod() == GET_BIT)
 		setResMethodGET();
-	else if (clients[curr_event->ident].getMethod() == POST)
+	else if (clients[curr_event->ident].getMethod() == POST_BIT)
 		setResMethodPOST();
-	else if (clients[curr_event->ident].getMethod() == DELETE)
+	else if (clients[curr_event->ident].getMethod() == DELETE_BIT)
 		setResMethodDELETE();
-	else if (clients[curr_event->ident].getMethod() == HEAD)
+	else if (clients[curr_event->ident].getMethod() == HEAD_BIT)
 		setResMethodHEAD();
-	else if (clients[curr_event->ident].getMethod() == PUT)
+	else if (clients[curr_event->ident].getMethod() == PUT_BIT)
 		setResMethodPUT();
 }
 

@@ -20,7 +20,7 @@ uintptr_t const & HTTP::getServerFd() const {
     return server_fd;
 }
 
-std::string const & HTTP::getMethod() const {
+char HTTP::getMethod() const {
     return requestMessage.method;
 }
 
@@ -56,7 +56,8 @@ void HTTP::resetHTTP() {
     requestMessage.buf = "";
     requestMessage.request_line = "";
     requestMessage.unparsed_uri = "";
-    requestMessage.method = "";
+    requestMessage.method_name = "";
+    requestMessage.method = 0;
     requestMessage.header_in.clear();
     requestMessage.body = "";
     requestMessage.chunk.initChunk();

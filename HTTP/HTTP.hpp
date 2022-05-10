@@ -42,8 +42,9 @@ struct  RequestMessage {
 	/* request_line */
 	std::string             request_line;   //  original request line
 	std::string             unparsed_uri;   //  original uri
-	std::string             method;         // -> method name: method name string
+	std::string             method_name;   	//	method name string
 	std::string             http_version;
+	char					method;			//	method bit value
 
 	/* request header */
 	HTTPHeaderField         header_in;
@@ -88,6 +89,7 @@ private:
 	int     reqBodyContentLength();
 	void    addHeader(std::pair<std::string, std::string> & header);
 		/* utils */
+	char    methodStringtoBit(std::string str);
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
 
@@ -97,10 +99,10 @@ public:
 	void					resetHTTP();
 
 	uintptr_t const &		getServerFd() const;
-	std::string const & 	getMethod() const;
 	std::string const & 	getURI() const;
 	std::string & 			getBody();
 	int const &				getStatus();
+	char				 	getMethod() const;
 
 	void					setStatus(int const & s);
 

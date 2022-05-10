@@ -63,7 +63,7 @@ void    HTTP::parseRequestLine() {
     ft_split(v, line, " ");
     if (v.size() != 3)
         setStatus(BAD_REQUEST);
-    requestMessage.method = v[0];
+    requestMessage.method_name = v[0];
     requestMessage.unparsed_uri = v[1];
     requestMessage.http_version = v[2];
 }
@@ -135,6 +135,7 @@ int HTTP::reqBodyChunked() {
         }
         else
             return FAIL;
+
         if (requestMessage.chunk.isEndChunk()) {
             std::string const & s = requestMessage.chunk.getContent();
             if (s.size()) {
@@ -165,6 +166,24 @@ void    HTTP::additionalParseRequestHeader() {
     if (requestMessage.header_in.find(CONNECTION_STR) != requestMessage.header_in.end())
         if (requestMessage.header_in[CONNECTION_STR] == "close")
             requestMessage.keep_alive = false;
+
+    requestMessage.method = methodStringtoBit(requestMessage.method_name);
+    if (requestMessage.method == 0)
+        setStatus(NOT_ALLOWED);
+}
+
+char    HTTP::methodStringtoBit(std::string str) {
+    if (str == GET)
+        return (GET_BIT);
+    else if (str == PUT)
+        return (PUT_BIT);
+    else if (str == DELETE)
+        return (DELETE_BIT);
+    else if (str == POST)
+        return (POST_BIT);
+    else if (str == HEAD)
+        return (HEAD_BIT);
+    return 0;    
 }
 
 void    HTTP::reqInputBuf(std::string const & str) {
@@ -183,7 +202,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {
-        if (requestMessage.method == "POST" && requestMessage.body.empty())
+        if (requestMessage.method_name == "POST" && requestMessage.body.empty())
             setStatus(NOT_ALLOWED);
         setStatus(0);
         reqPrint();
@@ -211,7 +230,7 @@ bool HTTP::reqCheckHeaderFinished() {
 */
 void HTTP::reqPrint() {
     std::cout << "==============<<  request parsing finish  >>==============" << std::endl; 
-    std::cout << requestMessage.method << " " << requestMessage.unparsed_uri << std::endl;
+    std::cout << requestMessage.method_name << " " << requestMessage.unparsed_uri << std::endl;
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
     if (!requestMessage.non_body)
@@ -221,6 +240,7 @@ void HTTP::reqPrint() {
     std::cout << "port_num : " << requestMessage.port_num << std::endl
                 << "keep-alive : " << requestMessage.keep_alive << std::endl
                 << "content_length : " << requestMessage.content_length << std::endl
-                << "chunked : " << requestMessage.chunked << std::endl;
+                << "chunked : " << requestMessage.chunked << std::endl
+                << "method : " << static_cast<int>(requestMessage.method) << std::endl;
     std::cout << "==============<< ststus : " << status << " >>================" << std::endl;
 }
