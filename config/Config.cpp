@@ -84,29 +84,35 @@ std::vector<servers> const & Config::getConfig() const{
 global const & Config::getGlobal() const{
     return global_config;
 }
-/*
+
 std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "Config result" << std::endl;
     std::cout << "=============================================="<< std::endl;
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "client_max_body_size : " << config.global_config.client_max_body_size << std::endl;
-    std::cout << "default_error_page : " << config.global_config.err_page << std::endl;
-    std::cout << "index : " << config.global_config.index << std::endl;
-    std::cout << "allowed_method : " << (int)config.global_config.allowed_method << std::endl;
     std::cout << "--------------------------------------" << std::endl;
     for (int i = 0; i < config.config.size(); ) {
         std::cout << "--------------------------------------" << std::endl;
-        std::cout << "port : " << config.config[i].port << std::endl;
-        std::cout << "host : " << config.config[i].host << std::endl;
-        std::cout << "location : " << config.config[i].location << std::endl;
-        std::cout << "root : " << config.config[i].root << std::endl;
+        std::cout << "server[" << i + 1 << "]" << std::endl;
+        std::cout << "  port : " << config.config[i].port << std::endl;
+        std::cout << "  host : " << config.config[i].host << std::endl;
+        for (int j = 0; j < config.config[i].location.size(); ) {
+            std::cout << "location_"<< j + 1<< "_uri : " << config.config[i].location[j].location_uri << std::endl;
+            std::cout << "    location_root : " << config.config[i].location[j].location_root << std::endl;
+            std::cout << "    allowed_method : " << config.config[i].location[j].allowed_method << std::endl;
+            std::cout << "    default_error_page : " << config.config[i].location[j].err_page << std::endl;
+            std::cout << "    index : " << config.config[i].location[j].index << std::endl;
+            std::cout << "    is_aster : " << config.config[i].location[j].is_aster << std::endl;
+            std::cout << "    CGI : " << config.config[i].location[j].cgi << std::endl;
+            j++;
+        }
         std::cout << "--------------------------------------" << std::endl;
         i++;
     }
     std::cout << "==============================================";
     return os;
 }
-*/
+
 
 const char *Config::GlobalConfigException::what() const throw(){
     return "Check global-value rule";

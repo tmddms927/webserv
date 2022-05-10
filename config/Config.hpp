@@ -49,7 +49,7 @@ public:
     global const & getGlobal() const;
     void    runParse();
 
-    //friend std::ostream &operator<<(std::ostream &os, const Config &config);
+    friend std::ostream &operator<<(std::ostream &os, const Config &config);
 };
 
 #endif //UNTITLED1_CONFIG_HPP
