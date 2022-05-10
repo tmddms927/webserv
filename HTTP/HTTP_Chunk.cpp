@@ -1,5 +1,5 @@
-#include "HTTP.hpp"
-
+#include "HTTP_Chunk.hpp"
+#include <sstream>
 
 void Chunk::setLength(std::string const & len_str) {
     std::stringstream stream;

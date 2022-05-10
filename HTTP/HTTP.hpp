@@ -4,8 +4,9 @@
 #include <map>
 #include <iostream>
 #include <unistd.h>
-#include <sstream>
+// #include <sstream>
 #include "../config/Config.hpp"
+#include "HTTP_Chunk.hpp"
 
 #define ERROR   -1
 #define SUCCESS 0
@@ -33,25 +34,6 @@
 #define PUT                     "PUT"
 
 typedef std::map<std::string, std::string> HTTPHeaderField;
-
-class  Chunk {
-private:
-	bool					isEnd;
-	long                    length;
-	std::string             content;
-
-public:
-	void				initChunk();
-
-	bool				isEndChunk();
-	void				setChunkEnd();
-
-	long const &		getLength() const;
-	std::string const & getContent() const;
-
-	void				setLength(std::string const & len_str);
-	long				appendContent(std::string const & content_part);
-};
 
 struct  RequestMessage {
 	/* raw data */
@@ -92,60 +74,57 @@ private:
 	int             status;
 	unsigned long	req_finished_time;
 
-	int             process_request_line();
-	int             process_request_headers();
-	int             process_request_body();
-	int             set_body_parsor();
-	void            content_phase();
-
-	int             reqBodyContentLength();
-	int             reqBodyChunked();
-
-public:
-	HTTP();
-	HTTP(uintptr_t _server_fd);
-	uintptr_t const & getServerFd() const;
-	std::string const & getMethod() const;
-	std::string const & getURI() const;
-	std::string & getBody();
-	int const & getStatus();
-	// uintptr_t const & getResponseFd();
-	// void setResponseFd(uintptr_t const & s);
-	void setStatus(int const & s);
-	std::string const & getResponseLine() const;
-	std::string const & getResponseHeader() const;
-	std::string const & getResponseBody() const;
-	bool const & getResponseHaveFileFd() const;
-	void setResponseHeader(std::string const & key, std::string const & value);
-	void setResponseHaveFileFd(bool const & have);
-	void resetHTTP();
-	unsigned long const & getReqFinishedTime();
-
 	/* request function */
-	void	reqInputBuf(std::string const & str);
 	bool	isReadyRequestLine();
 	bool	isReadyRequestHeader();
 	bool	isReadyRequestBody();
 	void	parseRequestLine();
 	void	parseRequestHeader();
-	bool	parseRequestBody(); // body가 끝까지 읽은 것을 체크하기 위해 boolean을 리턴
+	bool	parseRequestBody();
+	int     reqBodyChunked();
+	int     reqBodyContentLength();
+	void    addHeader(std::pair<std::string, std::string> & header);
+		/* utils */
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
-	void    addHeader(std::string line);
 
+public:
+	HTTP();
+	HTTP(uintptr_t _server_fd);
+	void					resetHTTP();
 
-	/* */
-	void reqPrint();
-	bool reqCheckFinished();
-	void reqChunkInit();
+	uintptr_t const &		getServerFd() const;
+	std::string const & 	getMethod() const;
+	std::string const & 	getURI() const;
+	std::string & 			getBody();
+	int const &				getStatus();
 
+	void					setStatus(int const & s);
+
+	/* request function */
+	void	reqInputBuf(std::string const & str);
+	void	reqPrint();
+	bool	reqCheckFinished();
+	bool	reqCheckHeaderFinished();
 
 	/* response function */
-	void setResponseFileDirectory(std::string const & str);
-	std::string const & getResponseFileDirectory();
-	void setResponseLine();
-	void setResponseBody(std::string const & str);
-	bool checkStatusError();
+	std::string const &		getResponseFileDirectory();
+	std::string const & 	getResponseLine() const;
+	std::string const & 	getResponseHeader() const;
+	std::string const & 	getResponseBody() const;
+	bool const &			getResponseHaveFileFd() const;
+
+	void					setResponseFileDirectory(std::string const & str);
+	void					setResponseLine();
+	void					setResponseHeader(std::string const & key, std::string const & value);
+	void					setResponseBody(std::string const & str);
+	void 					setResponseHaveFileFd(bool const & have);
+	
+	bool					checkStatusError();
+	unsigned long const &	getReqFinishedTime();
+
+	// uintptr_t const & getResponseFd();
+	// void setResponseFd(uintptr_t const & s);
 };
 
 #endif

@@ -55,6 +55,18 @@ void    ft_rtrim_space(std::string & str) {
     str = "";
 }
 
+std::pair<std::string, std::string> ft_slice_str(std::string const & src, size_t pos) {
+    std::pair<std::string, std::string> p;
+    if (src.size() <= pos)
+        throw std::out_of_range("out of range");
+    p.first = src.substr(0, pos);
+    if (src.size() <= pos + 1)
+        p.second = "";
+    else
+        p.second = src.substr(pos + 1);
+    return p;
+}
+
 /*
 ** 현재 시간을 반환
 ** 단위 : millisecond

@@ -1,6 +1,7 @@
 OUT		=	webserv
 CC		=	clang++
-CFLAGS	=	-fsanitize=address -g -I./HTTP -I./config -Wall -Wextra -Werror -fsanitize=address -g
+CFLAGS	=	-fsanitize=address -g -I./HTTP -I./config
+#-Wall -Wextra -Werror -fsanitize=address -g
 SRCS	=	main.cpp\
 			HTTP/HeaderFieldInfo.cpp\
 			HTTP/HTTP.cpp\

@@ -6,16 +6,14 @@
 #include <vector>
 #include <utility>
 
-void    HTTP::addHeader(std::string line) {
-    std::vector<std::string> v;
-    ft_split(v, line, ":");
-    if (v.size() != 2)
-        setStatus(BAD_REQUEST);
-    ft_trim_space(v[0]);
-    ft_trim_space(v[1]);
-    requestMessage.header_in.insert(std::pair<std::string, std::string>(v[0], v[1]));
+void    HTTP::addHeader(std::pair<std::string, std::string> & header) {
+    ft_trim_space(header.first);
+    ft_trim_space(header.second);
+    requestMessage.header_in.insert(header);
     //header validate
 }
+
+
 
 bool    HTTP::extractstr(std::string & dest, std::string & src, std::string const & cut) {
     size_t found;
@@ -76,12 +74,19 @@ void    HTTP::parseRequestLine() {
 void    HTTP::parseRequestHeader() {
     std::string line;
     std::vector<std::string> v;
+    std::pair<std::string, std::string> header;
+    size_t found;
 
     extractstr(line, requestMessage.buf, "\r\n\r\n");
     ft_split(v, line, "\r\n");
     for (std::vector<std::string>::iterator
-            it = v.begin(); it != v.end(); it++)
-        addHeader(*it);
+            it = v.begin(); it != v.end(); it++) {
+        found = it->find(":");
+        if (found == std::string::npos)
+            return ;//return error
+        header = ft_slice_str(*it, found);
+        addHeader(header);
+    }
     if (requestMessage.header_in.find(CONTENT_LENGTH_STR) != requestMessage.header_in.end())
         requestMessage.content_length = std::strtod(requestMessage.header_in[CONTENT_LENGTH_STR].c_str(), 0);
     if (requestMessage.header_in[TRANSFER_ENCODING_STR] == "chunked")
@@ -180,8 +185,13 @@ void    HTTP::reqInputBuf(std::string const & str) {
 bool HTTP::reqCheckFinished() {
 	if (requestMessage.request_step == CLIENT_READ_FINISH)
 		return true;
-	else
-		return false;
+    return false;
+}
+
+bool HTTP::reqCheckHeaderFinished() {
+    if (requestMessage.request_step == CLIENT_READ_REQ_BODY)
+        return true;
+    return false;
 }
 
 /*
