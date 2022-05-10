@@ -42,22 +42,6 @@ void Config::setMainConfig() {
     }
     throw GlobalConfigException();
 }
-/*
-void Config::isExist() {
-    std::vector<std::string> files;
-    files.push_back(global_config.index);
-    files.push_back(global_config.err_page);
-
-    for (int i = 0; i < files.size(); i++) {
-        std::ifstream file(files[i]);
-        if (file.is_open()) {
-            file.close();
-            continue;
-        }
-        throw GlobalConfigException();
-    }
-}
-*/
 
 void Config::validateServerVariables() {
     std::vector<std::string>::iterator it = raw.begin();
@@ -99,7 +83,7 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
         for (int j = 0; j < config.config[i].location.size(); ) {
             std::cout << "location_"<< j + 1<< "_uri : " << config.config[i].location[j].location_uri << std::endl;
             std::cout << "    location_root : " << config.config[i].location[j].location_root << std::endl;
-            std::cout << "    allowed_method : " << config.config[i].location[j].allowed_method << std::endl;
+            std::cout << "    allowed_method : " << (int)config.config[i].location[j].allowed_method << std::endl;
             std::cout << "    default_error_page : " << config.config[i].location[j].err_page << std::endl;
             std::cout << "    index : " << config.config[i].location[j].index << std::endl;
             std::cout << "    is_aster : " << config.config[i].location[j].is_aster << std::endl;

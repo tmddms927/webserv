@@ -5,6 +5,11 @@
 #include "ServerBlock.hpp"
 #include <sstream>
 
+#define FIND(X) (*it).find(X) != std::string::npos
+#define GET_RAW_VALUE(X) std::stringstream ss((*it).substr(strlen(X)))
+#define SET_TMP_VALUE(X) ss >> X
+#define SERVER_BLOCK_END (*it).empty() && (*it) != SERVERV
+
 typedef std::vector<std::string> rawtxt;
 
 servers ServerBlock::parse(rawtxt &raw) {
@@ -14,29 +19,25 @@ servers ServerBlock::parse(rawtxt &raw) {
     tmp.port = 0;
     it = raw.begin();
     ++it;
-    while (!(*it).empty() && (*it) != SERVERV) {
-        if ((*it).find(LOCATIONV) != std::string::npos)
+    while (!SERVER_BLOCK_END) {
+        if (FIND(LOCATIONV))
             tmp.location.push_back(parse_location(raw, it));
-        if ((*it).find(PORT) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(PORT)));
-            ss >> tmp.port;
+        if (FIND(PORT)) {
+            GET_RAW_VALUE(PORT);
+            SET_TMP_VALUE(tmp.port);
         }
-        if ((*it).find(HOSTV) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(HOSTV)));
-            ss >> tmp.host;
+        if (FIND(HOSTV)) {
+            GET_RAW_VALUE(HOSTV);
+            SET_TMP_VALUE(tmp.host);
         }
         it++;
         if (it == raw.end())
             break;
+        if (it->empty() && (it + 1)->find(LOCATIONV) != std::string::npos)
+            it++;
     }
     if (tmp.location.empty())
         throw InvalidServerBlock();
-    /*
-    if (!checkVariables(tmp, conf))
-        throw InvalidServerBlock();
-    if (tmp.port == 0)
-        tmp.port = conf.port;
-    */
     return tmp;
 }
 
@@ -46,35 +47,70 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
     tmp.allowed_method = 0;
     tmp.is_aster = false;
     while (!(*it).empty()) {
-        if ((*it).find(LOCATIONV) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(LOCATIONV)));
-            ss >> tmp.location_uri;
-            if (tmp.location_uri.find('*') != std::string::npos) {
+        if (tmp.location_uri.empty() && FIND(LOCATIONV)) {
+            GET_RAW_VALUE(LOCATIONV);
+            SET_TMP_VALUE(tmp.location_uri);
+            if (FIND("*")) {
                 int found = tmp.location_uri.find('*');
                 tmp.location_uri.replace(found, 1, "");
                 tmp.is_aster = true;
             }
         }
-        if ((*it).find(ROOT) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(ROOT)));
-            ss >> tmp.location_root;
+        else if (FIND(ROOT)) {
+            GET_RAW_VALUE(ROOT);
+            SET_TMP_VALUE(tmp.location_root);
         }
-        if ((*it).find(INDEXV) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(INDEXV)));
-            ss >> tmp.index;
+        else if (FIND(INDEXV)) {
+            GET_RAW_VALUE(INDEXV);
+            SET_TMP_VALUE(tmp.index);
         }
-        if ((*it).find(DEFAULT_ERROR) != std::string::npos) {
-            std::stringstream ss((*it).substr(strlen(DEFAULT_ERROR)));
-            ss >> tmp.err_page;
+        else if (FIND(DEFAULT_ERROR)) {
+            GET_RAW_VALUE(DEFAULT_ERROR);
+            SET_TMP_VALUE(tmp.err_page);
         }
-        if ((*it).find(ALLOWED_METHODV) != std::string::npos)
+        else if (FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
+        else
+            throw InvalidLocationBlock();
         it++;
+        if (it->empty() && (it + 1) != raw.end() && *(it + 1) != SERVERV && (it + 1)->find(LOCATIONV) == std::string::npos)
+            throw InvalidLocationBlock();
     }
     raw.erase(raw.begin(), it);
     it = raw.begin();
     return tmp;
 }
+/*
+void Config::isExistDir() {
+    std::vector<std::string> files;
+    files.push_back(global_config.index);
+    files.push_back(global_config.err_page);
+
+    for (int i = 0; i < files.size(); i++) {
+        std::ifstream file(files[i]);
+        if (file.is_open()) {
+            file.close();
+            continue;
+        }
+        throw GlobalConfigException();
+    }
+}
+
+void Config::isExistFile() {
+    std::vector<std::string> files;
+    files.push_back(global_config.index);
+    files.push_back(global_config.err_page);
+
+    for (int i = 0; i < files.size(); i++) {
+        std::ifstream file(files[i]);
+        if (file.is_open()) {
+            file.close();
+            continue;
+        }
+        throw GlobalConfigException();
+    }
+}
+*/
 
 bool ServerBlock::checkVariables(const servers &tmp, const servers &src) {
     bool res = true;
@@ -91,7 +127,7 @@ const char *ServerBlock::InvalidServerBlock::what() const throw(){
 }
 
 const char *ServerBlock::InvalidLocationBlock::what() const throw() {
-    return exception::what();
+    return "InvalidLocationBlock";
 }
 
 void ServerBlock::validMethod(char & allowed_bits, std::string const & methods) {
