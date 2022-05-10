@@ -9,6 +9,13 @@
 
 Config::Config(std::string const & conf_file) : config(), raw(), global_config(), conf_file(conf_file){}
 
+void Config::runParse() {
+    readFile();
+    setMainConfig();
+    setServerBlock();
+    validateServerBlock();
+}
+
 void Config::readFile() {
     std::ifstream file(conf_file);
     if (file.is_open()) {
@@ -22,16 +29,8 @@ void Config::readFile() {
         std::exit(1);
     }
     if (!(raw.end() - 1)->empty())
-        throw VariableRuleException();
+        throw VariableRuleException("End of File Must be \\n\\n");
 }
-
-
-void Config::eraseCompleted() {
-    while (!raw.begin()->empty())
-        raw.erase(raw.begin());
-    raw.erase(raw.begin());
-}
-
 
 void Config::setMainConfig() {
     if (raw[0].find(CLIENT_BODY_SIZE) != std::string::npos) {
@@ -43,7 +42,13 @@ void Config::setMainConfig() {
     throw GlobalConfigException();
 }
 
-void Config::validateServerVariables() {
+void Config::eraseCompleted() {
+    while (!raw.begin()->empty())
+        raw.erase(raw.begin());
+    raw.erase(raw.begin());
+}
+
+void Config::setServerBlock() {
     std::vector<std::string>::iterator it = raw.begin();
     while (raw.size()) {
         if (*it == SERVERV)
@@ -56,17 +61,11 @@ void Config::validateServerVariables() {
     }
 }
 
-void Config::runParse() {
-    readFile();
-    setMainConfig();
-    validateServerVariables();
-}
+void Config::validateServerBlock() {
+    bool res = false;
 
-std::vector<servers> const & Config::getConfig() const{
-    return config;
-}
-global const & Config::getGlobal() const{
-    return global_config;
+    if (res)
+        throw VariableRuleException();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -97,11 +96,29 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     return os;
 }
 
-
 const char *Config::GlobalConfigException::what() const throw(){
     return "Check global-value rule";
 }
 
 const char *Config::VariableRuleException::what() const throw() {
-    return "Check config file rule";
+    char res[100];
+    std::string msg = "Check config file rule";
+    ::memset(res, 0, 100);
+    ::memmove(res, msg.c_str(), msg.length());
+    if (!_str.empty()) {
+        ::strcat(res, _str.c_str());
+    }
+    return res;
 }
+
+Config::VariableRuleException::VariableRuleException() {}
+
+std::vector<servers> const & Config::getConfig() const{
+    return config;
+}
+
+global const & Config::getGlobal() const{
+    return global_config;
+}
+
+

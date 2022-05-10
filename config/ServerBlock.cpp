@@ -9,6 +9,7 @@
 #define GET_RAW_VALUE(X) std::stringstream ss((*it).substr(strlen(X)))
 #define SET_TMP_VALUE(X) ss >> X
 #define SERVER_BLOCK_END (*it).empty() && (*it) != SERVERV
+#define UNDEFINED_END it->empty() && (it + 1) != raw.end() && *(it + 1) != SERVERV && (it + 1)->find(LOCATIONV) == std::string::npos
 
 typedef std::vector<std::string> rawtxt;
 
@@ -56,78 +57,29 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
                 tmp.is_aster = true;
             }
         }
-        else if (FIND(ROOT)) {
+        else if (tmp.location_root.empty() && FIND(ROOT)) {
             GET_RAW_VALUE(ROOT);
             SET_TMP_VALUE(tmp.location_root);
         }
-        else if (FIND(INDEXV)) {
+        else if (tmp.index.empty() && FIND(INDEXV)) {
             GET_RAW_VALUE(INDEXV);
             SET_TMP_VALUE(tmp.index);
         }
-        else if (FIND(DEFAULT_ERROR)) {
+        else if (tmp.err_page.empty() && FIND(DEFAULT_ERROR)) {
             GET_RAW_VALUE(DEFAULT_ERROR);
             SET_TMP_VALUE(tmp.err_page);
         }
-        else if (FIND(ALLOWED_METHODV))
+        else if (tmp.allowed_method == 0 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
         else
             throw InvalidLocationBlock();
         it++;
-        if (it->empty() && (it + 1) != raw.end() && *(it + 1) != SERVERV && (it + 1)->find(LOCATIONV) == std::string::npos)
+        if (UNDEFINED_END)
             throw InvalidLocationBlock();
     }
     raw.erase(raw.begin(), it);
     it = raw.begin();
     return tmp;
-}
-/*
-void Config::isExistDir() {
-    std::vector<std::string> files;
-    files.push_back(global_config.index);
-    files.push_back(global_config.err_page);
-
-    for (int i = 0; i < files.size(); i++) {
-        std::ifstream file(files[i]);
-        if (file.is_open()) {
-            file.close();
-            continue;
-        }
-        throw GlobalConfigException();
-    }
-}
-
-void Config::isExistFile() {
-    std::vector<std::string> files;
-    files.push_back(global_config.index);
-    files.push_back(global_config.err_page);
-
-    for (int i = 0; i < files.size(); i++) {
-        std::ifstream file(files[i]);
-        if (file.is_open()) {
-            file.close();
-            continue;
-        }
-        throw GlobalConfigException();
-    }
-}
-*/
-
-bool ServerBlock::checkVariables(const servers &tmp, const servers &src) {
-    bool res = true;
-    /*
-    res |= (tmp.port != src.port)
-        || (tmp.root == "")
-        ;
-        */
-    return res;
-}
-
-const char *ServerBlock::InvalidServerBlock::what() const throw(){
-    return "InvalidServerBlock";
-}
-
-const char *ServerBlock::InvalidLocationBlock::what() const throw() {
-    return "InvalidLocationBlock";
 }
 
 void ServerBlock::validMethod(char & allowed_bits, std::string const & methods) {
@@ -157,3 +109,10 @@ void ServerBlock::validMethod(char & allowed_bits, std::string const & methods) 
 
 }
 
+const char *ServerBlock::InvalidServerBlock::what() const throw(){
+    return "InvalidServerBlock";
+}
+
+const char *ServerBlock::InvalidLocationBlock::what() const throw() {
+    return "InvalidLocationBlock";
+}
