@@ -15,7 +15,7 @@ void    ft_trim_space(std::string & str);
 void    ft_ltrim_space(std::string & str);
 void    ft_rtrim_space(std::string & str);
 
-unsigned long const get_time();
+unsigned long get_time();
 
 
 #endif

@@ -90,18 +90,19 @@ void    HTTP::parseRequestHeader() {
 
 bool    HTTP::parseRequestBody() {
     int ret;
-    //  non_body일 경우, 모든 body를 버리기
+
     if (requestMessage.non_body)
-        requestMessage.buf = "";
-    //  body len 확인
+        requestMessage.buf = "";            //  non_body일 경우, 모든 body를 버리기
+
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
-        setStatus(PATLOAD_TOO_LARGE);
-    // Content-Length, Transfer-Encoding 모두 있을 경우, Content-Length를 우선함
-    if (requestMessage.content_length >= 0)
-        ret = reqBodyContentLength();
+        setStatus(PATLOAD_TOO_LARGE);       //  body_len이 REQUEST_BODY_MAX_SIZE보다 크면 error
+
+    
+    if (requestMessage.content_length >= 0) //  Content-Length, Transfer-Encoding 모두 있을 경우
+        ret = reqBodyContentLength();       //  Content-Length를 우선함
     else if (requestMessage.chunked)
         ret = reqBodyChunked();
-    else { // Content-Length, Transfer-Encoding 모두 없을 경우
+    else {                                  //  Content-Length, Transfer-Encoding 모두 없을 경우
         requestMessage.non_body = true;
         ret = SUCCESS;
     }
@@ -117,7 +118,7 @@ int HTTP::reqBodyContentLength() {
 
     extractstr(temp, requestMessage.buf, left_len);
     requestMessage.body += temp;
-    if (requestMessage.body.size() >= requestMessage.content_length)
+    if (requestMessage.body.size() >= static_cast<size_t>(requestMessage.content_length))
         return SUCCESS;
     return FAIL;
 }

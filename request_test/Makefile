@@ -1,7 +1,6 @@
 OUT		=	chunk_test
 CC		=	clang++
-CFLAGS	=	-fsanitize=address -g -I../HTTP/
-#-Wall -Wextra -Werror -fsanitize=address -g
+CFLAGS	=	-fsanitize=address -g -I../HTTP/ -Wall -Wextra -Werror -fsanitize=address -g
 SRCS	=	request_test.cpp\
 			../HTTP/HTTPHeaderField.hpp\
 			../HTTP/HTTP_req.cpp\
