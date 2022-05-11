@@ -232,9 +232,9 @@ void Server::sendResMessage() {
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
 
-	// std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	// std::cout << "[[[[ response message! ]]]]" << std::endl;
-	// std::cout << "[[[[" << message << "]]]]" << std::endl;
+	std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	std::cout << "[[[[ response message! ]]]]" << std::endl;
+	std::cout << "[[[[" << message << "]]]]" << std::endl;
 
 	/////////////////////////////////////////////////////
 

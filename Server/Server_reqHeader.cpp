@@ -165,5 +165,5 @@ void Server::checkAllowedMethod() {
 		return ;
 	if ((config[block].location[location].allowed_method & a) == HEAD_BIT)
 		return ;
-	changeStatusToError(curr_event->ident, 404);
+	clients[curr_event->ident].setStatus(405);
 }
