@@ -21,7 +21,8 @@ private:
     void                            setMainConfig();
     void                            eraseCompleted();
     void                            setServerBlock();
-    void                            isExist();
+    void                            checkVariables();
+    void                            checkPort();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
     void                            checkFile();

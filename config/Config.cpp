@@ -15,7 +15,6 @@ void Config::runParse() {
     setMainConfig();
     setServerBlock();
     validateServerBlock();
-    isExist();
 }
 
 void Config::readFile() {
@@ -74,6 +73,15 @@ void Config::openDir(std::string const & str) {
     fs ? closedir(fs) : throw VariableRuleException("Open directory failed");
 }
 
+void Config::checkPort() {
+    int port = config[0].port;
+
+    for (int i = 1; i < config.size(); i++) {
+        if (port == config[i].port)
+            throw VariableRuleException("Ports can't be duplicated");
+    }
+}
+
 void Config::checkFile() {
     for (int i = 0; i < config.size(); i++) {
         for (int j = 0; j < config[i].location.size() ; j++) {
@@ -91,13 +99,14 @@ void Config::checkDir() {
     }
 }
 
-void Config::isExist() {
+void Config::checkVariables() {
     checkDir();
     checkFile();
+    checkPort();
 }
 
 void Config::validateServerBlock() {
-    isExist();
+    checkVariables();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -153,3 +162,4 @@ std::vector<servers> const & Config::getConfig() const{
 global const & Config::getGlobal() const{
     return global_config;
 }
+
