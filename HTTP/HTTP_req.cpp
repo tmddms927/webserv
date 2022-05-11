@@ -122,6 +122,7 @@ int HTTP::reqBodyContentLength() {
 
 int HTTP::reqBodyChunked() {
     std::string buf;
+    
     for (; !requestMessage.buf.empty(); ) {
         if (requestMessage.chunk.getLength() < 0) {
             if (extractstr(buf, requestMessage.buf, "\r\n"))
