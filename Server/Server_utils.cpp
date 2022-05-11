@@ -75,26 +75,6 @@ void Server::checkClientTimeout() {
 }
 
 /*
-** allowed method 확인하기
-*/
-void Server::checkAllowedMethod() {
-	// todo char a -> method 수정하기!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	char a = PUT_BIT;
-
-	if ((global_config.allowed_method & a) == GET_BIT)
-		return ;
-	if ((global_config.allowed_method & a) == POST_BIT)
-		return ;
-	if ((global_config.allowed_method & a) == DELETE_BIT)
-		return ;
-	if ((global_config.allowed_method & a) == PUT_BIT)
-		return ;
-	if ((global_config.allowed_method & a) == HEAD_BIT)
-		return ;
-	changeStatusToError(curr_event->ident, 404);
-}
-
-/*
 ** check keep-alive
 */
 void Server::checkKeepAlive() {

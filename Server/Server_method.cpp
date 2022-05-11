@@ -21,7 +21,8 @@ void Server::setResOKMes() {
 void Server::setResErrorMes(int const & client) {
 	int fd;
 
-	fd = open(global_config.err_page.c_str(), O_RDONLY);
+	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0) {
 		setResDefaultHeaderField();
 		clients[client].setResponseLine();
@@ -53,7 +54,6 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-
 ////
 return changeStatusToError(curr_event->ident, 405);
 ////
@@ -231,8 +231,11 @@ void Server::sendResMessage() {
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
-	std::cout << "[[[[ response message! ]]]]" << std::endl;
-	std::cout << "[[[[" << message << "]]]]" << std::endl;
+
+	// std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	// std::cout << "[[[[ response message! ]]]]" << std::endl;
+	// std::cout << "[[[[" << message << "]]]]" << std::endl;
+
 	/////////////////////////////////////////////////////
 
 	write(curr_event->ident, message.c_str(), message.length());

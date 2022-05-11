@@ -68,6 +68,8 @@ void HTTP::resetHTTP() {
 	requestMessage.keep_alive = true;
 	requestMessage.port_num = 0;
 
+	responseMessage.server_block_index = 0;
+	responseMessage.location_index = 0;
 	responseMessage.have_file_fd = false;
 	responseMessage.file_directory = "";
 	responseMessage.response_line = "";
@@ -101,4 +103,20 @@ unsigned long const & HTTP::getReqFinishedTime() {
 
 bool const & HTTP::getKeepAlive() const {
 	return requestMessage.keep_alive;
+}
+
+int const & HTTP::getResServerBlockIndex() {
+	return responseMessage.server_block_index;
+}
+
+void HTTP::setResServerBlockIndex(int const & i) {
+	responseMessage.server_block_index = i;
+}
+
+int const & HTTP::getResLocationIndex() {
+	return responseMessage.location_index;
+}
+
+void HTTP::setResLocationIndex(int const & i) {
+	responseMessage.location_index = i;
 }

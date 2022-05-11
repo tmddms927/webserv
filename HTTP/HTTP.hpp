@@ -62,6 +62,8 @@ struct  RequestMessage {
 };
 
 struct ResponseMessage {
+	int						server_block_index;
+	int						location_index;
 	bool					have_file_fd;
 	std::string             file_directory;
 	std::string             response_line;
@@ -88,7 +90,7 @@ private:
 	int     reqBodyChunked();
 	int     reqBodyContentLength();
 	void    addHeader(std::pair<std::string, std::string> & header);
-		/* utils */
+	/* utils */
 	char    methodStringtoBit(std::string str);
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
@@ -130,6 +132,10 @@ public:
 	
 	bool					checkStatusError();
 	unsigned long const &	getReqFinishedTime();
+	int const & 			getResServerBlockIndex();
+	void					setResServerBlockIndex(int const & i);
+	int const & 			getResLocationIndex();
+	void					setResLocationIndex(int const & i);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

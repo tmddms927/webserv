@@ -11,14 +11,14 @@ ContentType::ContentType(std::string const & f) : file(f) {
 ** get content-type
 */
 std::string const & ContentType::getContentType() {
-	set_content_type();
+	setContentType();
 	return content_type;
 }
 
 /*
 ** set content type
 */
-void ContentType::set_content_type() {
+void ContentType::setContentType() {
 	std::string temp;
 	size_t index;
 

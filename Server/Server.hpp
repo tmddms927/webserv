@@ -87,11 +87,17 @@ public:
 	bool	checkFileFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
-	void	checkAllowedMethod();
 	void	checkKeepAlive();
 
 	/* request header parsing */
-	void checkReqHeader();
+	void	checkReqHeader();
+	void	findServerBlockIndex();
+	void	findServerLocationIndex();
+	bool	findServerLocationIndex_findRoot();
+	bool	findServerLocationIndex_findServerBlock1();
+	bool	findServerLocationIndex_findServerBlock2();
+	bool	findServerLocationIndex_checkAsterisk();
+	void	checkAllowedMethod();
 };
 
 #endif
