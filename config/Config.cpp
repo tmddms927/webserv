@@ -6,6 +6,7 @@
 #include <sstream>
 #include "Config.hpp"
 #include "unistd.h"
+#include "dirent.h"
 
 Config::Config(std::string const & conf_file) : config(), raw(), global_config(), conf_file(conf_file){}
 
@@ -14,6 +15,7 @@ void Config::runParse() {
     setMainConfig();
     setServerBlock();
     validateServerBlock();
+    isExist();
 }
 
 void Config::readFile() {
@@ -29,7 +31,7 @@ void Config::readFile() {
         std::exit(1);
     }
     if (!(raw.end() - 1)->empty())
-        throw VariableRuleException("End of File Must be \\n\\n");
+        throw VariableRuleException("End of file must be represented \\n\\n");
 }
 
 void Config::setMainConfig() {
@@ -50,7 +52,7 @@ void Config::eraseCompleted() {
 
 void Config::setServerBlock() {
     std::vector<std::string>::iterator it = raw.begin();
-    while (raw.size()) {
+    while (!raw.empty()) {
         if (*it == SERVERV)
             config.push_back(ServerBlock::parse(raw));
         else if (*it == "")
@@ -61,11 +63,41 @@ void Config::setServerBlock() {
     }
 }
 
-void Config::validateServerBlock() {
-    bool res = false;
+void Config::openFile(std::string const & str) {
+    std::fstream fs;
+    fs.open(str);
+    fs.is_open() ? fs.close() : throw VariableRuleException("File not exist");
+}
 
-    if (res)
-        throw VariableRuleException();
+void Config::openDir(std::string const & str) {
+    DIR* fs = opendir(str.c_str());
+    fs ? closedir(fs) : throw VariableRuleException("Open directory failed");
+}
+
+void Config::checkFile() {
+    for (int i = 0; i < config.size(); i++) {
+        for (int j = 0; j < config[i].location.size() ; j++) {
+            openFile(config[i].location[j].location_root + config[i].location[j].index);
+            openFile(config[i].location[j].location_root + config[i].location[j].err_page);
+        }
+    }
+}
+
+void Config::checkDir() {
+    for (int i = 0; i < config.size(); i++) {
+        for (int j = 0; j < config[i].location.size() ; j++) {
+            openDir(config[i].location[j].location_root);
+        }
+    }
+}
+
+void Config::isExist() {
+    checkDir();
+    checkFile();
+}
+
+void Config::validateServerBlock() {
+    isExist();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -106,6 +138,7 @@ const char *Config::VariableRuleException::what() const throw() {
     ::memset(res, 0, 100);
     ::memmove(res, msg.c_str(), msg.length());
     if (!_str.empty()) {
+        ::strcat(res, " : ");
         ::strcat(res, _str.c_str());
     }
     return res;
@@ -120,5 +153,3 @@ std::vector<servers> const & Config::getConfig() const{
 global const & Config::getGlobal() const{
     return global_config;
 }
-
-

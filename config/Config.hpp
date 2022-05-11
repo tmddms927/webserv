@@ -21,10 +21,12 @@ private:
     void                            setMainConfig();
     void                            eraseCompleted();
     void                            setServerBlock();
+    void                            isExist();
+    void                            openFile(std::string const & str);
+    void                            openDir(std::string const & str);
+    void                            checkFile();
+    void                            checkDir();
     void                            validateServerBlock();
-    /*
-    void    isExist();
-     */
 private:
     class   GlobalConfigException : public std::exception {
     public:
