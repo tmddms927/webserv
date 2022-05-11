@@ -106,14 +106,6 @@ return changeStatusToError(curr_event->ident, 405);
 void Server::setResMethodHEAD() {
 	int fd;
 
-////
-
-	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(405);
-	clients[curr_event->ident].setResponseLine();
-	return ;
-////
-
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);

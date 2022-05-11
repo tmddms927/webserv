@@ -77,7 +77,7 @@ public:
 	void	sendResMessage();
 	void	setResDefaultHeaderField();
 	void	changeStatusToError(int const & client, int const & st);
-	void	isFile();
+	void	checkMethodHEADBODY();
 
 	/* utils.cpp */
 	void	change_events(uintptr_t const & ident,
@@ -98,6 +98,7 @@ public:
 	bool	findServerLocationIndex_findServerBlock2();
 	bool	findServerLocationIndex_checkAsterisk();
 	void	checkAllowedMethod();
+	void	isFile();
 };
 
 #endif
