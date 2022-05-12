@@ -75,9 +75,9 @@ public:
 	void	readResHEADFile();
 
 	void	sendResMessage();
-	void	setResDefaultHeaderField();
+	void	setResDefaultHeaderField(uintptr_t fd);
 	void	changeStatusToError(int const & client, int const & st);
-	void	checkMethodHEADBODY();
+	bool	isMethodHEAD(uintptr_t fd);
 
 	/* utils.cpp */
 	void	change_events(uintptr_t const & ident,

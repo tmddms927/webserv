@@ -6,13 +6,15 @@
 ** set OK response message - directory doesn't have index file
 */
 void Server::setResOKMes() {
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setResponseLine();
 
-	ContentType ct(clients[curr_event->ident].getResponseFileDirectory());
-	clients[curr_event->ident].setResponseHeader("Content-Type", ct.getContentType());
-	clients[curr_event->ident].setResponseBody("123");
-	clients[curr_event->ident].setResponseHeader("Content-Length", "3");
+	if (isMethodHEAD(curr_event->ident) == false) {
+		ContentType ct(clients[curr_event->ident].getResponseFileDirectory());
+		clients[curr_event->ident].setResponseHeader("Content-Type", ct.getContentType());
+		clients[curr_event->ident].setResponseBody("123");
+		clients[curr_event->ident].setResponseHeader("Content-Length", "3");
+	}
 }
 
 /*
@@ -24,7 +26,7 @@ void Server::setResErrorMes(int const & client) {
 	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0) {
-		setResDefaultHeaderField();
+		setResDefaultHeaderField(curr_event->ident);
 		clients[client].setResponseLine();
 	}
 	else {
@@ -77,7 +79,7 @@ void Server::setResMethodPUT() {
 ////
 return changeStatusToError(curr_event->ident, 405);
 ////
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(200);
 	// clients[curr_event->ident].setResponseBody("");
 	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
@@ -95,7 +97,7 @@ return changeStatusToError(curr_event->ident, 405);
 	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
 }
@@ -127,13 +129,13 @@ void Server::readResErrorFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
-	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0) {
+	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
 		ContentType ct(clients[fd].getResponseFileDirectory());
 		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
 		clients[fd].setResponseBody(buf);
 		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setResponseLine();
 }
 
@@ -153,13 +155,15 @@ void Server::readResGETFile() {
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
-
-	ContentType ct(clients[fd].getResponseFileDirectory());
-	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-	setResDefaultHeaderField();
+	if (isMethodHEAD(fd) == false) {
+		ContentType ct(clients[fd].getResponseFileDirectory());
+		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+		clients[fd].setResponseBody(buf);
+		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
+	}
+	std::cout << "good!" << std::endl;
+	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
-	clients[fd].setResponseBody(buf);
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[fd].setResponseLine();
 }
 
@@ -177,7 +181,7 @@ void Server::writeResPOSTFile() {
 	if (len != req_body.length())
 		return changeStatusToError(fd, 404);
 
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	// post body 있어야되나..?
 	// clients[fd].setResponseBody("");
@@ -202,7 +206,7 @@ void Server::readResHEADFile() {
 		return changeStatusToError(fd, 500);
 
 	clients[fd].setStatus(200);
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setResponseLine();
 }
 
@@ -236,9 +240,9 @@ void Server::sendResMessage() {
 /*
 ** input default response header field
 */
-void Server::setResDefaultHeaderField() {
-	clients[curr_event->ident].setResponseHeader("Server", SERVER_DEFAULT_NAME);
-	clients[curr_event->ident].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
+void Server::setResDefaultHeaderField(uintptr_t fd) {
+	clients[fd].setResponseHeader("Server", SERVER_DEFAULT_NAME);
+	clients[fd].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
 }
 
 /*
@@ -247,4 +251,16 @@ void Server::setResDefaultHeaderField() {
 void Server::changeStatusToError(int const & client, int const & st) {
 	clients[client].setStatus(st);
 	setResErrorMes(client);
+}
+
+/*
+** method가 HEAD인지 확인
+*/
+bool Server::isMethodHEAD(uintptr_t fd) {
+	char method = clients[fd].getMethod();
+
+	if (method == HEAD_BIT)
+		return true;
+	else
+		return false;
 }
