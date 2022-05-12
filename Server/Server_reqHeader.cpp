@@ -17,7 +17,7 @@ void Server::findServerBlockIndex() {
 	uintptr_t server_fd = clients[curr_event->ident].getServerFd();
 	size_t size = server_socket.size();
 
-	for (int i = 0; i < size; ++i) {
+	for (size_t i = 0; i < size; ++i) {
 		if (server_socket[i] == server_fd) {
 			clients[curr_event->ident].setResServerBlockIndex(i);
 			return ;
