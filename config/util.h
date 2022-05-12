@@ -7,17 +7,23 @@
 #include "constant.h"
 
 typedef struct  global_s {
-    std::string                 err_page;
-    int                         client_max_body_size;
-    std::string                 index;
-    char                        allowed_method;
+    int                    client_max_body_size;
 }               global;
 
+typedef struct location_s {
+    std::string            location_uri;
+    std::string            location_root;
+    std::string            err_page;
+    std::string            index;
+    std::string            cgi;
+    char                   allowed_method;
+    bool                   is_aster;
+}               locations;
+
 typedef struct  servers_s {
-    std::string host;
-    std::string location;
-    std::string cgi;
-    std::string root;
-    int         port;
+    std::string            host;
+    int                    port;
+    std::vector<locations> location;
 }               servers;
+
 #endif //UNTITLED1_UTIL_H

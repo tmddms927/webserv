@@ -11,34 +11,41 @@
 
 class Config {
 private:
-    std::string                 str;
-    std::vector<servers>      config;
-    std::vector<std::string>  raw;
-    global                      global_config;
-    std::string               conf_file;
+    std::vector<servers>            config;
+    std::vector<std::string>        raw;
+    global                          global_config;
+    std::string                     conf_file;
+
 private:
-    void    readFile();
-    void    setMainConfig();
-    void    validateServerVariables();
-    void    eraseCompleted();
-    void    isExist();
-    void    validMethod(std::string const & methods);
-    void    setRootDir();
+    void                            readFile();
+    void                            setMainConfig();
+    void                            eraseCompleted();
+    void                            setServerBlock();
+    void                            checkVariables();
+    void                            checkRelativePath();
+    void                            checkPort();
+    void                            openFile(std::string const & str);
+    void                            openDir(std::string const & str);
+    void                            checkFile();
+    void                            checkDir();
+    void                            validateServerBlock();
+private:
     class   GlobalConfigException : public std::exception {
     public:
-        const char *what() const throw();
+        const char                  *what() const throw();
     };
     class   VariableRuleException : public std::exception {
     public:
-        const char *what() const throw();
+        const char                  *what() const throw();
     };
-public:
-    Config(std::string const & conf_file);
-    std::vector<servers> const & getConfig() const;
-    global const & getGlobal() const;
-    void    runParse();
 
-    friend std::ostream &operator<<(std::ostream &os, const Config &config);
+public:
+    explicit                        Config(std::string const & conf_file);
+    std::vector<servers> const &    getConfig() const;
+    global const &                  getGlobal() const;
+    void                            runParse();
+
+    friend std::ostream &           operator<<(std::ostream &os, const Config &config);
 };
 
 #endif //UNTITLED1_CONFIG_HPP

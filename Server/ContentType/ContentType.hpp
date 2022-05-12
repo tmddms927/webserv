@@ -10,7 +10,7 @@ private:
 public:
     ContentType(std::string const & f);
     std::string const & getContentType();
-    void set_content_type();
+    void setContentType();
 };
 
 #endif

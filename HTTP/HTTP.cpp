@@ -6,39 +6,43 @@
 ** HTTP class default constructor.
 */
 HTTP::HTTP(){
-    resetHTTP();
+	resetHTTP();
 }
 
 /*
 ** HTTP class constructor. socket_fd값을 받아와서 저장.
 */
 HTTP::HTTP(uintptr_t _server_fd) : server_fd(_server_fd) {
-    resetHTTP();
+	resetHTTP();
 }
 
 uintptr_t const & HTTP::getServerFd() const {
-    return server_fd;
+	return server_fd;
 }
 
 char HTTP::getMethod() const {
-    return requestMessage.method;
+	return requestMessage.method;
 }
 
 std::string const & HTTP::getURI() const {
-    return requestMessage.unparsed_uri;
+	return requestMessage.unparsed_uri;
+}
+
+void HTTP::setURI(std::string const & str) {
+	requestMessage.unparsed_uri = str;
 }
 
 std::string & HTTP::getBody() {
-    return requestMessage.body;
+	return requestMessage.body;
 }
 
 int const & HTTP::getStatus() {
-    return status;
+	return status;
 }
 
 void HTTP::setStatus(int const & s) {
-    if (this->status == 0 || this->status == -1)
-        this->status = s;
+	if (this->status == 0 || this->status == -1)
+		this->status = s;
 }
 
 // uintptr_t const & HTTP::getResponseFd() {
@@ -74,6 +78,11 @@ void HTTP::resetHTTP() {
     responseMessage.response_line = "";
     responseMessage.header = "";
     responseMessage.body = "";
+	status = 0;
+	req_finished_time = get_time();
+
+	responseMessage.server_block_index = 0;
+	responseMessage.location_index = 0;
 }
 
 HTTP::~HTTP() {
@@ -82,25 +91,45 @@ HTTP::~HTTP() {
 }
 
 std::string const & HTTP::getResponseLine() const {
-    return responseMessage.response_line;
+	return responseMessage.response_line;
 }
 
 std::string const & HTTP::getResponseHeader() const {
-    return responseMessage.header;
+	return responseMessage.header;
 }
 
 std::string const & HTTP::getResponseBody() const {
-    return responseMessage.body;
+	return responseMessage.body;
 }
 
 bool const & HTTP::getResponseHaveFileFd() const {
-    return responseMessage.have_file_fd;
+	return responseMessage.have_file_fd;
 }
 
 void HTTP::setResponseHaveFileFd(bool const & have) {
-    responseMessage.have_file_fd = have;
+	responseMessage.have_file_fd = have;
 }
 
 unsigned long const & HTTP::getReqFinishedTime() {
-    return req_finished_time;
+	return req_finished_time;
+}
+
+bool const & HTTP::getKeepAlive() const {
+	return requestMessage.keep_alive;
+}
+
+int const & HTTP::getResServerBlockIndex() {
+	return responseMessage.server_block_index;
+}
+
+void HTTP::setResServerBlockIndex(int const & i) {
+	responseMessage.server_block_index = i;
+}
+
+int const & HTTP::getResLocationIndex() {
+	return responseMessage.location_index;
+}
+
+void HTTP::setResLocationIndex(int const & i) {
+	responseMessage.location_index = i;
 }

@@ -63,6 +63,8 @@ struct  RequestMessage {
 };
 
 struct ResponseMessage {
+	int						server_block_index;
+	int						location_index;
 	bool					have_file_fd;
 	std::string             file_directory;
 	std::string             response_line;
@@ -90,7 +92,7 @@ private:
 	int     reqBodyChunked();
 	int     reqBodyContentLength();
 	void    addHeader(std::pair<std::string, std::string> & header);
-		/* utils */
+	/* utils */
 	char    methodStringtoBit(std::string str);
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
@@ -103,10 +105,14 @@ public:
 
 	uintptr_t const &		getServerFd() const;
 	std::string const & 	getURI() const;
+	void setURI(std::string const & str);
 	std::string & 			getBody();
 	int const &				getStatus();
+	unsigned int const &	getPort();
 	char				 	getMethod() const;
+	bool const &			getKeepAlive() const;
 
+	void					setPort();
 	void					setStatus(int const & s);
 
 	/* request function */
@@ -130,6 +136,10 @@ public:
 	
 	bool					checkStatusError();
 	unsigned long const &	getReqFinishedTime();
+	int const & 			getResServerBlockIndex();
+	void					setResServerBlockIndex(int const & i);
+	int const & 			getResLocationIndex();
+	void					setResLocationIndex(int const & i);
 
 	/*  CGI function  */
 	void					cgi_creat(uintptr_t *write_fd, uintptr_t *read_fd, pid_t *pid);

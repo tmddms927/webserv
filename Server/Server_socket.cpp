@@ -43,7 +43,7 @@ void Server::socketInit(int const & i) {
 
 	removeBindError(fd);
 	setSockaddr_in(i);
-	
+
 	if (bind(fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
 		throw "bind() error!";
 
@@ -52,7 +52,7 @@ void Server::socketInit(int const & i) {
 
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	server_socket.push_back(static_cast<uintptr_t>(fd));
-	std::cout << "Open Port = " << config[i].port << std::endl;
+	std::cout << "Open Port = " << config[i].port << "(" << fd << ")" << std::endl;
 }
 
 /*
@@ -77,6 +77,7 @@ void Server::setSockaddr_in(int const & i) {
 
 /*
 ** request가 어떤 port로 들어왔는지 찾아주기
+** i : index, port : port
 */
 uintptr_t Server::checkPort(int const & i, int const & port) const {
 	for (int j = 0; j < i; ++j) {

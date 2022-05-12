@@ -206,7 +206,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         if (requestMessage.method_name == "POST" && requestMessage.body.empty())
             setStatus(NOT_ALLOWED);
         setStatus(0);
-        reqPrint();
+        // reqPrint();
     }
 }
 

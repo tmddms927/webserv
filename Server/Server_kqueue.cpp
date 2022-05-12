@@ -35,12 +35,10 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1)
 				throw "kevent() error";
 			checkKeventFilter();
 		}
-		checkClientTimeout();
 	}
 }
 
@@ -48,8 +46,10 @@ void Server::kqueueEventRun() {
 ** check kqueue filter
 */
 void Server::checkKeventFilter() {
-	// if (curr_event->flags & EV_ERROR)
-	// 	kqueueEventError();
+	if (curr_event->flags & EV_ERROR) {
+		kqueueEventError();
+		exit(1);
+	}
 	if (curr_event->flags & EV_EOF)
 		kqueueEventError();
 	if (curr_event->filter == EVFILT_READ)
@@ -75,8 +75,9 @@ void Server::kqueueEventError() {
 ** read event의 fd가 server_socket인지 client socket인지 확인
 */
 void Server::kqueueEventRead() {
-	if (checkServerSocket(curr_event->ident) != -1)
+	if (checkServerSocket(curr_event->ident) != -1) {
 		kqueueConnectAccept();
+	}
 	else if (checkFileFd())
 		kqueueEventReadFileFd();
 	else
@@ -94,11 +95,11 @@ void Server::kqueueConnectAccept() {
 	// todo accept 실패 시 어떻게 할 것인지
 	if (client_socket == -1)
 		throw "accept() error";
-	std::cout << "accept new client : " << client_socket << std::endl;
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
+	std::cout << "accept new client : " << client_socket << std::endl;
 }
 
 /*
@@ -110,7 +111,6 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client(curr_event->ident);
@@ -143,8 +143,7 @@ void Server::kqueueEventReadFileFd() {
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
-	checkAllowedMethod();
-	findServerBlock();
+	checkReqHeader();
 	checkMethod();
 	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
@@ -154,7 +153,9 @@ void Server::finishedRead() {
 ** check method
 */
 void Server::checkMethod() {
-	if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
+	if (clients[curr_event->ident].getStatus() == 200)
+		setResOKMes();
+	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET_BIT)
 		setResMethodGET();
@@ -173,13 +174,18 @@ void Server::checkMethod() {
 */
 void Server::kqueueEventWrite() {
 	if (checkFileFd()) {
-		writeResPOSTFile();
+		if (clients[file_fd[curr_event->ident]].getMethod() == POST_BIT)
+			writeResPOSTFile();
+		else if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
+			writeResPUTFile();
 		disconnect_file_fd();
 	}
 	else {
 		sendResMessage();
 		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
+		checkKeepAlive();
 		clients[curr_event->ident].resetHTTP();
+		checkClientTimeout();
 	}
 }

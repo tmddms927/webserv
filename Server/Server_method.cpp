@@ -3,37 +3,17 @@
 #include "ContentType/ContentType.hpp"
 
 /*
-** find server block
-** 아예 수정해야 됨!
+** set OK response message - directory doesn't have index file
 */
-void Server::findServerBlock() {
-	int size = config.size();
-	size_t found;
-	std::string uri = clients[curr_event->ident].getURI();
+void Server::setResOKMes() {
+	setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setResponseLine();
 
-	// 처음에 / 없을 때
-	found = uri.find("/");
-    if (found == std::string::npos || found != 0) {
-		clients[curr_event->ident].setStatus(404);
-        return ;
-	}
-	// server block이 없을 경우
-    std::string temp = uri.substr(1);
-	found = temp.find("/");
-    if (found == std::string::npos) {
-		clients[curr_event->ident].setResponseFileDirectory(config[0].root + uri);
-		isFile();
-        return ;
-	}
-	temp = uri.substr(0, found + 1);
-	for (int i = 1; i < size; ++i) {
-		if (server_socket[i] == clients[curr_event->ident].getServerFd()) {
-			if (temp == config[i].location) {
-				clients[curr_event->ident].setResponseFileDirectory(config[i].root + uri);
-				isFile();
-				return ;
-			}
-		}
+	if (isMethodHEAD(curr_event->ident) == false) {
+		ContentType ct(clients[curr_event->ident].getResponseFileDirectory());
+		clients[curr_event->ident].setResponseHeader("Content-Type", ct.getContentType());
+		clients[curr_event->ident].setResponseBody("123");
+		clients[curr_event->ident].setResponseHeader("Content-Length", "3");
 	}
 }
 
@@ -42,10 +22,12 @@ void Server::findServerBlock() {
 */
 void Server::setResErrorMes(int const & client) {
 	int fd;
+	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
+			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
 
-	fd = open(global_config.err_page.c_str(), O_RDONLY);
+	fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0) {
-		setResDefaultHeaderField();
+		setResDefaultHeaderField(curr_event->ident);
 		clients[client].setResponseLine();
 	}
 	else {
@@ -62,6 +44,8 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+
+	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	if (fd <= 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
@@ -75,13 +59,9 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-
-////
-return changeStatusToError(curr_event->ident, 405);
-////
 	int fd;
 
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
@@ -95,29 +75,26 @@ return changeStatusToError(curr_event->ident, 405);
 ** set PUT response message
 */
 void Server::setResMethodPUT() {
+	int fd;
 
-////
-return changeStatusToError(curr_event->ident, 405);
-////
-	setResDefaultHeaderField();
-	clients[curr_event->ident].setStatus(200);
-	// clients[curr_event->ident].setResponseBody("");
-	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
-	clients[curr_event->ident].setResponseLine();
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		changeStatusToError(curr_event->ident, 404);
+	else {
+		file_fd[fd] = curr_event->ident;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
+		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+	}
 }
 
 /*
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
-
-////
-return changeStatusToError(curr_event->ident, 405);
-////
 	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
 }
@@ -127,10 +104,6 @@ return changeStatusToError(curr_event->ident, 405);
 */
 void Server::setResMethodHEAD() {
 	int fd;
-
-////
-return changeStatusToError(curr_event->ident, 405);
-////
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd < 0)
@@ -153,13 +126,13 @@ void Server::readResErrorFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
-	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0) {
+	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
 		ContentType ct(clients[fd].getResponseFileDirectory());
 		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
 		clients[fd].setResponseBody(buf);
 		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setResponseLine();
 }
 
@@ -179,13 +152,14 @@ void Server::readResGETFile() {
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
-
-	ContentType ct(clients[fd].getResponseFileDirectory());
-	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-	setResDefaultHeaderField();
+	if (isMethodHEAD(fd) == false) {
+		ContentType ct(clients[fd].getResponseFileDirectory());
+		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+		clients[fd].setResponseBody(buf);
+		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
+	}
+	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
-	clients[fd].setResponseBody(buf);
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	clients[fd].setResponseLine();
 }
 
@@ -203,11 +177,33 @@ void Server::writeResPOSTFile() {
 	if (len != req_body.length())
 		return changeStatusToError(fd, 404);
 
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	// post body 있어야되나..?
 	// clients[fd].setResponseBody("");
 	// clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
+	clients[fd].setResponseLine();
+}
+
+/*
+** write POST file
+*/
+void Server::writeResPUTFile() {
+	std::string req_body;
+	size_t		len;
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	req_body = clients[fd].getBody();
+	len = write(curr_event->ident, req_body.c_str(), req_body.length());
+	if (len != req_body.length())
+		return changeStatusToError(fd, 404);
+
+	setResDefaultHeaderField(fd);
+	clients[fd].setStatus(200);
+	// post body 있어야되나..?
+	clients[fd].setResponseBody("good!");
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(5));
 	clients[fd].setResponseLine();
 }
 
@@ -228,7 +224,7 @@ void Server::readResHEADFile() {
 		return changeStatusToError(fd, 500);
 
 	clients[fd].setStatus(200);
-	setResDefaultHeaderField();
+	setResDefaultHeaderField(fd);
 	clients[fd].setResponseLine();
 }
 
@@ -249,8 +245,11 @@ void Server::sendResMessage() {
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
+
+	std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
+
 	/////////////////////////////////////////////////////
 
 	write(curr_event->ident, message.c_str(), message.length());
@@ -259,11 +258,9 @@ void Server::sendResMessage() {
 /*
 ** input default response header field
 */
-void Server::setResDefaultHeaderField() {
-	std::string str;
-
-	clients[curr_event->ident].setResponseHeader("Server", SERVER_DEFAULT_NAME);
-	clients[curr_event->ident].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
+void Server::setResDefaultHeaderField(uintptr_t fd) {
+	clients[fd].setResponseHeader("Server", SERVER_DEFAULT_NAME);
+	clients[fd].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
 }
 
 /*
@@ -274,18 +271,14 @@ void Server::changeStatusToError(int const & client, int const & st) {
 	setResErrorMes(client);
 }
 
-/*
-** directory이면 index file 붙여주기
+/*make 
+** method가 HEAD인지 확인
 */
-void Server::isFile() {
-	std::string path = clients[curr_event->ident].getResponseFileDirectory();
-	struct stat ss;
+bool Server::isMethodHEAD(uintptr_t fd) {
+	char method = clients[fd].getMethod();
 
-	if (stat(path.c_str(), &ss) == -1) {
-	//  무조건 수정
-		return clients[curr_event->ident].setStatus(404);
-		// return clients[curr_event->ident].setStatus(200);
-	}
-	if (S_ISDIR(ss.st_mode))
-		clients[curr_event->ident].setResponseFileDirectory(path + global_config.index);
+	if (method == HEAD_BIT)
+		return true;
+	else
+		return false;
 }

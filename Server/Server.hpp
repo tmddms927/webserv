@@ -59,8 +59,9 @@ public:
 	void	kqueueEventWrite();
 
 	/* Server_method */
-    void	findServerBlock();
+    void	uriParser();
 
+	void	setResOKMes();
 	void	setResErrorMes(int const & client);
 	void	setResMethodGET();
 	void	setResMethodPOST();
@@ -71,12 +72,13 @@ public:
 	void	readResErrorFile();
 	void	readResGETFile();
 	void	writeResPOSTFile();
+	void	writeResPUTFile();
 	void	readResHEADFile();
 
 	void	sendResMessage();
-	void	setResDefaultHeaderField();
+	void	setResDefaultHeaderField(uintptr_t fd);
 	void	changeStatusToError(int const & client, int const & st);
-	void	isFile();
+	bool	isMethodHEAD(uintptr_t fd);
 
 	/* utils.cpp */
 	void	change_events(uintptr_t const & ident,
@@ -86,6 +88,19 @@ public:
 	bool	checkFileFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
+	void	checkKeepAlive();
+
+	/* request header parsing */
+	void	checkReqHeader();
+	void	findServerBlockIndex();
+	void	findServerLocationIndex();
+	bool	findServerLocationIndex_findRoot();
+	bool	findServerLocationIndex_findServerBlock1();
+	bool	findServerLocationIndex_findServerBlock2();
+	bool	findServerLocationIndex_findServerBlock3();
+	bool	findServerLocationIndex_checkAsterisk(std::string const & str);
+	int		checkLocation(int const & sb, int const & size, std::string const & str);
+	void	isFile();
 	void	checkAllowedMethod();
 
 	/* CGI/CGI.cpp */
