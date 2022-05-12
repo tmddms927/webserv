@@ -5,11 +5,12 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sstream>
+#include "HTTP.hpp"
 
 #define READ                    0
 #define WRITE                   1
 #define CONTENT_SIZE            30
-#define READ_BUF_SIZE           60
+#define READ_BUF_SIZE           200
 #define KQUEUE_EVENT_LIST_SIZE  1024
 
 std::string     input = "hi im jeokim";
@@ -86,7 +87,7 @@ int    cgi_fork(KQueue & kq) {
     int     server_write_pipe[2];
 
     char    *arg[2];
-    char    *env[6];
+    char    *env[5];
 
     //file open, read, write error체크 엄밀히 하기
     pipe(server_read_pipe);
@@ -103,16 +104,16 @@ int    cgi_fork(KQueue & kq) {
         arg[0] = "cgi_tester";
         arg[1] = NULL;
         env[0] = "REQUEST_METHOD=POST";
-        env[1] = "REDIRECT_STATUS=200";
-        env[2] = "SERVER_PROTOCOL=HTTP/1.1";
-        env[3] = "PATH_INFO=/Users/hwan/Documents/webserv/hello";
+        // env[1] = "REDIRECT_STATUS=200";
+        env[1] = "SERVER_PROTOCOL=HTTP/1.1";
+        env[2] = "PATH_INFO=/Users/hwan/Documents/webserv/hello";
         std::stringstream ss;
-        ss << input.size();
-        // ss << CONTENT_SIZE;
+        // ss << input.size();
+        ss << CONTENT_SIZE;
         std::string s = "CONTENT_LENGTH=";
         s = s + ss.str();
-        env[4] = const_cast<char*>(s.c_str());
-        env[5] = NULL;
+        env[3] = const_cast<char*>(s.c_str());
+        env[4] = NULL;
         ::execve("cgi_tester",arg , env);
     }
     else {                  //  << Server(parent) >>
@@ -125,8 +126,7 @@ int    cgi_fork(KQueue & kq) {
         fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK);
         //  regist CGI fd to variable
         std::cout << server_write_pipe[WRITE] << ", " << server_read_pipe[READ] << std::endl;
-        kq.change_events(server_write_pipe[WRITE], EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_DELETE);
-        kq.change_events(server_read_pipe[READ], EVFILT_READ, EV_ADD | EV_ENABLE);
+
         return pid;
     }
 }
@@ -146,10 +146,7 @@ void    response(uintptr_t fd, KQueue kq, pid_t pid) {
         std::cout << "no buf to read" << std::endl;
     else if (rd == 0) {
         std::cout << "something problem in read fd" << std::endl;
-        kq.change_events(fd, EVFILT_READ, EV_DELETE | EV_ENABLE);
         close(fd);
-        // exit(1);
-        // kill(pid, SIGTERM);
     }
     else {
         std::cout << "||       << response >>        ||" << std::endl;
@@ -159,6 +156,7 @@ void    response(uintptr_t fd, KQueue kq, pid_t pid) {
 
 void    sigpipe(int) {
     std::cout << "sigpipe" << std::endl;
+    exit(1);
 }
 
 void    sigchild(int) {
@@ -170,33 +168,37 @@ void    sigchild(int) {
 int main() {
     KQueue kq;
     pid_t pid;
+    HTTP    http;
+    std::string buf;
 
     signal(SIGPIPE, sigpipe);
     signal(SIGCHLD, sigchild);
     kq.kqueueInit();
-    pid = cgi_fork(kq);
+    http.reqInputBuf(buf);
+    if (!http.reqCheckFinished())
+        std::cout << "request not finished" << std::endl;
+
+    uintptr_t read_fd;
+    uintptr_t write_fd;
+    pid_t   pid;
+    http.cgi_creat(&write_fd, &read_fd, &pid);
+    kq.change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+    kq.change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
+
     while (1) {
         int event_count;
+        std::cout << "while start" << std::endl;
+        // HTTP에 request 입력
         event_count = kq.kqueueEvent();
+        std::cout << "event_cout : " << event_count << std::endl;
         for (int idx = 0; idx < event_count; idx++) {
-            std::cout << "event_cout : " << event_count << std::endl;
-            if (kq.getEventList()[idx].filter == EVFILT_READ) {
-                response(kq.getEventList()[idx].ident, kq, pid);
-                // kq.change_events(kq.getEventList()[idx].ident, EVFILT_READ, EV_DELETE);
-                // close(kq.getEventList()[idx].ident);
-                // sleep(5);
-            }
+            if (kq.getEventList()[idx].filter == EVFILT_READ)
+                http.cgi_read();
             else if (kq.getEventList()[idx].filter == EVFILT_WRITE) {
-                std::cout << "hihi" << std::endl;
-                request(kq.getEventList()[idx].ident);
-                std::cout << "fd : " << kq.getEventList()[idx].ident << std::endl;
-                // kq.change_events(kq.getEventList()[idx].ident, EVFILT_WRITE, EV_DISABLE);
-                close(kq.getEventList()[idx].ident);
-                // if (kill(pid, SIGKILL) == -1)
-                //     std::cout << "kill fail" << std::endl; 
-                // close(kq.getEventList()[idx].ident);
-                // kq.change_events(kq.getEventList()[idx].ident, EVFILT_WRITE, EV_ADD | EV_DISABLE);
-                // close(kq.getEventList()[idx].ident);
+                if (kq.getEventList()[idx].ident == write_fd)
+                    http.cgi_write();
+                else
+                    ;
             }
         }
     }

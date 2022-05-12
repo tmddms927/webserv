@@ -67,12 +67,18 @@ void HTTP::resetHTTP() {
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
     requestMessage.keep_alive = true;
     requestMessage.port_num = 0;
+    cgi = 0;
 
     responseMessage.have_file_fd = false;
     responseMessage.file_directory = "";
     responseMessage.response_line = "";
     responseMessage.header = "";
     responseMessage.body = "";
+}
+
+HTTP::~HTTP() {
+    if (cgi)
+        delete cgi;
 }
 
 std::string const & HTTP::getResponseLine() const {

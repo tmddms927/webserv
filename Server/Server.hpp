@@ -87,6 +87,9 @@ public:
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkAllowedMethod();
+
+	/* CGI/CGI.cpp */
+	void    CGI_fork();
 };
 
 #endif

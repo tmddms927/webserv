@@ -7,6 +7,7 @@
 // #include <sstream>
 #include "../config/Config.hpp"
 #include "HTTP_Chunk.hpp"
+#include "../CGInterface/CGInterface.hpp"
 
 #define ERROR   -1
 #define SUCCESS 0
@@ -76,6 +77,7 @@ private:
 	ResponseMessage responseMessage;
 	int             status;
 	unsigned long	req_finished_time;
+	CGInterface		*cgi;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -97,6 +99,7 @@ public:
 	HTTP();
 	HTTP(uintptr_t _server_fd);
 	void					resetHTTP();
+	~HTTP();
 
 	uintptr_t const &		getServerFd() const;
 	std::string const & 	getURI() const;
@@ -127,6 +130,11 @@ public:
 	
 	bool					checkStatusError();
 	unsigned long const &	getReqFinishedTime();
+
+	/*  CGI function  */
+	void					cgi_creat(uintptr_t *write_fd, uintptr_t *read_fd, pid_t *pid);
+	bool					cgi_write(size_t buf_size);
+	bool					cgi_read(size_t buf_size);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);
