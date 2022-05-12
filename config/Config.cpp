@@ -6,8 +6,16 @@
 #include <sstream>
 #include "Config.hpp"
 #include "unistd.h"
+#include "dirent.h"
 
 Config::Config(std::string const & conf_file) : config(), raw(), global_config(), conf_file(conf_file){}
+
+void Config::runParse() {
+    readFile();
+    setMainConfig();
+    setServerBlock();
+    validateServerBlock();
+}
 
 void Config::readFile() {
     std::ifstream file(conf_file);
@@ -25,14 +33,6 @@ void Config::readFile() {
         throw VariableRuleException();
 }
 
-
-void Config::eraseCompleted() {
-    while (!raw.begin()->empty())
-        raw.erase(raw.begin());
-    raw.erase(raw.begin());
-}
-
-
 void Config::setMainConfig() {
     if (raw[0].find(CLIENT_BODY_SIZE) != std::string::npos) {
         std::stringstream ss(raw[0].substr(strlen(CLIENT_BODY_SIZE)));
@@ -42,29 +42,19 @@ void Config::setMainConfig() {
     }
     throw GlobalConfigException();
 }
-/*
-void Config::isExist() {
-    std::vector<std::string> files;
-    files.push_back(global_config.index);
-    files.push_back(global_config.err_page);
 
-    for (int i = 0; i < files.size(); i++) {
-        std::ifstream file(files[i]);
-        if (file.is_open()) {
-            file.close();
-            continue;
-        }
-        throw GlobalConfigException();
-    }
+void Config::eraseCompleted() {
+    while (!raw.begin()->empty())
+        raw.erase(raw.begin());
+    raw.erase(raw.begin());
 }
-*/
 
-void Config::validateServerVariables() {
+void Config::setServerBlock() {
     std::vector<std::string>::iterator it = raw.begin();
-    while (raw.size()) {
+    while (!raw.empty()) {
         if (*it == SERVERV)
             config.push_back(ServerBlock::parse(raw));
-        else if (*it == "")
+        else if (it->empty())
             raw.erase(raw.begin());
         else
             throw std::exception();
@@ -72,17 +62,55 @@ void Config::validateServerVariables() {
     }
 }
 
-void Config::runParse() {
-    readFile();
-    setMainConfig();
-    validateServerVariables();
+void Config::openFile(std::string const & str) {
+    std::fstream fs;
+    fs.open(str);
+    fs.is_open() ? fs.close() : throw VariableRuleException();
 }
 
-std::vector<servers> const & Config::getConfig() const{
-    return config;
+void Config::openDir(std::string const & str) {
+    DIR* fs = opendir(str.c_str());
+    fs ? closedir(fs) : throw VariableRuleException();
 }
-global const & Config::getGlobal() const{
-    return global_config;
+
+void Config::checkPort() {
+    int port = config[0].port;
+
+    for (size_t i = 1; i < config.size(); i++) {
+        if (port == config[i].port)
+            throw VariableRuleException();
+    }
+}
+
+void Config::checkFile() {
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            openFile(config[i].location[j].location_root + "/" + config[i].location[j].index);
+            openFile(config[i].location[j].location_root + "/" + config[i].location[j].err_page);
+            if (!config[i].location[j].cgi.empty())
+                openFile(config[i].location[j].cgi);
+        }
+    }
+}
+
+void Config::checkDir() {
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            if (*(config[i].location[j].location_root.end() - 1) == '/')
+                throw VariableRuleException();
+            openDir(config[i].location[j].location_root);
+        }
+    }
+}
+
+void Config::checkVariables() {
+    checkDir();
+    checkFile();
+    checkPort();
+}
+
+void Config::validateServerBlock() {
+    checkVariables();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -91,15 +119,15 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "client_max_body_size : " << config.global_config.client_max_body_size << std::endl;
     std::cout << "--------------------------------------" << std::endl;
-    for (int i = 0; i < config.config.size(); ) {
+    for (size_t i = 0; i < config.config.size(); ) {
         std::cout << "--------------------------------------" << std::endl;
         std::cout << "server[" << i + 1 << "]" << std::endl;
         std::cout << "  port : " << config.config[i].port << std::endl;
         std::cout << "  host : " << config.config[i].host << std::endl;
-        for (int j = 0; j < config.config[i].location.size(); ) {
+        for (size_t j = 0; j < config.config[i].location.size(); ) {
             std::cout << "location_"<< j + 1<< "_uri : " << config.config[i].location[j].location_uri << std::endl;
             std::cout << "    location_root : " << config.config[i].location[j].location_root << std::endl;
-            std::cout << "    allowed_method : " << config.config[i].location[j].allowed_method << std::endl;
+            std::cout << "    allowed_method : " << (int)config.config[i].location[j].allowed_method << std::endl;
             std::cout << "    default_error_page : " << config.config[i].location[j].err_page << std::endl;
             std::cout << "    index : " << config.config[i].location[j].index << std::endl;
             std::cout << "    is_aster : " << config.config[i].location[j].is_aster << std::endl;
@@ -113,11 +141,18 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     return os;
 }
 
-
 const char *Config::GlobalConfigException::what() const throw(){
     return "Check global-value rule";
 }
 
+std::vector<servers> const & Config::getConfig() const{
+    return config;
+}
+
+global const & Config::getGlobal() const{
+    return global_config;
+}
+
 const char *Config::VariableRuleException::what() const throw() {
-    return "Check config file rule";
+    return "Check config file";
 }

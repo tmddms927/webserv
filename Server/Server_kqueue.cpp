@@ -35,12 +35,10 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			// std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1)
 				throw "kevent() error";
 			checkKeventFilter();
 		}
-		checkClientTimeout();
 	}
 }
 
@@ -113,7 +111,6 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
-	// std::cout << "[" << buf << "]" << std::endl;
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client(curr_event->ident);
@@ -146,7 +143,6 @@ void Server::kqueueEventReadFileFd() {
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
-	checkAllowedMethod();
 	checkReqHeader();
 	checkMethod();
 	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
@@ -178,7 +174,10 @@ void Server::checkMethod() {
 */
 void Server::kqueueEventWrite() {
 	if (checkFileFd()) {
-		writeResPOSTFile();
+		if (clients[file_fd[curr_event->ident]].getMethod() == POST_BIT)
+			writeResPOSTFile();
+		else if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
+			writeResPUTFile();
 		disconnect_file_fd();
 	}
 	else {
@@ -187,5 +186,6 @@ void Server::kqueueEventWrite() {
 		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
 		checkKeepAlive();
 		clients[curr_event->ident].resetHTTP();
+		checkClientTimeout();
 	}
 }

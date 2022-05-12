@@ -4,7 +4,6 @@
 ** check client request header 
 */
 void Server::checkReqHeader() {
-	std::cout << static_cast<int>(clients[curr_event->ident].getMethod()) << std::endl;
 	findServerBlockIndex();
 	findServerLocationIndex();
 	checkAllowedMethod();
@@ -17,7 +16,7 @@ void Server::findServerBlockIndex() {
 	uintptr_t server_fd = clients[curr_event->ident].getServerFd();
 	size_t size = server_socket.size();
 
-	for (int i = 0; i < size; ++i) {
+	for (size_t i = 0; i < size; ++i) {
 		if (server_socket[i] == server_fd) {
 			clients[curr_event->ident].setResServerBlockIndex(i);
 			return ;
@@ -30,16 +29,11 @@ void Server::findServerBlockIndex() {
 */
 void Server::findServerLocationIndex() {
 	std::string uri = clients[curr_event->ident].getURI();
-	if (uri[0] != '/') {
+	if (uri[0] != '/')
 		clients[curr_event->ident].setURI("/" + uri);
-	}
 	if (findServerLocationIndex_findRoot())
 		return ;
 	if (findServerLocationIndex_findServerBlock1())
-		return ;
-	if (findServerLocationIndex_findServerBlock2())
-		return ;
-	if (findServerLocationIndex_findServerBlock3())
 		return ;
 	// server block location과 uri가 맞지 않은 경우
 	clients[curr_event->ident].setResLocationIndex(0);
@@ -118,16 +112,18 @@ bool Server::findServerLocationIndex_findServerBlock3() {
 	std::string uri = clients[curr_event->ident].getURI();
 	std::string temp = uri.substr(1);
 	size_t found = temp.find("/");
-	temp = uri.substr(0, found + 1);
+	temp = uri.substr(0, found + 2);
 	std::string sub = uri.substr(found + 1);
 
 	for (int i = 1; i < size; ++i) {
-		if (uri == config[server_block].location[i].location_uri) {
+		if (temp == config[server_block].location[i].location_uri) {
 			clients[curr_event->ident].setResLocationIndex(i);
 			clients[curr_event->ident].setResponseFileDirectory(\
 				config[server_block].location[i].location_root + sub);
-			isFile();
-			return findServerLocationIndex_checkAsterisk();
+			if (clients[curr_event->ident].getMethod() != PUT_BIT && \
+			clients[curr_event->ident].getMethod() != POST_BIT)
+				isFile();
+			return findServerLocationIndex_checkAsterisk(sub);
 		}
 	}
 	return false;
@@ -136,18 +132,19 @@ bool Server::findServerLocationIndex_findServerBlock3() {
 /*
 ** server block location - asterisk check
 */
-bool Server::findServerLocationIndex_checkAsterisk() {
+bool Server::findServerLocationIndex_checkAsterisk(std::string const & str) {
 	int server_block = clients[curr_event->ident].getResServerBlockIndex();
 	int location_index = clients[curr_event->ident].getResLocationIndex();
+	std::string uri;
+	size_t found;
 
 	if (config[server_block].location[0].is_aster == true)
 		return true;
 	if (config[server_block].location[location_index].is_aster != true) {
-		std::string uri = clients[curr_event->ident].getURI();
-		size_t found = uri.find(config[server_block].location[location_index].location_uri);
-		uri = uri.substr(found);
-
-		if (uri.find("/") != std::string::npos) {
+		uri = str.substr(1);
+		found = uri.find("/");
+		uri = uri.substr(found + 1);
+		if (found != std::string::npos && uri.length() != 0) {
 			clients[curr_event->ident].setResLocationIndex(0);
 			clients[curr_event->ident].setStatus(404);
 			return false;
@@ -180,14 +177,22 @@ void Server::isFile() {
 	int location_index = clients[curr_event->ident].getResLocationIndex();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1)
+	if (stat(path.c_str(), &ss) == -1) {
 		clients[curr_event->ident].setStatus(404);
+	}
 	else if (S_ISDIR(ss.st_mode)) {
-		if (config[server_block_index].location[location_index].index == "")
-			clients[curr_event->ident].setStatus(404);
-		else
-			clients[curr_event->ident].setResponseFileDirectory(path +
+		if (path == config[server_block_index].location[location_index].location_root) {
+			clients[curr_event->ident].setResponseFileDirectory(path +\
 				config[server_block_index].location[location_index].index);
+		}
+		else {
+			if (path[path.length() - 1] == '/')
+				clients[curr_event->ident].setResponseFileDirectory(path +\
+					config[server_block_index].location[location_index].err_page);
+			else
+				clients[curr_event->ident].setResponseFileDirectory(path + "/" +\
+					config[server_block_index].location[location_index].err_page);
+		}
 	}
 }
 
