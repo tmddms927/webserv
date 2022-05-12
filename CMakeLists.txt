@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.21)
 project(untitled1)
 
 set(CMAKE_CXX_STANDARD 98)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address")
-file(GLOB SRC ./*.h ./*.hpp ./*.cpp config/*.h config/*.cpp config/*.hpp)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -Wall -Werror -Wextra")
+file(GLOB SRC ./*.hpp ./*.cpp
+        config/*.h config/*.cpp config/*.hpp
+        Server/*.hpp Server/*.cpp
+        Server/ContentType/*.cpp Server/ContentType/*.hpp
+        HTTP/*.hpp HTTP/*.cpp)
 file(GLOB CONF_TEST_SRC config/*.h config/*.cpp config/*.hpp)
 add_executable(untitled1 ${SRC})
 

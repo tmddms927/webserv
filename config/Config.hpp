@@ -34,11 +34,7 @@ private:
         const char                  *what() const throw();
     };
     class   VariableRuleException : public std::exception {
-    private:
-        std::string                 _str;
     public:
-        VariableRuleException();
-        explicit                    VariableRuleException(std::string const & str) : _str(str){};
         const char                  *what() const throw();
     };
 

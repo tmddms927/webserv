@@ -1,6 +1,6 @@
 #include "Server/Server.hpp"
-#include "HeaderFieldInfo.hpp"
-#include "HTTP.hpp"
+#include "HTTP/HeaderFieldInfo.hpp"
+#include "HTTP/HTTP.hpp"
 
 int main(int argc, char *argv[]) {
     std::vector<servers> ss;
