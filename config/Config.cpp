@@ -54,7 +54,7 @@ void Config::setServerBlock() {
     while (!raw.empty()) {
         if (*it == SERVERV)
             config.push_back(ServerBlock::parse(raw));
-        else if (*it == "")
+        else if (it->empty())
             raw.erase(raw.begin());
         else
             throw std::exception();
@@ -85,8 +85,8 @@ void Config::checkPort() {
 void Config::checkFile() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
-            openFile(config[i].location[j].location_root + config[i].location[j].index);
-            openFile(config[i].location[j].location_root + config[i].location[j].err_page);
+            openFile(config[i].location[j].location_root + "/" + config[i].location[j].index);
+            openFile(config[i].location[j].location_root + "/" + config[i].location[j].err_page);
         }
     }
 }
@@ -94,6 +94,8 @@ void Config::checkFile() {
 void Config::checkDir() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
+            if (*(config[i].location[j].location_root.end() - 1) == '/')
+                throw VariableRuleException();
             openDir(config[i].location[j].location_root);
         }
     }
