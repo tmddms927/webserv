@@ -103,6 +103,25 @@ void Config::checkDir() {
     }
 }
 
+
+void Config::checkRelativePath() {
+    bool res = 0;
+    for (size_t i = 0; i < config.size() ; i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            res |= config[i].location[j].location_root.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].location_root.find("./") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].index.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].index.find("./") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].err_page.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].err_page.find("./") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].location_uri.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].location_uri.find("./") != std::string::npos ? 1 : 0;
+        }
+    }
+    if (res)
+        throw VariableRuleException();
+}
+
 void Config::checkVariables() {
     checkDir();
     checkFile();
@@ -111,6 +130,7 @@ void Config::checkVariables() {
 
 void Config::validateServerBlock() {
     checkVariables();
+    checkRelativePath();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -152,6 +172,7 @@ std::vector<servers> const & Config::getConfig() const{
 global const & Config::getGlobal() const{
     return global_config;
 }
+
 
 const char *Config::VariableRuleException::what() const throw() {
     return "Check config file";

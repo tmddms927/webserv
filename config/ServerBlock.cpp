@@ -10,7 +10,7 @@
 #define SET_TMP_VALUE(X) ss >> X
 #define SERVER_BLOCK_END (*it).empty() && (*it) != SERVERV
 #define UNDEFINED_END it->empty() && (it + 1) != raw.end() && *(it + 1) != SERVERV && (it + 1)->find(LOCATIONV) == std::string::npos
-
+#define CHECK_NULL(X) if (X.empty()) throw InvalidLocationBlock()
 typedef std::vector<std::string> rawtxt;
 
 servers ServerBlock::parse(rawtxt &raw) {
@@ -74,6 +74,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
         else if (tmp.cgi.empty() && FIND(CGI)) {
             GET_RAW_VALUE(CGI);
             SET_TMP_VALUE(tmp.cgi);
+            CHECK_NULL(tmp.cgi);
         }
         else
             throw InvalidLocationBlock();

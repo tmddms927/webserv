@@ -22,6 +22,7 @@ private:
     void                            eraseCompleted();
     void                            setServerBlock();
     void                            checkVariables();
+    void                            checkRelativePath();
     void                            checkPort();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
