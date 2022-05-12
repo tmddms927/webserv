@@ -87,6 +87,8 @@ void Config::checkFile() {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
             openFile(config[i].location[j].location_root + "/" + config[i].location[j].index);
             openFile(config[i].location[j].location_root + "/" + config[i].location[j].err_page);
+            if (!config[i].location[j].cgi.empty())
+                openFile(config[i].location[j].cgi);
         }
     }
 }

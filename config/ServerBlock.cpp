@@ -71,6 +71,10 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
         }
         else if (tmp.allowed_method == 0 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
+        else if (tmp.cgi.empty() && FIND(CGI)) {
+            GET_RAW_VALUE(CGI);
+            SET_TMP_VALUE(tmp.cgi);
+        }
         else
             throw InvalidLocationBlock();
         it++;
