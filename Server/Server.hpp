@@ -96,9 +96,11 @@ public:
 	bool	findServerLocationIndex_findRoot();
 	bool	findServerLocationIndex_findServerBlock1();
 	bool	findServerLocationIndex_findServerBlock2();
+	bool	findServerLocationIndex_findServerBlock3();
 	bool	findServerLocationIndex_checkAsterisk();
-	void	checkAllowedMethod();
+	int		checkLocation(int const & sb, int const & size, std::string const & str);
 	void	isFile();
+	void	checkAllowedMethod();
 };
 
 #endif

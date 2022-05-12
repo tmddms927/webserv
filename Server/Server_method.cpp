@@ -161,7 +161,6 @@ void Server::readResGETFile() {
 		clients[fd].setResponseBody(buf);
 		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
-	std::cout << "good!" << std::endl;
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	clients[fd].setResponseLine();

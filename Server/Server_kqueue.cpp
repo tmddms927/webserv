@@ -120,8 +120,6 @@ void Server::kqueueEventReadClient() {
 	}
 	else
 		clients[curr_event->ident].reqInputBuf(buf);
-	if (clients[curr_event->ident].reqCheckHeaderFinished())
-		checkReqHeader();
 	if (clients[curr_event->ident].reqCheckFinished())
 		finishedRead();
 }
