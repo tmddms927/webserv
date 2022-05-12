@@ -22,9 +22,10 @@ void Server::setResOKMes() {
 */
 void Server::setResErrorMes(int const & client) {
 	int fd;
+	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
+			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
 
-	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+	fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0) {
 		setResDefaultHeaderField(curr_event->ident);
 		clients[client].setResponseLine();
@@ -222,12 +223,12 @@ void Server::sendResMessage() {
 	message += clients[curr_event->ident].getResponseBody();
 
 	/////////////////////////////////////////////////////
-	std::cout << "==========================" << std::endl;
+	// std::cout << "==========================" << std::endl;
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
 
-	std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	// std::cout <<  clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
 

@@ -29,6 +29,10 @@ void Server::findServerBlockIndex() {
 ** server block에 맞는 location 찾아서 저장
 */
 void Server::findServerLocationIndex() {
+	std::string uri = clients[curr_event->ident].getURI();
+	if (uri[0] != '/') {
+		clients[curr_event->ident].setURI("/" + uri);
+	}
 	if (findServerLocationIndex_findRoot())
 		return ;
 	if (findServerLocationIndex_findServerBlock1())
@@ -46,92 +50,87 @@ void Server::findServerLocationIndex() {
 }
 
 /*
-** findServerLocationIndex_1
-** 처음에 / 없는지 체크
+** findServerLocationIndex_findRoot
+** /인지 확인
 */
 bool Server::findServerLocationIndex_findRoot() {
 	size_t found;
 	std::string uri = clients[curr_event->ident].getURI();
 
 	found = uri.find("/");
-	if (found == std::string::npos || found != 0) {
-		clients[curr_event->ident].setStatus(404);
-		return true;
-	}
-	return false;
-}
-
-/*
-** findServerLocationIndex_1
-** /인지 확인
-*/
-bool Server::findServerLocationIndex_findServerBlock1() {
-	std::string uri = clients[curr_event->ident].getURI();
-	std::string temp = uri.substr(1);
-
-	// root directory
-	if (temp.length() == 0) {
+	if (uri.length() == 1) {
 		clients[curr_event->ident].setResponseFileDirectory(\
 			config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
-			+ temp + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].index);
+			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].index);
 		return true;
 	}
 	return false;
 }
 
 /*
-** findServerLocationIndex
-** / ~이면 ~가 location인지 확인
-** 아니면 root + ~
+** findServerLocationIndex_findServerBlock
 */
-bool Server::findServerLocationIndex_findServerBlock2() {
+bool Server::findServerLocationIndex_findServerBlock1() {
+	size_t found;
+	int server_block = clients[curr_event->ident].getResServerBlockIndex();
 	std::string uri = clients[curr_event->ident].getURI();
 	std::string temp = uri.substr(1);
-	int server_block = clients[curr_event->ident].getResServerBlockIndex();
-	int index = checkLocation(server_block,\
-			config[clients[curr_event->ident].getResServerBlockIndex()].location.size(), temp);
+	found = temp.find("/");
 
-	if (index == -1) {
-		clients[curr_event->ident].setResponseFileDirectory(\
-			config[server_block].location[0].location_root + temp);
-		return true;
-	}
-	else {
-		clients[curr_event->ident].setResponseFileDirectory(\
-			config[server_block].location[index].location_root + \
-			config[server_block].location[index].index);
-		return true;
-	}
+	if (found == std::string::npos)
+		return findServerLocationIndex_findServerBlock2();
+	else
+		return findServerLocationIndex_findServerBlock3();
 	return false;
 }
 
 /*
 ** findServerLocationIndex
-** /~/이면 ~가 location인지 확인
+** 127.0.0.1/abc 일 경우
+*/
+bool Server::findServerLocationIndex_findServerBlock2() {
+	int server_block = clients[curr_event->ident].getResServerBlockIndex();
+	std::string uri = clients[curr_event->ident].getURI();
+	int size = config[server_block].location.size();
+
+	for (int i = 1; i < size; ++i) {
+		if (uri + "/" == config[server_block].location[i].location_uri) {
+			clients[curr_event->ident].setResLocationIndex(i);
+			clients[curr_event->ident].setResponseFileDirectory(\
+				config[server_block].location[i].location_root + "/"\
+				 + config[server_block].location[i].index);
+			return true;
+		}
+	}
+	clients[curr_event->ident].setResponseFileDirectory(\
+		config[server_block].location[0].location_root + uri);
+	isFile();
+	return true;
+}
+
+/*
+** findServerLocationIndex
+** 127.0.0.1/abc/ 일 경우
 */
 bool Server::findServerLocationIndex_findServerBlock3() {
-	return true;
-	// size_t found;
-	// int server_block = clients[curr_event->ident].getResServerBlockIndex();
-	// int size = config[server_block].location.size();
-	// std::string uri = clients[curr_event->ident].getURI();
-	// std::string temp = uri.substr(1);
-	// found = temp.find("/");
+	int server_block = clients[curr_event->ident].getResServerBlockIndex();
+	int size = config[server_block].location.size();
+	std::string uri = clients[curr_event->ident].getURI();
+	std::string temp = uri.substr(1);
+	size_t found = temp.find("/");
+	temp = uri.substr(0, found + 1);
+	std::string sub = uri.substr(found + 1);
 
-	// // server block이 있을 경우
-	// temp = uri.substr(0, found + 1);
-	// for (int i = 1; i < size; ++i) {
-	// 	if (temp == config[server_block].location[i].location_uri) {
-	// 		clients[curr_event->ident].setResLocationIndex(i);
-	// 		clients[curr_event->ident].setResponseFileDirectory(\
-	// 			config[server_block].location[i].location_root + uri);
-	// 		if (!findServerLocationIndex_checkAsterisk())
-	// 			return false;
-	// 		isFile();
-	// 		return true;
-	// 	}
-	// }
-	// return false;
+	for (int i = 1; i < size; ++i) {
+		if (uri == config[server_block].location[i].location_uri) {
+			clients[curr_event->ident].setResLocationIndex(i);
+			clients[curr_event->ident].setResponseFileDirectory(\
+				config[server_block].location[i].location_root + sub);
+			isFile();
+			return findServerLocationIndex_checkAsterisk();
+		}
+	}
+	return false;
 }
 
 /*
@@ -141,6 +140,8 @@ bool Server::findServerLocationIndex_checkAsterisk() {
 	int server_block = clients[curr_event->ident].getResServerBlockIndex();
 	int location_index = clients[curr_event->ident].getResLocationIndex();
 
+	if (config[server_block].location[0].is_aster == true)
+		return true;
 	if (config[server_block].location[location_index].is_aster != true) {
 		std::string uri = clients[curr_event->ident].getURI();
 		size_t found = uri.find(config[server_block].location[location_index].location_uri);
@@ -148,6 +149,7 @@ bool Server::findServerLocationIndex_checkAsterisk() {
 
 		if (uri.find("/") != std::string::npos) {
 			clients[curr_event->ident].setResLocationIndex(0);
+			clients[curr_event->ident].setStatus(404);
 			return false;
 		}
 	}

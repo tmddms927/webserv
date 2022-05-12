@@ -28,6 +28,10 @@ std::string const & HTTP::getURI() const {
 	return requestMessage.unparsed_uri;
 }
 
+void HTTP::setURI(std::string const & str) {
+	requestMessage.unparsed_uri = str;
+}
+
 std::string & HTTP::getBody() {
 	return requestMessage.body;
 }
