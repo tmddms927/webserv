@@ -140,9 +140,22 @@ void Config::checkVariables() {
     checkPort();
 }
 
+bool Config::hasRootLocation() {
+    bool res = false;
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size(); j++) {
+            if (config[i].location[j].location_uri == "/")
+                res = true;
+        }
+    }
+    return res;
+}
+
 void Config::validateServerBlock() {
     checkVariables();
     checkRelativePath();
+    if (!hasRootLocation())
+        throw VariableRuleException();
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -185,7 +198,6 @@ std::vector<servers> const & Config::getConfig() const{
 global const & Config::getGlobal() const{
     return global_config;
 }
-
 
 const char *Config::VariableRuleException::what() const throw() {
     return "Check config file";
