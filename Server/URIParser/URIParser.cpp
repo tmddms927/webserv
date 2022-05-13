@@ -1,5 +1,5 @@
 #include "URIParser.hpp"
-#include "../autoindex/AutoIndex.hpp"
+#include "../../autoindex/AutoIndex.hpp"
 
 URIParser::URIParser(HTTP & _client, std::vector<uintptr_t> const & _server_socket,\
 						std::vector<servers> const & _config)
