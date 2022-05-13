@@ -7,6 +7,7 @@
 // #include <sstream>
 #include "../config/Config.hpp"
 #include "HTTP_Chunk.hpp"
+#include "../CGIInterface/CGIInterface.hpp"
 
 #define ERROR_REQ   -1
 #define SUCCESS_REQ 0
@@ -64,7 +65,10 @@ struct  RequestMessage {
 struct ResponseMessage {
 	int						server_block_index;
 	int						location_index;
+	int						cgi_index;
+	bool					have_cgi_fd;
 	bool					have_file_fd;
+	std::string				cgi_directory;
 	std::string             file_directory;
 	std::string             response_line;
 	std::string             header;
@@ -73,11 +77,13 @@ struct ResponseMessage {
 
 class HTTP {
 private:
+
 	uintptr_t       server_fd;
 	RequestMessage  requestMessage;
 	ResponseMessage responseMessage;
 	int             status;
-	unsigned long	req_finished_time;
+	unsigned long long	time_out;
+	CGIInterface		*cgi;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -99,6 +105,7 @@ public:
 	HTTP();
 	HTTP(uintptr_t _server_fd);
 	void					resetHTTP();
+	~HTTP();
 
 	uintptr_t const &		getServerFd() const;
 	std::string const & 	getURI() const;
@@ -120,23 +127,35 @@ public:
 
 	/* response function */
 	std::string const &		getResponseFileDirectory();
+	std::string const &		getResponseCGIDirectory();
 	std::string const & 	getResponseLine() const;
 	std::string const & 	getResponseHeader() const;
 	std::string const & 	getResponseBody() const;
 	bool const &			getResponseHaveFileFd() const;
+	bool const &			getResponseHaveCGIFd() const;
 
 	void					setResponseFileDirectory(std::string const & str);
+	void					setResponseCGIDirectory(std::string const & str);
 	void					setResponseLine();
 	void					setResponseHeader(std::string const & key, std::string const & value);
 	void					setResponseBody(std::string const & str);
 	void 					setResponseHaveFileFd(bool const & have);
+	void 					setResponseHaveCGIFd(bool const & have);
 	
 	bool					checkStatusError();
-	unsigned long const &	getReqFinishedTime();
+	unsigned long long const &	getTimeOut();
+	void					setTimeOut();
 	int const & 			getResServerBlockIndex();
 	void					setResServerBlockIndex(int const & i);
 	int const & 			getResLocationIndex();
 	void					setResLocationIndex(int const & i);
+	int const & 			getResCgiIndex();
+	void					setResCgiIndex(int const & i);
+
+	/*  CGI function  */
+	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
+	bool					cgi_write(size_t buf_size);
+	bool					cgi_read(size_t buf_size);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

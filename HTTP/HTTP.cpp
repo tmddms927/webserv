@@ -54,31 +54,40 @@ void HTTP::setStatus(int const & s) {
 // }
 
 void HTTP::resetHTTP() {
-	status = 0;
-	req_finished_time = get_time();
+    status = 0;
+	time_out = get_time();
 
-	requestMessage.buf = "";
-	requestMessage.request_line = "";
-	requestMessage.unparsed_uri = "";
-	requestMessage.method_name = "";
-	requestMessage.method = 0;
-	requestMessage.header_in.clear();
-	requestMessage.body = "";
-	requestMessage.chunk.initChunk();
-	requestMessage.non_body = false;
-	requestMessage.content_length = -1;
-	requestMessage.chunked = false;
-	requestMessage.request_step = CLIENT_READ_REQ_LINE;
-	requestMessage.keep_alive = true;
-	requestMessage.port_num = 0;
+    requestMessage.buf = "";
+    requestMessage.request_line = "";
+    requestMessage.unparsed_uri = "";
+    requestMessage.method_name = "";
+    requestMessage.method = 0;
+    requestMessage.header_in.clear();
+    requestMessage.body = "";
+    requestMessage.chunk.initChunk();
+    requestMessage.non_body = false;
+    requestMessage.content_length = -1;
+    requestMessage.chunked = false;
+    requestMessage.request_step = CLIENT_READ_REQ_LINE;
+    requestMessage.keep_alive = true;
+    requestMessage.port_num = 0;
+    cgi = 0;
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
+	responseMessage.cgi_index = -1;
+	responseMessage.have_cgi_fd = false;
 	responseMessage.have_file_fd = false;
+	responseMessage.cgi_directory = "";
 	responseMessage.file_directory = "";
 	responseMessage.response_line = "";
 	responseMessage.header = "";
 	responseMessage.body = "";
+}
+
+HTTP::~HTTP() {
+    if (cgi)
+        delete cgi;
 }
 
 std::string const & HTTP::getResponseLine() const {
@@ -93,34 +102,14 @@ std::string const & HTTP::getResponseBody() const {
 	return responseMessage.body;
 }
 
-bool const & HTTP::getResponseHaveFileFd() const {
-	return responseMessage.have_file_fd;
+unsigned long long const & HTTP::getTimeOut() {
+	return time_out;
 }
 
-void HTTP::setResponseHaveFileFd(bool const & have) {
-	responseMessage.have_file_fd = have;
-}
-
-unsigned long const & HTTP::getReqFinishedTime() {
-	return req_finished_time;
+void HTTP::setTimeOut() {
+	time_out = get_time();
 }
 
 bool const & HTTP::getKeepAlive() const {
 	return requestMessage.keep_alive;
-}
-
-int const & HTTP::getResServerBlockIndex() {
-	return responseMessage.server_block_index;
-}
-
-void HTTP::setResServerBlockIndex(int const & i) {
-	responseMessage.server_block_index = i;
-}
-
-int const & HTTP::getResLocationIndex() {
-	return responseMessage.location_index;
-}
-
-void HTTP::setResLocationIndex(int const & i) {
-	responseMessage.location_index = i;
 }
