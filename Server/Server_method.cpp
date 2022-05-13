@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include <stdio.h>
 #include "ContentType/ContentType.hpp"
+#include "../autoindex/AutoIndex.hpp"
 
 /*
 ** set OK response message - directory doesn't have index file
@@ -44,9 +45,9 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
-
-	if (fd <= 0)
-		changeStatusToError(curr_event->ident, 404);
+	if (fd <= 0) {
+		checkAutoIndex();
+	}
 	else {
 		file_fd[fd] = curr_event->ident;
 		clients[curr_event->ident].setResponseHaveFileFd(true);
@@ -242,11 +243,12 @@ void Server::sendResMessage() {
 	/////////////////////////////////////////////////////
 	std::cout << "==========================hi" << std::endl;
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
+	// std::cout << "==========================" << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
 
-	// std::cout << "[[[[ response message! ]]]]" << std::endl;
-	// std::cout << "[[[[" << message << "]]]]" << std::endl;
+	std::cout << "[[[[ response message! ]]]]" << std::endl;
+	std::cout << "[[[[" << message << "]]]]" << std::endl;
 
 	int i = 0;
 	int length = message.length();
@@ -280,7 +282,7 @@ void Server::changeStatusToError(int const & client, int const & st) {
 	setResErrorMes(client);
 }
 
-/*make 
+/*
 ** method가 HEAD인지 확인
 */
 bool Server::isMethodHEAD(uintptr_t fd) {
@@ -290,4 +292,23 @@ bool Server::isMethodHEAD(uintptr_t fd) {
 		return true;
 	else
 		return false;
+}
+
+void Server::checkAutoIndex() {
+	bool err;
+	std::string body;
+
+	AutoIndex autoIndex(config[clients[curr_event->ident].getResServerBlockIndex()].\
+		location[clients[curr_event->ident].getResLocationIndex()].location_root);
+	err = autoIndex.makeHTML();
+	if (err) {
+		changeStatusToError(curr_event->ident, 404);
+	}
+	else {
+		body = autoIndex.getRes().body;
+		clients[curr_event->ident].setStatus(200);
+		clients[curr_event->ident].setResponseBody(body);
+		clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(body.length()));
+		clients[curr_event->ident].setResponseLine();
+	}
 }

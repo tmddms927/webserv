@@ -10,6 +10,18 @@
 
 Config::Config(std::string const & conf_file) : config(), raw(), global_config(), conf_file(conf_file){}
 
+Config::Config(const Config &src) {
+    *this = src;
+}
+
+Config &Config::operator=(const Config &src) {
+    this->config = src.config;
+    this->raw = src.raw;
+    this->global_config = src.global_config;
+    this->conf_file = src.conf_file;
+    return *this;
+}
+
 void Config::runParse() {
     readFile();
     setMainConfig();

@@ -204,7 +204,7 @@ void Server::setClientCGI() {
 */
 void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() == 200)
-		setResOKMes();
+		;// setResOKMes();
 	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET_BIT)

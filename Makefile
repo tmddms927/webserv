@@ -23,6 +23,8 @@ SRCS	=	main.cpp\
 			config/Config.cpp\
 			config/ServerBlock.cpp\
 			\
+			autoindex/AutoIndex.cpp\
+			\
 			CGIInterface/CGIInterface.cpp\
 			utils.cpp
 OBJS	=	${SRCS:.cpp=.o}
