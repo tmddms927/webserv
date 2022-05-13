@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "URIParser/URIParser.hpp"
 
 /*
 ** server main socket를 kqueue에 등록
@@ -143,7 +144,9 @@ void Server::kqueueEventReadFileFd() {
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
-	checkReqHeader();
+	URIParser uriParser(clients[curr_event->ident], server_socket, config);
+	uriParser.checkReqHeader();
+
 	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
 		checkCGI(); // cgi
 	else

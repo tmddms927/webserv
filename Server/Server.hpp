@@ -90,21 +90,6 @@ public:
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
-
-	/* request header parsing */
-	void	checkReqHeader();
-	void	findServerBlockIndex();
-	void	findServerLocationIndex();
-	bool	findServerLocationIndex_findRoot();
-	bool	findServerLocationIndex_findServerBlock1();
-	bool	findServerLocationIndex_findServerBlock2();
-	bool	findServerLocationIndex_findServerBlock3();
-	bool	findServerLocationIndex_checkAsterisk(std::string const & str);
-	int		checkLocation(int const & sb, int const & size, std::string const & str);
-	void	isFile();
-	void	checkAllowedMethod();
-	void	checkURICGI();
-	void	setCGIPATH(int const & block, int const & i);
 };
 
 #endif
