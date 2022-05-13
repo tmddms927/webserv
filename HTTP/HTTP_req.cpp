@@ -101,7 +101,7 @@ bool    HTTP::parseRequestBody() {
         ret = reqBodyChunked();
     else {                                  //  Content-Length, Transfer-Encoding 모두 없을 경우
         requestMessage.non_body = true;
-        ret = SUCCESS;
+        ret = SUCCESS_REQ;
     }
     return ret;
 }
@@ -198,7 +198,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_REQ_BODY;
     }
     if (isReadyRequestBody() &&
-        parseRequestBody() == SUCCESS) {
+        parseRequestBody() == SUCCESS_REQ) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {

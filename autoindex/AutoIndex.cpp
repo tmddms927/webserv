@@ -5,26 +5,31 @@
 #include "AutoIndex.hpp"
 #include <dirent.h>
 
-AutoIndex::AutoIndex(const std::vector<servers> &config) : _config(config){}
+AutoIndex::AutoIndex(const std::string &config) : _config(config), _err(false){}
 
-void AutoIndex::makeHTML() {
+bool & AutoIndex::makeHTML() {
     std::string     body;
     struct dirent   *ent;
     DIR             *dir;
 
-    dir = opendir ("./");
+    body = "<pre>\n";
+    dir = opendir(_config.c_str());
     if (dir != NULL) {
-        /* print all the files and directories within directory */
         while ((ent = readdir (dir)) != NULL) {
-            printf ("%s\n", ent->d_name);
+            if (std::string(ent->d_name) == "." || std::string(ent->d_name) == "..")
+                continue;
+            body += ent->d_name;
+            body += "\n";
         }
         closedir (dir);
     } else {
-        perror ("");
+        _err = true;
     }
-    body = "<pre>\n";
     body += "</pre>";
-    /*
-     * <a href="+ + "></a>
-     */
+    _res.body = body;
+    return _err;
+}
+
+const ResponseMessage &AutoIndex::getRes() const {
+    return _res;
 }

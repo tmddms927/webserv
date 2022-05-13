@@ -41,6 +41,8 @@ private:
 
 public:
     explicit                        Config(std::string const & conf_file);
+    Config(Config const & src);
+    Config  &                       operator=(Config const & src);
     std::vector<servers> const &    getConfig() const;
     global const &                  getGlobal() const;
     void                            runParse();
