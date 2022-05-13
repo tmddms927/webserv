@@ -144,9 +144,20 @@ void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 
 	checkReqHeader();
-	checkMethod();
-	if (clients[curr_event->ident].getResponseHaveFileFd() == false)
+	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
+		checkCGI(); // cgi
+	else
+		checkMethod();
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false || 
+		clients[curr_event->ident].getResponseHaveCGIFd() == false)
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+}
+
+/*
+** check GGI
+*/
+void Server::checkCGI() {
+
 }
 
 /*

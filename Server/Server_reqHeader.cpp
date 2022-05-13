@@ -7,6 +7,7 @@ void Server::checkReqHeader() {
 	findServerBlockIndex();
 	findServerLocationIndex();
 	checkAllowedMethod();
+	checkURICGI();
 }
 
 /*
@@ -216,4 +217,26 @@ void Server::checkAllowedMethod() {
 		return ;
 	// 만약 default method가 있다면...?
 	clients[curr_event->ident].setStatus(405);
+}
+
+void Server::checkURICGI() {
+	int block = clients[curr_event->ident].getResServerBlockIndex();
+	size_t size = config[block].location.size();
+
+	for (size_t i = 0; i < size; ++i) {
+		if  (config[block].location[i].cgi != "") {
+			return setCGIPATH(block, i);
+		}
+	}
+}
+
+void Server::setCGIPATH(int const & block, int const & i) {
+	if (config[block].location[i].location_uri.find(".") == std::string::npos)
+		return ;
+	std::string find_str = config[block].location[i].location_uri.substr(1);
+	std::string uri = clients[curr_event->ident].getURI();
+	if (uri.find(find_str) == std::string::npos)
+		return ;
+	else
+		std::cout << clients[curr_event->ident].getResponseCGIDirectory() << std::endl;
 }

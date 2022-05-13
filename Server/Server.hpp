@@ -55,6 +55,7 @@ public:
 	void	kqueueEventReadClient();
 	void	kqueueEventReadFileFd();
 	void	finishedRead();
+	void	checkCGI();
 	void	checkMethod();
 	void	kqueueEventWrite();
 
@@ -102,6 +103,8 @@ public:
 	int		checkLocation(int const & sb, int const & size, std::string const & str);
 	void	isFile();
 	void	checkAllowedMethod();
+	void	checkURICGI();
+	void	setCGIPATH(int const & block, int const & i);
 };
 
 #endif

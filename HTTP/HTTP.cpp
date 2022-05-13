@@ -74,7 +74,9 @@ void HTTP::resetHTTP() {
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
+	responseMessage.have_cgi_fd = false;
 	responseMessage.have_file_fd = false;
+	responseMessage.cgi_directory = "";
 	responseMessage.file_directory = "";
 	responseMessage.response_line = "";
 	responseMessage.header = "";
@@ -91,14 +93,6 @@ std::string const & HTTP::getResponseHeader() const {
 
 std::string const & HTTP::getResponseBody() const {
 	return responseMessage.body;
-}
-
-bool const & HTTP::getResponseHaveFileFd() const {
-	return responseMessage.have_file_fd;
-}
-
-void HTTP::setResponseHaveFileFd(bool const & have) {
-	responseMessage.have_file_fd = have;
 }
 
 unsigned long const & HTTP::getReqFinishedTime() {

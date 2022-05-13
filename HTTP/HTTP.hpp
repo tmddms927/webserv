@@ -64,7 +64,9 @@ struct  RequestMessage {
 struct ResponseMessage {
 	int						server_block_index;
 	int						location_index;
+	bool					have_cgi_fd;
 	bool					have_file_fd;
+	std::string				cgi_directory;
 	std::string             file_directory;
 	std::string             response_line;
 	std::string             header;
@@ -120,16 +122,20 @@ public:
 
 	/* response function */
 	std::string const &		getResponseFileDirectory();
+	std::string const &		getResponseCGIDirectory();
 	std::string const & 	getResponseLine() const;
 	std::string const & 	getResponseHeader() const;
 	std::string const & 	getResponseBody() const;
 	bool const &			getResponseHaveFileFd() const;
+	bool const &			getResponseHaveCGIFd() const;
 
 	void					setResponseFileDirectory(std::string const & str);
+	void					setResponseCGIDirectory(std::string const & str);
 	void					setResponseLine();
 	void					setResponseHeader(std::string const & key, std::string const & value);
 	void					setResponseBody(std::string const & str);
 	void 					setResponseHaveFileFd(bool const & have);
+	void 					setResponseHaveCGIFd(bool const & have);
 	
 	bool					checkStatusError();
 	unsigned long const &	getReqFinishedTime();

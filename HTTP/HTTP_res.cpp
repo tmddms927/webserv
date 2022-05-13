@@ -10,6 +10,30 @@ std::string const & HTTP::getResponseFileDirectory() {
 	return responseMessage.file_directory;
 }
 
+void HTTP::setResponseCGIDirectory(std::string const & str) {
+	responseMessage.cgi_directory = str;
+}
+
+std::string const & HTTP::getResponseCGIDirectory() {
+	return responseMessage.cgi_directory;
+}
+
+bool const & HTTP::getResponseHaveFileFd() const {
+	return responseMessage.have_file_fd;
+}
+
+void HTTP::setResponseHaveFileFd(bool const & have) {
+	responseMessage.have_file_fd = have;
+}
+
+bool const & HTTP::getResponseHaveCGIFd() const {
+	return responseMessage.have_cgi_fd;
+}
+
+void HTTP::setResponseHaveCGIFd(bool const & have) {
+	responseMessage.have_cgi_fd = have;
+}
+
 /*
 ** set response line
 */

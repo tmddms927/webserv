@@ -45,7 +45,6 @@ void Server::setResMethodGET() {
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 
-	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	if (fd <= 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
