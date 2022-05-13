@@ -6,8 +6,10 @@
 */
 void Server::kqueueInit() {
 	this->kq = kqueue();
-	if (this->kq == -1)
+	if (this->kq == -1) {
+		closeAllFd();
 		throw "kqueue() error!";
+	}
 	addServerSocketKevent();
 }
 
@@ -30,16 +32,24 @@ void Server::kqueueEventRun() {
 
 	while (1) {
 		new_events = kevent(kq, &change_list[0], change_list.size(),
-							event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
+							event_list, KQUEUE_EVENT_LIST_SIZE, &kq_timeout);
 		change_list.clear();
 
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			if (new_events == -1)
+			if (new_events == -1) {
+				closeAllFd();
 				throw "kevent() error";
-			checkKeventFilter();
+			}
+			try {
+				checkKeventFilter();
+			}
+			catch(const char * err) {
+				throw err;
+			}
 		}
+		// checkClientTimeout();
 	}
 }
 
@@ -47,16 +57,19 @@ void Server::kqueueEventRun() {
 ** check kqueue filter
 */
 void Server::checkKeventFilter() {
-	if (curr_event->flags & EV_ERROR) {
-		kqueueEventError();
-		exit(1);
+	try {
+		if (curr_event->flags & EV_ERROR)
+			kqueueEventError();
+		if (curr_event->flags & EV_EOF)
+			kqueueEventError();
+		if (curr_event->filter == EVFILT_READ)
+			kqueueEventRead();
+		if (curr_event->filter == EVFILT_WRITE)
+			kqueueEventWrite();
 	}
-	if (curr_event->flags & EV_EOF)
-		kqueueEventError();
-	if (curr_event->filter == EVFILT_READ)
-		kqueueEventRead();
-	if (curr_event->filter == EVFILT_WRITE)
-		kqueueEventWrite();
+	catch(const char * err) {
+		throw err;
+	}
 }
 
 /*
@@ -76,13 +89,17 @@ void Server::kqueueEventError() {
 ** read event의 fd가 server_socket인지 client socket인지 확인
 */
 void Server::kqueueEventRead() {
-	if (checkServerSocket(curr_event->ident) != -1) {
-		kqueueConnectAccept();
+	try {
+		if (checkServerSocket(curr_event->ident) != -1)
+			kqueueConnectAccept();
+		else if (checkFileFd())
+			kqueueEventReadFileFd();
+		else
+			kqueueEventReadClient();
 	}
-	else if (checkFileFd())
-		kqueueEventReadFileFd();
-	else
-		kqueueEventReadClient();
+	catch(const char * err) {
+		throw err;
+	}
 }
 
 /*
@@ -112,6 +129,7 @@ void Server::kqueueEventReadClient() {
 
 	std::memset(buf, 0, SOCKET_READ_BUF);
 	n = read(curr_event->ident, buf, SOCKET_READ_BUF - 1);
+	clients[curr_event->ident].setTimeOut();
 	if (n == 0) {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client(curr_event->ident);
@@ -152,15 +170,28 @@ void Server::finishedRead() {
 	else
 		checkMethod();
 	if (clients[curr_event->ident].getResponseHaveFileFd() == false || 
-		clients[curr_event->ident].getResponseHaveCGIFd() == false)
+		clients[curr_event->ident].getResponseHaveCGIFd() == false) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+	}
 }
 
 /*
 ** check GGI
 */
 void Server::checkCGI() {
-
+	// std::string str = clients[curr_event->ident].getBody();
+	// int size = str.size();
+	// std::string body(size, ' ');
+	// for (int i = 0; i < size; ++i)
+	// 	body[i] = toupper(str[i]);
+	// std::cout << "hi~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+	
+	// setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setStatus(200);
+	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setResponseBody("body");
+	clients[curr_event->ident].setResponseHeader("Content-Type", "text/plain");
+	clients[curr_event->ident].setResponseHeader("Content-Length", "4");
 }
 
 /*
@@ -200,6 +231,5 @@ void Server::kqueueEventWrite() {
 		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
 		checkKeepAlive();
 		clients[curr_event->ident].resetHTTP();
-		checkClientTimeout();
 	}
 }

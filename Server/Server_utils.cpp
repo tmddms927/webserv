@@ -61,15 +61,16 @@ void Server::disconnect_file_fd() {
 ** timeout 확인하기
 */
 void Server::checkClientTimeout() {
-	long current_time = get_time();
 	std::vector<uintptr_t> fd(clients.size());
 	int i = 0;
 
 	// todo req 중이면 끝내지 않기
 	for (std::map<uintptr_t, HTTP>::iterator it = clients.begin();
 		it != clients.end(); ++it) {
-			if (current_time - it->second.getReqFinishedTime() > TIME_OUT)
+			if (get_time() - it->second.getTimeOut() > TIME_OUT) {
+				std::cout << get_time() - it->second.getTimeOut() << std::endl;
 				fd[i++] = it->first;
+			}
 	}
 	for (int j = 0; j < i; ++j) {
 		std::cout << "time out! : " << fd[j] << std::endl;

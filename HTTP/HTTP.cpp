@@ -55,7 +55,7 @@ void HTTP::setStatus(int const & s) {
 
 void HTTP::resetHTTP() {
 	status = 0;
-	req_finished_time = get_time();
+	time_out = get_time();
 
 	requestMessage.buf = "";
 	requestMessage.request_line = "";
@@ -74,6 +74,7 @@ void HTTP::resetHTTP() {
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
+	responseMessage.cgi_index = -1;
 	responseMessage.have_cgi_fd = false;
 	responseMessage.have_file_fd = false;
 	responseMessage.cgi_directory = "";
@@ -95,26 +96,14 @@ std::string const & HTTP::getResponseBody() const {
 	return responseMessage.body;
 }
 
-unsigned long const & HTTP::getReqFinishedTime() {
-	return req_finished_time;
+unsigned long long const & HTTP::getTimeOut() {
+	return time_out;
+}
+
+void HTTP::setTimeOut() {
+	time_out = get_time();
 }
 
 bool const & HTTP::getKeepAlive() const {
 	return requestMessage.keep_alive;
-}
-
-int const & HTTP::getResServerBlockIndex() {
-	return responseMessage.server_block_index;
-}
-
-void HTTP::setResServerBlockIndex(int const & i) {
-	responseMessage.server_block_index = i;
-}
-
-int const & HTTP::getResLocationIndex() {
-	return responseMessage.location_index;
-}
-
-void HTTP::setResLocationIndex(int const & i) {
-	responseMessage.location_index = i;
 }

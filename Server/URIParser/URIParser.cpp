@@ -16,8 +16,8 @@ URIParser::~URIParser() {
 void URIParser::checkReqHeader() {
 	findServerBlockIndex();
 	findServerLocationIndex();
-	checkAllowedMethod();
 	checkURICGI();
+	checkAllowedMethod();
 }
 
 /*
@@ -214,6 +214,7 @@ void URIParser::checkAllowedMethod() {
 	char a = client.getMethod();
 	int block = client.getResServerBlockIndex();
 	int location = client.getResLocationIndex();
+	int cgi = client.getResCgiIndex();
 
 	if ((config[block].location[location].allowed_method & a) == GET_BIT)
 		return ;
@@ -225,6 +226,19 @@ void URIParser::checkAllowedMethod() {
 		return ;
 	if ((config[block].location[location].allowed_method & a) == HEAD_BIT)
 		return ;
+	if (cgi != -1) {
+		if ((config[block].location[cgi].allowed_method & a) == GET_BIT)
+			return;
+		if ((config[block].location[cgi].allowed_method & a) == POST_BIT)
+			return;
+		if ((config[block].location[cgi].allowed_method & a) == DELETE_BIT)
+			return;
+		if ((config[block].location[cgi].allowed_method & a) == PUT_BIT)
+			return;
+		if ((config[block].location[cgi].allowed_method & a) == HEAD_BIT)
+			return;
+		std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+	}
 	// 만약 default method가 있다면...?
 	client.setStatus(405);
 }
@@ -247,6 +261,9 @@ void URIParser::setCGIPATH(int const & block, int const & i) {
 	std::string uri = client.getURI();
 	if (uri.find(find_str) == std::string::npos)
 		return ;
-	else
-		std::cout << client.getResponseCGIDirectory() << std::endl;
+	else {
+		client.setResCgiIndex(i);
+		client.setResponseCGIDirectory(config[block].location[i].cgi);
+		client.setResponseFileDirectory("");
+	}
 }

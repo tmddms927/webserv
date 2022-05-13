@@ -64,6 +64,7 @@ struct  RequestMessage {
 struct ResponseMessage {
 	int						server_block_index;
 	int						location_index;
+	int						cgi_index;
 	bool					have_cgi_fd;
 	bool					have_file_fd;
 	std::string				cgi_directory;
@@ -75,11 +76,11 @@ struct ResponseMessage {
 
 class HTTP {
 private:
-	uintptr_t       server_fd;
-	RequestMessage  requestMessage;
-	ResponseMessage responseMessage;
-	int             status;
-	unsigned long	req_finished_time;
+	uintptr_t       	server_fd;
+	RequestMessage  	requestMessage;
+	ResponseMessage 	responseMessage;
+	int             	status;
+	unsigned long long	time_out;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -138,11 +139,14 @@ public:
 	void 					setResponseHaveCGIFd(bool const & have);
 	
 	bool					checkStatusError();
-	unsigned long const &	getReqFinishedTime();
+	unsigned long long const &	getTimeOut();
+	void					setTimeOut();
 	int const & 			getResServerBlockIndex();
 	void					setResServerBlockIndex(int const & i);
 	int const & 			getResLocationIndex();
 	void					setResLocationIndex(int const & i);
+	int const & 			getResCgiIndex();
+	void					setResCgiIndex(int const & i);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

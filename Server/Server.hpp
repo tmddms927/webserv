@@ -43,6 +43,7 @@ public:
 	void removeBindError(int const & fd);
 	void setSockaddr_in(int const & i);
 	uintptr_t checkPort(int const & i, int const & port) const;
+	void closeAllFd();
 
 	/* Server_kqueue.cpp */
 	void	kqueueInit();

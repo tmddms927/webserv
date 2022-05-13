@@ -15,14 +15,14 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    run:
-        try {
+    // run:
+        // try {
             Server server(conf);
             server.socketRun();
-        }
-        catch (std::exception e){
-            // std::cout << e.what() << std::endl;
-            std::cout << "webserv restart..." << std::endl;
-            goto run;
-        }
+        // }
+        // catch (std::exception e){
+        //     // std::cout << e.what() << std::endl;
+        //     std::cout << "webserv restart..." << std::endl;
+        //     goto run;
+        // }
 }

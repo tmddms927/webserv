@@ -34,6 +34,31 @@ void HTTP::setResponseHaveCGIFd(bool const & have) {
 	responseMessage.have_cgi_fd = have;
 }
 
+
+int const & HTTP::getResServerBlockIndex() {
+	return responseMessage.server_block_index;
+}
+
+void HTTP::setResServerBlockIndex(int const & i) {
+	responseMessage.server_block_index = i;
+}
+
+int const & HTTP::getResLocationIndex() {
+	return responseMessage.location_index;
+}
+
+void HTTP::setResLocationIndex(int const & i) {
+	responseMessage.location_index = i;
+}
+
+int const & HTTP::getResCgiIndex() {
+	return responseMessage.cgi_index;
+}
+
+void HTTP::setResCgiIndex(int const & i) {
+	responseMessage.cgi_index = i;
+}
+
 /*
 ** set response line
 */
