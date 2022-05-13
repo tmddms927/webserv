@@ -5,7 +5,7 @@
 int main(int argc, char *argv[]) {
     std::vector<servers> ss;
 
-    if (argc > 2)
+    if (argc != 2)
         exit(1);
     Config conf(argv[1]);
     try {
