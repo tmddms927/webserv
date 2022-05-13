@@ -51,6 +51,7 @@ void Server::disconnect_client(uintptr_t fd) {
 ** disconnect file fd : close fd & erase fd at file_fd
 */
 void Server::disconnect_file_fd() {
+	std::cout << "file close : " << curr_event->ident << std::endl;
 	change_events(file_fd[curr_event->ident], EVFILT_WRITE, EV_ENABLE);
 	close(curr_event->ident);
 	file_fd.erase(curr_event->ident);
@@ -70,8 +71,10 @@ void Server::checkClientTimeout() {
 			if (current_time - it->second.getReqFinishedTime() > TIME_OUT)
 				fd[i++] = it->first;
 	}
-	for (int j = 0; j < i; ++j)
+	for (int j = 0; j < i; ++j) {
+		std::cout << "time out! : " << fd[j] << std::endl;
 		disconnect_client(fd[j]);
+	}
 }
 
 /*

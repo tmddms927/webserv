@@ -22,9 +22,10 @@ void Server::setResOKMes() {
 */
 void Server::setResErrorMes(int const & client) {
 	int fd;
+	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
+			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
 
-	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+	fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0) {
 		setResDefaultHeaderField(curr_event->ident);
 		clients[client].setResponseLine();
@@ -43,6 +44,8 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+
+	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	if (fd <= 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
@@ -56,12 +59,9 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-////
-return changeStatusToError(curr_event->ident, 405);
-////
 	int fd;
 
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
@@ -75,25 +75,22 @@ return changeStatusToError(curr_event->ident, 405);
 ** set PUT response message
 */
 void Server::setResMethodPUT() {
+	int fd;
 
-////
-return changeStatusToError(curr_event->ident, 405);
-////
-	setResDefaultHeaderField(curr_event->ident);
-	clients[curr_event->ident].setStatus(200);
-	// clients[curr_event->ident].setResponseBody("");
-	// clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(0));
-	clients[curr_event->ident].setResponseLine();
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		changeStatusToError(curr_event->ident, 404);
+	else {
+		file_fd[fd] = curr_event->ident;
+		clients[curr_event->ident].setResponseHaveFileFd(true);
+		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+	}
 }
 
 /*
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
-
-////
-return changeStatusToError(curr_event->ident, 405);
-////
 	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
@@ -189,6 +186,28 @@ void Server::writeResPOSTFile() {
 }
 
 /*
+** write POST file
+*/
+void Server::writeResPUTFile() {
+	std::string req_body;
+	size_t		len;
+	int fd;
+
+	fd = file_fd[curr_event->ident];
+	req_body = clients[fd].getBody();
+	len = write(curr_event->ident, req_body.c_str(), req_body.length());
+	if (len != req_body.length())
+		return changeStatusToError(fd, 404);
+
+	setResDefaultHeaderField(fd);
+	clients[fd].setStatus(200);
+	// post body 있어야되나..?
+	clients[fd].setResponseBody("good!");
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(5));
+	clients[fd].setResponseLine();
+}
+
+/*
 ** read HEAD file
 */
 void Server::readResHEADFile() {
@@ -252,7 +271,7 @@ void Server::changeStatusToError(int const & client, int const & st) {
 	setResErrorMes(client);
 }
 
-/*
+/*make 
 ** method가 HEAD인지 확인
 */
 bool Server::isMethodHEAD(uintptr_t fd) {

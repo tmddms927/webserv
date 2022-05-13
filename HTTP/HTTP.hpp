@@ -102,6 +102,7 @@ public:
 
 	uintptr_t const &		getServerFd() const;
 	std::string const & 	getURI() const;
+	void setURI(std::string const & str);
 	std::string & 			getBody();
 	int const &				getStatus();
 	unsigned int const &	getPort();
