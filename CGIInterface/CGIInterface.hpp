@@ -40,8 +40,8 @@ public:
     ~CGIInterface();
 
     void    CGI_fork(struct s_cgiInfo &ci, struct s_cgiArg &ca);
-    bool    CGI_write(std::string const &body);
-    bool    CGI_read(std::string & buf);
+    int     CGI_write(std::string const &body);
+    int     CGI_read(std::string & buf);
     size_t  CGI_getWrittenLength();
     void    CGI_clear();
     int     CGI_getReadFd();

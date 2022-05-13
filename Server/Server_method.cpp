@@ -256,8 +256,7 @@ void Server::sendResMessage() {
 		if (RW_MAX_SIZE * (i + 1) > length)
 			size = length;
 		else
-			size = length;
-		std::cout << size << std::endl;
+			size = RW_MAX_SIZE;
 		write(curr_event->ident, message.c_str() + i * RW_MAX_SIZE, size);
 		i++;
 		if (i * RW_MAX_SIZE > length)

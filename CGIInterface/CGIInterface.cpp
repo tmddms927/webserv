@@ -84,43 +84,44 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo &ci ,struct s_cgiArg &ca) {
 	}
 }
 
-bool    CGIInterface::CGI_write(std::string const &body) {
-	ssize_t wr;
-	int i = 0;
+int    CGIInterface::CGI_write(std::string const &body) {
+	ssize_t wr = 0;
+	size_t length = body.size();
+	size_t write_size;
 
-	while (1) {
-		wr = write(write_fd, body.c_str() + (i * RW_MAX_SIZE), RW_MAX_SIZE);
-		std::cout << "wr : " << wr << std::endl;
-		if (wr == 0) {
-			std::cout << "CGI_write error" << std::endl;			
-			return false;
-		}
-		if (wr == -1 || wr < RW_MAX_SIZE)
-			break;
-		i++;
-	}
-	return true;
+	if (RW_MAX_SIZE  > length)
+		write_size = length;
+	else
+		write_size = RW_MAX_SIZE;
+
+	wr = write(write_fd, body.c_str(), write_size);
+	if (wr != -1)
+		written_length += wr;
+	// if (wr == -1) {
+	// 	// std::cout << "wr : " << wr << std::endl;
+	// 	// exit(1);
+	// }
+	// if (wr == 0) {
+	// 	std::cout << "CGI_write error" << std::endl;			
+	// 	return false;
+	// }
+	return wr;
 }
 
-bool    CGIInterface::CGI_read(std::string & buf) {
-	int rd = RW_MAX_SIZE - 1;
-	char tmp[RW_MAX_SIZE];
+int    CGIInterface::CGI_read(std::string & buf) {
+	int rd = RW_MAX_SIZE + 1;
+	char tmp[RW_MAX_SIZE + 1];
 
-	while (1)
-	{
-		memset(tmp, 0, RW_MAX_SIZE);
+	memset(tmp, 0, RW_MAX_SIZE + 1);
 
-		rd = read(read_fd, tmp, RW_MAX_SIZE - 1);
-		// std::cout << "tmp : " << tmp << std::endl;
-		if (rd == 0) {
-			std::cout << "CGI_read error" << std::endl;
-			return false;
-		}
+	rd = read(read_fd, tmp, RW_MAX_SIZE);
+	if (rd > 0)
 		buf = tmp;
-		if (rd == -1 || rd < RW_MAX_SIZE -1)
-			break;
-	}
-	return true;
+	if (rd == 0)
+		std::cout << "CGI_read error" << std::endl;
+	if (rd == -1)
+		std::cout << "CGI_read have no buf to read" << std::endl;
+	return rd;
 }
 
 size_t  CGIInterface::CGI_getWrittenLength() {

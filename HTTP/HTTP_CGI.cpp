@@ -22,23 +22,28 @@ bool    HTTP::cgi_write(size_t buf_size) {
     std::string buf;
     int         cgi_wr;
 
-    buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), buf_size);
-    if (!buf.empty()) {
-        if (!(cgi_wr = cgi.CGI_write(buf)))
-            return false;
-        if (cgi.CGI_getWrittenLength() < requestMessage.body.size())
-            return false;
+    if (cgi.CGI_getWrittenLength() == requestMessage.body.size()) {
+        close(cgi.CGI_getWriteFd());
+        return true;
     }
-    close(cgi.CGI_getWriteFd());
-    return true;
+    buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), buf_size);
+    cgi_wr = cgi.CGI_write(buf);
+    if (cgi_wr == 0)
+        std::cout << "CGI_write error" << std::endl;
+    if (cgi_wr == -1)
+        std::cout << "CGI_write pipe buf error" << std::endl;
+    return false;
 }
 
 bool    HTTP::cgi_read(size_t buf_size) {
     int         cgi_rd;
     std::string tmp;
 
-    if (cgi.CGI_read(tmp))
-        ; //read error가 날 경우
+    cgi_rd = cgi.CGI_read(tmp);
+    if (cgi_rd == 0)
+        std::cout << "CGI_read error" << std::endl;
+    if (cgi_rd == -1)
+        std::cout << "CGI_read pipe buf error" << std::endl;
 
     if (status <= 0) {
         std::cout << "header parsing~" << std::endl;
