@@ -47,6 +47,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
 
     tmp.allowed_method = 0;
     tmp.is_aster = false;
+    tmp.auto_index = false;
     while (!(*it).empty()) {
         if (tmp.location_uri.empty() && FIND(LOCATIONV)) {
             GET_RAW_VALUE(LOCATIONV);
@@ -75,6 +76,17 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             GET_RAW_VALUE(CGI);
             SET_TMP_VALUE(tmp.cgi);
             CHECK_NULL(tmp.cgi);
+        }
+        else if (tmp.auto_index == 0 && FIND(AUTO_INDEXV)) {
+            std::string value;
+            GET_RAW_VALUE(AUTO_INDEXV);
+            ss >> value;
+            if (value == "on")
+                tmp.auto_index = true;
+            else if (value == "off")
+                tmp.auto_index = false;
+            else
+                throw InvalidLocationBlock();
         }
         else
             throw InvalidLocationBlock();
