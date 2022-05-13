@@ -16,7 +16,7 @@ struct s_cgiInfo {
     pid_t       pid;   
 };
 
-struct cgi_struct {
+struct s_cgiArg {
     std::string cgi_path;
     size_t      content_length; // if body exist
     std::string method_name;
@@ -27,24 +27,20 @@ struct cgi_struct {
 class CGInterface
 {
 private:
-    /* must initiated */
-    size_t      cgi_write_len;
-    size_t      written_len;
-    size_t      read_len;
-
     /*  fds  */
-    uintptr_t   write_fd;
-    uintptr_t   read_fd;
 
-    /*      */
+    /* util */
+    size_t      written_length;
 
 public:
+    uintptr_t   read_fd;
+    uintptr_t   write_fd;
     CGInterface(/* args */);
     ~CGInterface();
 
-    void    CGI_fork(struct s_cgiInfo *ci);
-    bool    CGI_write(std::string const &body);
-    bool    CGI_read(std::string & buf, size_t buf_size);
+    void    CGI_fork(struct s_cgiInfo &ci, struct s_cgiArg &ca);
+    int     CGI_write(std::string const &body);
+    int     CGI_read(std::string & buf, size_t buf_size);
     size_t  CGI_getWrittenLength();
 };
 

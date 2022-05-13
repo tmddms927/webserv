@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <vector>
 #include <sys/event.h>
+#include <string>
 #include <sstream>
 
 #define READ    0
@@ -11,19 +12,19 @@
 /*
 **  SIGPIPE 감지 시에 실행할 함수
 */
-void    sigpipe(int) {
-    std::cout << "sigpipe" << std::endl;
-}
+// void    sigpipe(int) {
+//     std::cout << "sigpipe" << std::endl;
+// }
 
 /*  
 **  SIGCHLD 감지 시에 실행할 함수
 **  종료됨을 알린 자식프로세스의 자원을 부모 프로세스가 회수 -> wait()
 */
-void    sigchild(int) {
-    int status;
-    std::cout << "sigchild" << std::endl;
-    wait(&status);
-}
+// void    sigchild(int) {
+//     int status;
+//     std::cout << "sigchild" << std::endl;
+//     wait(&status);
+// }
 
 void    set_CGI_read_fd(int pipe[2]) {
     close(pipe[WRITE]);
@@ -37,11 +38,10 @@ void    set_CGI_write_fd(int pipe[2]) {
     close(pipe[WRITE]);
 }
 
-void    CGInterface::CGI_fork(struct s_cgiInfo *ci) {
+void    CGInterface::CGI_fork(struct s_cgiInfo &ci ,struct s_cgiArg &ca) {
     pid_t   pid;
     int     server_read_pipe[2];
     int     server_write_pipe[2];
-
     char    *arg[2];
     char    *env[5];
 
@@ -57,13 +57,13 @@ void    CGInterface::CGI_fork(struct s_cgiInfo *ci) {
         set_CGI_read_fd(server_write_pipe); // server 기준 write, cgi 기준 read
         set_CGI_write_fd(server_read_pipe);
         //  arg, env 세팅
-        arg[0] = "cgi_tester";
+        arg[0] = const_cast<char*>("cgi_tester");
         arg[1] = NULL;
-        env[0] = "REQUEST_METHOD=POST";     //method
-        // env[1] = "REDIRECT_STATUS=200";  // php option
-        env[1] = "SERVER_PROTOCOL=HTTP/1.1";
-        env[2] = "PATH_INFO=/Users/hwan/Documents/webserv/hello";
-        env[3] = "CONTENT_LENGTH=10";
+        std::cout << ca.method_name;
+        env[0] = const_cast<char*>(("REQUEST_METHOD=" + ca.method_name).c_str());     //method
+        env[1] = const_cast<char*>("SERVER_PROTOCOL=HTTP/1.1");
+        env[2] = const_cast<char*>("PATH_INFO=/Users/hwan/Documents/webserv/hello");
+        env[3] = const_cast<char*>(("CONTENT_LENGTH=" + ft_itoa(ca.content_length)).c_str());
         env[4] = NULL;
         ::execve("cgi_tester",arg , env);
     }
@@ -73,45 +73,42 @@ void    CGInterface::CGI_fork(struct s_cgiInfo *ci) {
         close(server_read_pipe[WRITE]);
         fcntl(server_write_pipe[WRITE], F_SETFL, O_NONBLOCK);
         fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK);
-        ci->read_fd = server_read_pipe[READ];
-        ci->write_fd = server_write_pipe[WRITE];
-        ci->pid = pid;
+        read_fd = server_read_pipe[READ];
+        write_fd = server_write_pipe[WRITE];
+        ci.read_fd = server_read_pipe[READ];
+        ci.write_fd = server_write_pipe[WRITE];
+        ci.pid = pid;
     }
 }
 
-bool    CGInterface::CGI_write(std::string const &body) {
-    int wr;
+int    CGInterface::CGI_write(std::string const &body) {
+    ssize_t wr;
 
     wr = write(write_fd, body.c_str(), body.size());
-    if (written_len += wr) {
-        if (written_len >= cgi_write_len) {
-            close(write_fd);
-            return true;
-        }
-    }
-    return false;
+    if (wr > 0)
+        written_length += wr;
+    return wr;
 }
 
-bool    CGInterface::CGI_read(std::string & buf, size_t buf_size) {
-    int     rd;
-    size_t  found = 0;
-    std::string s;
-    std::stringstream ss;
-    char    tmp[buf_size + 1];
+int    CGInterface::CGI_read(std::string & buf, size_t buf_size) {
+    int rd;
+    char tmp[buf_size + 1];
 
     memset(tmp, 0, buf_size + 1);
     rd = read(read_fd, tmp, buf_size);
-    if (rd > 0) {
-        ss << tmp;
-        buf += ss.str();
-    }
-    if (read_len == std::string::npos) {
-        found = buf.find("\r\n\r\n");
-        if (found != std::string::npos)
-            return false;
-    }
-    read_len += rd - found;
-    if (read_len >= cgi_write_len)
-        return true;
-    return false;
+    buf = tmp;
+    return rd;
+}
+
+size_t  CGInterface::CGI_getWrittenLength() {
+    return written_length;
+}
+
+
+CGInterface::CGInterface(/* args */): written_length(0) {
+    
+}
+
+CGInterface::~CGInterface() {
+
 }

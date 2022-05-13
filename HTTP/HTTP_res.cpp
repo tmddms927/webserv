@@ -27,7 +27,7 @@ void HTTP::setResponseLine() {
 }
 
 void HTTP::setResponseBody(std::string const & str) {
-	responseMessage.body = str;
+	responseMessage.body += str;
 }
 
 bool HTTP::checkStatusError() {

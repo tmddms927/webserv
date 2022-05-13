@@ -142,7 +142,7 @@ public:
 	void					setResLocationIndex(int const & i);
 
 	/*  CGI function  */
-	void					cgi_creat(uintptr_t *write_fd, uintptr_t *read_fd, pid_t *pid);
+	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
 	bool					cgi_write(size_t buf_size);
 	bool					cgi_read(size_t buf_size);
 
