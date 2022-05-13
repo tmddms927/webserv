@@ -8,9 +8,9 @@
 #include "../config/Config.hpp"
 #include "HTTP_Chunk.hpp"
 
-#define ERROR   -1
-#define SUCCESS 0
-#define FAIL    1
+#define ERROR_REQ   -1
+#define SUCCESS_REQ 0
+#define FAIL_REQ    1
 
 /* new phase level */
 #define CLIENT_READ_REQ_LINE 0
