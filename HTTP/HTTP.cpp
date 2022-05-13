@@ -54,23 +54,24 @@ void HTTP::setStatus(int const & s) {
 // }
 
 void HTTP::resetHTTP() {
-	status = 0;
+    status = 0;
 	time_out = get_time();
 
-	requestMessage.buf = "";
-	requestMessage.request_line = "";
-	requestMessage.unparsed_uri = "";
-	requestMessage.method_name = "";
-	requestMessage.method = 0;
-	requestMessage.header_in.clear();
-	requestMessage.body = "";
-	requestMessage.chunk.initChunk();
-	requestMessage.non_body = false;
-	requestMessage.content_length = -1;
-	requestMessage.chunked = false;
-	requestMessage.request_step = CLIENT_READ_REQ_LINE;
-	requestMessage.keep_alive = true;
-	requestMessage.port_num = 0;
+    requestMessage.buf = "";
+    requestMessage.request_line = "";
+    requestMessage.unparsed_uri = "";
+    requestMessage.method_name = "";
+    requestMessage.method = 0;
+    requestMessage.header_in.clear();
+    requestMessage.body = "";
+    requestMessage.chunk.initChunk();
+    requestMessage.non_body = false;
+    requestMessage.content_length = -1;
+    requestMessage.chunked = false;
+    requestMessage.request_step = CLIENT_READ_REQ_LINE;
+    requestMessage.keep_alive = true;
+    requestMessage.port_num = 0;
+    cgi = 0;
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
@@ -82,6 +83,11 @@ void HTTP::resetHTTP() {
 	responseMessage.response_line = "";
 	responseMessage.header = "";
 	responseMessage.body = "";
+}
+
+HTTP::~HTTP() {
+    if (cgi)
+        delete cgi;
 }
 
 std::string const & HTTP::getResponseLine() const {

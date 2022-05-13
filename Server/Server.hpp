@@ -31,6 +31,7 @@ private:
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
 	std::map<uintptr_t, size_t>		file_fd;
+	std::map<uintptr_t, size_t>		cgi_fd;
 
 public:
 	/* Server.cpp */
@@ -56,7 +57,7 @@ public:
 	void	kqueueEventReadClient();
 	void	kqueueEventReadFileFd();
 	void	finishedRead();
-	void	checkCGI();
+	void	setClientCGI();
 	void	checkMethod();
 	void	kqueueEventWrite();
 
@@ -88,9 +89,17 @@ public:
 	void	disconnect_client(uintptr_t fd);
 	int		checkServerSocket(uintptr_t const & fd) const;
 	bool	checkFileFd() const;
+	bool	checkCgiFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
+
+	/* Server_cgi */
+	void writeCGI();
+	void readCGI();
+
+	/* CGI/CGI.cpp */
+	void    CGI_fork();
 };
 
 #endif

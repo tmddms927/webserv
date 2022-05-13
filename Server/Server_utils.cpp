@@ -24,6 +24,18 @@ bool Server::checkFileFd() const {
 		return false;
 }
 
+
+/*
+** cgi fd인지 확인
+*/
+bool Server::checkCgiFd() const {
+	if (cgi_fd.find(curr_event->ident) != cgi_fd.end())
+		return true;
+	else
+		return false;
+}
+
+
 /*
 ** connect client : add kqueue event & add fd_list
 */

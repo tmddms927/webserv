@@ -9,17 +9,21 @@ SRCS	=	main.cpp\
 			HTTP/HTTP_Chunk.cpp\
 			HTTP/HTTP_req.cpp\
 			HTTP/HTTP_res.cpp\
+			HTTP/HTTP_CGI.cpp\
 			\
 			Server/Server.cpp\
 			Server/Server_socket.cpp\
 			Server/Server_kqueue.cpp\
 			Server/Server_method.cpp\
 			Server/Server_utils.cpp\
+			Server/Server_cgi.cpp\
 			Server/ContentType/ContentType.cpp\
 			Server/URIParser/URIParser.cpp\
 			\
 			config/Config.cpp\
 			config/ServerBlock.cpp\
+			\
+			CGIInterface/CGIInterface.cpp\
 			utils.cpp
 OBJS	=	${SRCS:.cpp=.o}
 

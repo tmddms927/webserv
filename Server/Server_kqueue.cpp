@@ -94,6 +94,8 @@ void Server::kqueueEventRead() {
 			kqueueConnectAccept();
 		else if (checkFileFd())
 			kqueueEventReadFileFd();
+		else if (checkCgiFd())
+			readCGI();
 		else
 			kqueueEventReadClient();
 	}
@@ -166,7 +168,7 @@ void Server::finishedRead() {
 	uriParser.checkReqHeader();
 
 	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
-		checkCGI(); // cgi
+		setClientCGI();
 	else
 		checkMethod();
 	if (clients[curr_event->ident].getResponseHaveFileFd() == false || 
@@ -178,20 +180,18 @@ void Server::finishedRead() {
 /*
 ** check GGI
 */
-void Server::checkCGI() {
-	// std::string str = clients[curr_event->ident].getBody();
-	// int size = str.size();
-	// std::string body(size, ' ');
-	// for (int i = 0; i < size; ++i)
-	// 	body[i] = toupper(str[i]);
-	// std::cout << "hi~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-	
-	// setResDefaultHeaderField(curr_event->ident);
-	clients[curr_event->ident].setStatus(200);
-	clients[curr_event->ident].setResponseLine();
-	clients[curr_event->ident].setResponseBody("body");
-	clients[curr_event->ident].setResponseHeader("Content-Type", "text/plain");
-	clients[curr_event->ident].setResponseHeader("Content-Length", "4");
+void Server::setClientCGI() {
+	uintptr_t write_fd;
+	uintptr_t read_fd;
+	pid_t pid;
+
+	clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid);
+
+	change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
+	cgi_fd[write_fd] = curr_event->ident;
+	cgi_fd[read_fd] = curr_event->ident;
+	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 
 /*
@@ -225,6 +225,8 @@ void Server::kqueueEventWrite() {
 			writeResPUTFile();
 		disconnect_file_fd();
 	}
+	else if (checkCgiFd())
+		writeCGI();
 	else {
 		sendResMessage();
 		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);

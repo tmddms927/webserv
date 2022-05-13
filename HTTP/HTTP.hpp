@@ -7,6 +7,7 @@
 // #include <sstream>
 #include "../config/Config.hpp"
 #include "HTTP_Chunk.hpp"
+#include "../CGIInterface/CGIInterface.hpp"
 
 #define ERROR   -1
 #define SUCCESS 0
@@ -76,11 +77,13 @@ struct ResponseMessage {
 
 class HTTP {
 private:
-	uintptr_t       	server_fd;
-	RequestMessage  	requestMessage;
-	ResponseMessage 	responseMessage;
-	int             	status;
+
+	uintptr_t       server_fd;
+	RequestMessage  requestMessage;
+	ResponseMessage responseMessage;
+	int             status;
 	unsigned long long	time_out;
+	CGIInterface		*cgi;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -102,6 +105,7 @@ public:
 	HTTP();
 	HTTP(uintptr_t _server_fd);
 	void					resetHTTP();
+	~HTTP();
 
 	uintptr_t const &		getServerFd() const;
 	std::string const & 	getURI() const;
@@ -147,6 +151,11 @@ public:
 	void					setResLocationIndex(int const & i);
 	int const & 			getResCgiIndex();
 	void					setResCgiIndex(int const & i);
+
+	/*  CGI function  */
+	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
+	bool					cgi_write(size_t buf_size);
+	bool					cgi_read(size_t buf_size);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);
