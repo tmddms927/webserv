@@ -116,8 +116,8 @@ int HTTP::reqBodyContentLength() {
     extractstr(temp, requestMessage.buf, left_len);
     requestMessage.body += temp;
     if (requestMessage.body.size() >= static_cast<size_t>(requestMessage.content_length))
-        return SUCCESS;
-    return FAIL;
+        return SUCCESS_REQ;
+    return FAIL_REQ;
 }
 
 int HTTP::reqBodyChunked() {
@@ -127,14 +127,14 @@ int HTTP::reqBodyChunked() {
             if (extractstr(buf, requestMessage.buf, "\r\n"))
                 requestMessage.chunk.setLength(buf);
             else
-                return FAIL;
+                return FAIL_REQ;
             }
         else if (extractstr(buf, requestMessage.buf, "\r\n")) {
             requestMessage.chunk.appendContent(buf);
             requestMessage.chunk.setChunkEnd();
         }
         else
-            return FAIL;
+            return FAIL_REQ;
 
         if (requestMessage.chunk.isEndChunk()) {
             std::string const & s = requestMessage.chunk.getContent();
@@ -143,10 +143,10 @@ int HTTP::reqBodyChunked() {
                 requestMessage.chunk.initChunk();
             }
             else
-                return SUCCESS;
+                return SUCCESS_REQ;
         }
     }
-    return FAIL;
+    return FAIL_REQ;
 }
 
 void    HTTP::additionalParseRequestHeader() {
