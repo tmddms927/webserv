@@ -237,9 +237,7 @@ void URIParser::checkAllowedMethod() {
 			return;
 		if ((config[block].location[cgi].allowed_method & a) == HEAD_BIT)
 			return;
-		std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 	}
-	// 만약 default method가 있다면...?
 	client.setStatus(405);
 }
 
