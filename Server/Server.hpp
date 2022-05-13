@@ -31,6 +31,7 @@ private:
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
 	std::map<uintptr_t, size_t>		file_fd;
+	std::map<uintptr_t, size_t>		cgi_fd;
 
 public:
 	/* Server.cpp */
@@ -43,6 +44,7 @@ public:
 	void removeBindError(int const & fd);
 	void setSockaddr_in(int const & i);
 	uintptr_t checkPort(int const & i, int const & port) const;
+	void closeAllFd();
 
 	/* Server_kqueue.cpp */
 	void	kqueueInit();
@@ -55,6 +57,7 @@ public:
 	void	kqueueEventReadClient();
 	void	kqueueEventReadFileFd();
 	void	finishedRead();
+	void	setClientCGI();
 	void	checkMethod();
 	void	kqueueEventWrite();
 
@@ -79,6 +82,7 @@ public:
 	void	setResDefaultHeaderField(uintptr_t fd);
 	void	changeStatusToError(int const & client, int const & st);
 	bool	isMethodHEAD(uintptr_t fd);
+	void	checkAutoIndex();
 
 	/* utils.cpp */
 	void	change_events(uintptr_t const & ident,
@@ -86,22 +90,17 @@ public:
 	void	disconnect_client(uintptr_t fd);
 	int		checkServerSocket(uintptr_t const & fd) const;
 	bool	checkFileFd() const;
+	bool	checkCgiFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
 
-	/* request header parsing */
-	void	checkReqHeader();
-	void	findServerBlockIndex();
-	void	findServerLocationIndex();
-	bool	findServerLocationIndex_findRoot();
-	bool	findServerLocationIndex_findServerBlock1();
-	bool	findServerLocationIndex_findServerBlock2();
-	bool	findServerLocationIndex_findServerBlock3();
-	bool	findServerLocationIndex_checkAsterisk(std::string const & str);
-	int		checkLocation(int const & sb, int const & size, std::string const & str);
-	void	isFile();
-	void	checkAllowedMethod();
+	/* Server_cgi */
+	void writeCGI();
+	void readCGI();
+
+	/* CGI/CGI.cpp */
+	void    CGI_fork();
 };
 
 #endif

@@ -4,13 +4,16 @@
 ** server socket 구동하기
 */
 void Server::socketRun() {
-	try {
-		ServerSocketInit();
-		kqueueInit();
-		kqueueEventRun();
-	}
-	catch(const char * err) {
-		std::cout << err << std::endl;
+	while (1) {
+		try {
+			ServerSocketInit();
+			kqueueInit();
+			kqueueEventRun();
+		}
+		catch(const char * err) {
+			std::cout << "webserv restart..." << std::endl;
+			std::cout << err << std::endl;
+		}
 	}
 }
 
@@ -38,17 +41,23 @@ void Server::socketInit(int const & i) {
 		server_socket.push_back(server_socket[fd]);
 		return ;
 	}
-	if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+	if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+		closeAllFd();
 		throw "socket() error!";
+	}
 
 	removeBindError(fd);
 	setSockaddr_in(i);
 
-	if (bind(fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
+	if (bind(fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+		closeAllFd();
 		throw "bind() error!";
+	}
 
-	if (listen(fd, SOCKET_LISTEN_BACKLOG) == -1)
+	if (listen(fd, SOCKET_LISTEN_BACKLOG) == -1) {
+		closeAllFd();
 		throw "listen() error!";
+	}
 
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	server_socket.push_back(static_cast<uintptr_t>(fd));
@@ -72,7 +81,6 @@ void Server::setSockaddr_in(int const & i) {
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(SOCKET_ADDR);
 	server_addr.sin_port = htons(config[i].port);
-
 }
 
 /*
@@ -86,4 +94,19 @@ uintptr_t Server::checkPort(int const & i, int const & port) const {
 		}
 	}
 	return -1;
+}
+
+void Server::closeAllFd() {
+	int size = server_socket.size();
+	for (int i = 0; i < size; ++i)
+		close(server_socket[i]);
+	
+	std::map<uintptr_t, HTTP>::iterator it1 = clients.begin();
+	for (; it1 != clients.end(); ++it1)
+		close(it1->first);
+	clients.clear();
+	std::map<uintptr_t, size_t>::iterator it2 = file_fd.begin();
+	for (; it2 != file_fd.end(); ++it2)
+		close(it2->first);
+	file_fd.clear();
 }
