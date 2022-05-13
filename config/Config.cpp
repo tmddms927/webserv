@@ -164,6 +164,7 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
             std::cout << "    index : " << config.config[i].location[j].index << std::endl;
             std::cout << "    is_aster : " << config.config[i].location[j].is_aster << std::endl;
             std::cout << "    CGI : " << config.config[i].location[j].cgi << std::endl;
+            std::cout << "    auto_index : " << config.config[i].location[j].auto_index << std::endl;
             j++;
         }
         std::cout << "--------------------------------------" << std::endl;
