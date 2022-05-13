@@ -45,9 +45,9 @@ servers ServerBlock::parse(rawtxt &raw) {
 locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
     locations tmp;
 
-    tmp.allowed_method = 0;
-    tmp.is_aster = false;
-    tmp.auto_index = false;
+    tmp.allowed_method = -1;
+    tmp.is_aster = -1;
+    tmp.auto_index = -1;
     while (!(*it).empty()) {
         if (tmp.location_uri.empty() && FIND(LOCATIONV)) {
             GET_RAW_VALUE(LOCATIONV);
@@ -56,7 +56,8 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
                 int found = tmp.location_uri.find('*');
                 tmp.location_uri.replace(found, 1, "");
                 tmp.is_aster = true;
-            }
+            } else
+                tmp.is_aster = false;
         }
         else if (tmp.location_root.empty() && FIND(ROOT)) {
             GET_RAW_VALUE(ROOT);
@@ -70,14 +71,14 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             GET_RAW_VALUE(DEFAULT_ERROR);
             SET_TMP_VALUE(tmp.err_page);
         }
-        else if (tmp.allowed_method == 0 && FIND(ALLOWED_METHODV))
+        else if (tmp.allowed_method == -1 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
         else if (tmp.cgi.empty() && FIND(CGI)) {
             GET_RAW_VALUE(CGI);
             SET_TMP_VALUE(tmp.cgi);
             CHECK_NULL(tmp.cgi);
         }
-        else if (tmp.auto_index == 0 && FIND(AUTO_INDEXV)) {
+        else if (tmp.auto_index == -1 && FIND(AUTO_INDEXV)) {
             std::string value;
             GET_RAW_VALUE(AUTO_INDEXV);
             ss >> value;
@@ -100,6 +101,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
 }
 
 void ServerBlock::validMethod(char & allowed_bits, std::string const & methods) {
+    allowed_bits = 0;
     std::string tmp = methods;
     if (tmp.find(CONF_GET) != std::string::npos) {
         allowed_bits |= GET_BIT;
