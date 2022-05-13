@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    // signal(SIGCHLD, sigchild);
     // run:
         // try {
             Server server(conf);

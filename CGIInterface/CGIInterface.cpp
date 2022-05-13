@@ -12,19 +12,19 @@
 /*
 **  SIGPIPE 감지 시에 실행할 함수
 */
-// void    sigpipe(int) {
-//     std::cout << "sigpipe" << std::endl;
-// }
+void    sigpipe(int) {
+    std::cout << "sigpipe" << std::endl;
+}
 
 /*  
 **  SIGCHLD 감지 시에 실행할 함수
 **  종료됨을 알린 자식프로세스의 자원을 부모 프로세스가 회수 -> wait()
 */
-// void    sigchild(int) {
-//     int status;
-//     std::cout << "sigchild" << std::endl;
-//     wait(&status);
-// }
+void    sigchild(int) {
+    int status;
+    std::cout << "sigchild" << std::endl;
+    wait(&status);
+}
 
 void    set_CGI_read_fd(int pipe[2]) {
     close(pipe[WRITE]);
@@ -46,8 +46,10 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo &ci ,struct s_cgiArg &ca) {
     char    *env[5];
 
     //file open, read, write error체크 엄밀히 하기
-    pipe(server_read_pipe);
-    pipe(server_write_pipe);
+    if (pipe(server_read_pipe) == -1)
+        std::cout << "pipe open error";
+    if (pipe(server_write_pipe) == -1)
+        std::cout << "pipe open error";
 
     pid = fork();
     if (pid < 0)
@@ -73,6 +75,7 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo &ci ,struct s_cgiArg &ca) {
         close(server_read_pipe[WRITE]);
         fcntl(server_write_pipe[WRITE], F_SETFL, O_NONBLOCK);
         fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK);
+        std::cout << "hihi" << std::endl;
         read_fd = server_read_pipe[READ];
         write_fd = server_write_pipe[WRITE];
         ci.read_fd = server_read_pipe[READ];
@@ -96,22 +99,45 @@ int    CGIInterface::CGI_read(std::string & buf, size_t buf_size) {
 
     memset(tmp, 0, buf_size + 1);
     rd = read(read_fd, tmp, buf_size);
+    std::cout << "tmp : " << tmp << std::endl;
+    if (rd <= 0)
+        std::cout << "CGI_read error" << std::endl;
+    std::cout << "error" << std::endl;
     buf = tmp;
     return rd;
 }
 
 size_t  CGIInterface::CGI_getWrittenLength() {
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    std::cout << &written_length << std::endl;
-    std::cout << written_length << std::endl;
     return written_length;
 }
 
+void  CGIInterface::CGI_clear() {
+    write_fd = 0;
+    read_fd = 0;
+    written_length = 0;
+}
 
 CGIInterface::CGIInterface(/* args */): written_length(0) {
-    
+    // std::cout << "CGIInterface default constructor called" << std::endl;
 }
 
 CGIInterface::~CGIInterface() {
+    // std::cout << "CGIInterface default destructor called" << std::endl;
+}
 
+// CGIInterface::CGIInterface(CGIInterface const &) {
+//     // std::cout << "CGIInterface copy constructor called" << std::endl;
+
+// }
+// CGIInterface & CGIInterface::operator=(CGIInterface const &) {
+//     // std::cout << "CGIInterface destructor called" << std::endl;
+//     return *this;
+// }
+
+int     CGIInterface::CGI_getReadFd() {
+    return read_fd;
+}
+
+int     CGIInterface::CGI_getWriteFd() {
+    return write_fd;
 }

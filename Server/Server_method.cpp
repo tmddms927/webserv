@@ -240,13 +240,13 @@ void Server::sendResMessage() {
 	message += clients[curr_event->ident].getResponseBody();
 
 	/////////////////////////////////////////////////////
-	std::cout << "==========================" << std::endl;
+	std::cout << "==========================hi" << std::endl;
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
 
-	// std::cout << "[[[[ response message! ]]]]" << std::endl;
-	// std::cout << "[[[[" << message << "]]]]" << std::endl;
+	std::cout << "[[[[ response message! ]]]]" << std::endl;
+	std::cout << "[[[[" << message << "]]]]" << std::endl;
 
 	write(curr_event->ident, message.c_str(), message.length());
 }

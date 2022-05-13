@@ -28,7 +28,7 @@ bool Server::checkFileFd() const {
 /*
 ** cgi fd인지 확인
 */
-bool Server::checkCgiFd() const {
+bool Server::checkCGIFd() const {
 	if (cgi_fd.find(curr_event->ident) != cgi_fd.end())
 		return true;
 	else

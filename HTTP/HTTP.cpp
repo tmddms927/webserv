@@ -5,15 +5,13 @@
 /*
 ** HTTP class default constructor.
 */
-HTTP::HTTP(){
+HTTP::HTTP(): cgi() {
+	// std::cout << "HTTP default constructor called" << std::endl;
 	resetHTTP();
 }
 
-/*
-** HTTP class constructor. socket_fd값을 받아와서 저장.
-*/
-HTTP::HTTP(uintptr_t _server_fd) : server_fd(_server_fd) {
-	resetHTTP();
+void HTTP::setServerFd(uintptr_t const fd) {
+	server_fd = fd;
 }
 
 uintptr_t const & HTTP::getServerFd() const {
@@ -45,14 +43,6 @@ void HTTP::setStatus(int const & s) {
 		this->status = s;
 }
 
-// uintptr_t const & HTTP::getResponseFd() {
-//     return response_fd;
-// }
-
-// void HTTP::setResponseFd(uintptr_t const & s) {
-//     this->response_fd = s;
-// }
-
 void HTTP::resetHTTP() {
     status = 0;
 	time_out = get_time();
@@ -71,7 +61,7 @@ void HTTP::resetHTTP() {
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
     requestMessage.keep_alive = true;
     requestMessage.port_num = 0;
-    cgi = 0;
+    cgi.CGI_clear();
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
@@ -86,8 +76,7 @@ void HTTP::resetHTTP() {
 }
 
 HTTP::~HTTP() {
-    if (cgi)
-        delete cgi;
+	// std::cout << "HTTP destructor called" << std::endl;
 }
 
 std::string const & HTTP::getResponseLine() const {
@@ -112,4 +101,13 @@ void HTTP::setTimeOut() {
 
 bool const & HTTP::getKeepAlive() const {
 	return requestMessage.keep_alive;
+}
+
+HTTP::HTTP(HTTP const &): cgi() {
+	resetHTTP();
+}
+
+HTTP & HTTP::operator=(HTTP const &) {
+	resetHTTP();
+	return *this;
 }
