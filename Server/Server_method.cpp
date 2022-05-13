@@ -245,10 +245,24 @@ void Server::sendResMessage() {
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
 
-	std::cout << "[[[[ response message! ]]]]" << std::endl;
-	std::cout << "[[[[" << message << "]]]]" << std::endl;
+	// std::cout << "[[[[ response message! ]]]]" << std::endl;
+	// std::cout << "[[[[" << message << "]]]]" << std::endl;
 
-	write(curr_event->ident, message.c_str(), message.length());
+	int i = 0;
+	int length = message.length();
+	int size = 0;
+
+	while (1) {
+		if (RW_MAX_SIZE * (i + 1) > length)
+			size = length;
+		else
+			size = length;
+		std::cout << size << std::endl;
+		write(curr_event->ident, message.c_str() + i * RW_MAX_SIZE, size);
+		i++;
+		if (i * RW_MAX_SIZE > length)
+			break ;
+	}
 }
 
 /*

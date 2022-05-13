@@ -83,6 +83,9 @@ void Server::kqueueEventError() {
 	{
 		std::cerr << "client socket error" << std::endl;
 		disconnect_client(curr_event->ident);
+		/////////////////
+		exit(1);
+		/////////////////
 	}
 }
 
@@ -192,6 +195,7 @@ void Server::setClientCGI() {
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
 	cgi_fd[read_fd] = curr_event->ident;
+	std::cout << write_fd << ", " << read_fd << std::endl;
 	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 

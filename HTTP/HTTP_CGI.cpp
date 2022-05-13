@@ -24,14 +24,10 @@ bool    HTTP::cgi_write(size_t buf_size) {
 
     buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), buf_size);
     if (!buf.empty()) {
-        cgi_wr = cgi.CGI_write(buf);
-        if (cgi_wr < 0) {
-            std::cout << "HTTP cgi_write have no write to buf" << std::endl;
-            exit(1);
-        }
-        if (cgi.CGI_getWrittenLength() < requestMessage.body.size()) {
+        if (!(cgi_wr = cgi.CGI_write(buf)))
             return false;
-        }
+        if (cgi.CGI_getWrittenLength() < requestMessage.body.size())
+            return false;
     }
     close(cgi.CGI_getWriteFd());
     return true;
@@ -41,11 +37,13 @@ bool    HTTP::cgi_read(size_t buf_size) {
     int         cgi_rd;
     std::string tmp;
 
-    cgi_rd = cgi.CGI_read(tmp, buf_size);
+    if (cgi.CGI_read(tmp))
+        ; //read error가 날 경우
 
     if (status <= 0) {
         std::cout << "header parsing~" << std::endl;
         requestMessage.buf += tmp;
+        // std::cout << "[" << requestMessage.buf << "]" << std::endl;
         tmp = "";
         if (extractstr(tmp, requestMessage.buf, "\r\n\r\n")) {
             std::vector<std::string> v;
