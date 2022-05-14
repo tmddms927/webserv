@@ -3,17 +3,41 @@
 #include "../utils.hpp"
 #include <iostream>
 #include "../Server/Server_define.hpp"
+#include <cstring>
+#include "HTTPHeaderField.hpp"
+
+void    HTTP::makeCGIArg(std::vector<std::string> & arg) {
+    arg.push_back(responseMessage.cgi_directory);
+    arg.push_back(responseMessage.file_directory);
+}
+
+void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
+    env.push_back("REQUEST_METHOD=" + requestMessage.method_name);
+    env.push_back("PATH_INFO=" + responseMessage.file_directory);
+
+    if (requestMessage.header_in.find(CONTENT_TYPE_STR) != requestMessage.header_in.end())
+        env.push_back(CONTENT_TYPE_STR + requestMessage.header_in[CONTENT_TYPE_STR]);
+
+    for (HTTPHeaderField::iterator it = requestMessage.header_in.begin();
+            it != requestMessage.header_in.end(); it++) {
+                if (!strncmp(it->second.c_str(), "X-", 2))
+                    env.push_back(it->first + "=" + it->second);
+            }
+}
 
 void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiInfo    ci;
-    struct s_cgiArg     ca;
+    std::vector<std::string> args;
+    std::vector<std::string> envs;
 
     requestMessage.buf = "";
 
-    ca.content_length = requestMessage.body.size();
-    ca.method_name = requestMessage.method_name;
-
-    cgi.CGI_fork(ci, ca);
+    // ca.content_length = requestMessage.body.size();
+    // ca.method_name = requestMessage.method_name;
+    makeCGIArg(args);
+    makeCGIEnv(envs);
+    
+    cgi.CGI_fork(ci, args, envs);
     write_fd = ci.write_fd;
     read_fd = ci.read_fd;
     pid = ci.pid;
@@ -66,8 +90,9 @@ int     HTTP::cgi_setResponseline() {
     std::string cgi_response_line;
     std::vector<std::string> tmp_v;
 
-    if (cgi_header_buf.empty())
+    if (cgi_header_buf.empty()) {
         return CGI_ERROR;
+    }
     found = cgi_header_buf.find("\r\n");
     if (found == std::string::npos)
         return CGI_ERROR;

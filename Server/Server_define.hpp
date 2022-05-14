@@ -12,7 +12,7 @@
 #define SERVER_DEFAULT_NAME		"webserv"
 #define TIME_OUT                600
 
-#define CGI_FINISHED        1001
+#define CGI_FINISHED            1001
 #define CGI_ERROR               1002
 #define CGI_NOT_FINISHED		1003
 
