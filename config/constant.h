@@ -11,6 +11,7 @@
 #define HOSTV "host "
 #define ROOT "root "
 #define CGI "cgi "
+#define AUTO_INDEXV "auto_index "
 #define CLIENT_BODY_SIZE "client_max_body_size "
 #define DEFAULT_ERROR "default_error_page "
 #define INDEXV "index "

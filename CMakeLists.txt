@@ -7,8 +7,12 @@ file(GLOB SRC ./*.hpp ./*.cpp
         config/*.h config/*.cpp config/*.hpp
         Server/*.hpp Server/*.cpp
         Server/ContentType/*.cpp Server/ContentType/*.hpp
-        HTTP/*.hpp HTTP/*.cpp)
+        Server/URIParser/*.cpp Server/URIParser/*.hpp
+        HTTP/*.hpp HTTP/*.cpp
+        autoindex/*.cpp autoindex/*.hpp
+        CGIInterface/*.cpp CGIInterface/CGIInterface.hpp)
 file(GLOB CONF_TEST_SRC config/*.h config/*.cpp config/*.hpp)
+file(GLOB INDEX_TEST_SRC AutoIndex/*.hpp AutoIndex/*.cpp ${CONF_TEST_SRC})
 add_executable(untitled1 ${SRC})
 
 
@@ -23,7 +27,7 @@ include_directories(gtest/googletest/include)
 include_directories(gtest/googlemock/include)
 
 #######################################################################test_config
-add_executable(config test/Config_test.cc ${CONF_TEST_SRC})
+add_executable(config test/Config_test.cc ${CONF_TEST_SRC} )
 
 #Link with GoogleTest
 target_link_libraries(config gtest gtest_main)
@@ -32,5 +36,14 @@ target_link_libraries(config gtest gtest_main)
 target_link_libraries(config gmock gmock_main)
 #######################################################################test_config
 
+#######################################################################test_index
+add_executable(index test/AutoIndex_test.cc ${INDEX_TEST_SRC} )
+
+#Link with GoogleTest
+target_link_libraries(index gtest gtest_main)
+
+#Link with GoogleMock
+target_link_libraries(index gmock gmock_main)
+#######################################################################test_index
 #######################################################################test_server
 #######################################################################test_server

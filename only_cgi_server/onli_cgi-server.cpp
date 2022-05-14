@@ -15,6 +15,10 @@
 #define READ_BUF_SIZE           200
 #define KQUEUE_EVENT_LIST_SIZE  1024
 
+#define CGI_FINISHED            1001
+#define CGI_ERROR               1002
+#define CGI_NOT_FINISHED		1003
+
 std::string     input = "hi im jeokim";
 
 typedef struct kevent   t_kevent;
@@ -159,8 +163,8 @@ int main(int argc, char **argv) {
 		std::cout << "fileopen fail" << std::endl;
 	// out = open("result", O_WRONLY | O_CREAT, 0644);
     // fcntl(out, F_SETFL, O_NONBLOCK);
-    signal(SIGPIPE, sigpipe);
-    signal(SIGCHLD, sigchild); 
+    // signal(SIGPIPE, sigpipe);
+    // signal(SIGCHLD, sigchild); 
     kq.kqueueInit();
     // http.reqInputBuf(buf);
 
@@ -204,12 +208,16 @@ int main(int argc, char **argv) {
         for (int idx = 0; idx < event_count; idx++) {
             std::cout << kq.getEventList()[idx].ident << ", " << kq.getEventList()[idx].filter << std::endl;
             if (kq.getEventList()[idx].filter == EVFILT_READ) {
-                if (http.cgi_read(READ_BUF_SIZE))
+                if (http.cgi_read() == CGI_FINISHED) {
+                    if (http.cgi_setResponseline() == CGI_ERROR)
+                        exit(1);
+                    http.cgi_setResponseHeader();
                     std::cout << "cgi_read end" << std::endl;
+                }
             }
             else if (kq.getEventList()[idx].filter == EVFILT_WRITE) {
                 if (kq.getEventList()[idx].ident == write_fd) {
-                    http.cgi_write(READ_BUF_SIZE);
+                    http.cgi_write();
                 }
                 else {
                     std::cout << "response to client" << std::endl;

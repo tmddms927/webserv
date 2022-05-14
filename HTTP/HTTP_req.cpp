@@ -101,7 +101,7 @@ bool    HTTP::parseRequestBody() {
         ret = reqBodyChunked();
     else {                                  //  Content-Length, Transfer-Encoding 모두 없을 경우
         requestMessage.non_body = true;
-        ret = SUCCESS;
+        ret = SUCCESS_REQ;
     }
     return ret;
 }
@@ -116,8 +116,8 @@ int HTTP::reqBodyContentLength() {
     extractstr(temp, requestMessage.buf, left_len);
     requestMessage.body += temp;
     if (requestMessage.body.size() >= static_cast<size_t>(requestMessage.content_length))
-        return SUCCESS;
-    return FAIL;
+        return SUCCESS_REQ;
+    return FAIL_REQ;
 }
 
 int HTTP::reqBodyChunked() {
@@ -128,14 +128,14 @@ int HTTP::reqBodyChunked() {
             if (extractstr(buf, requestMessage.buf, "\r\n"))
                 requestMessage.chunk.setLength(buf);
             else
-                return FAIL;
+                return FAIL_REQ;
             }
         else if (extractstr(buf, requestMessage.buf, "\r\n")) {
             requestMessage.chunk.appendContent(buf);
             requestMessage.chunk.setChunkEnd();
         }
         else
-            return FAIL;
+            return FAIL_REQ;
 
         if (requestMessage.chunk.isEndChunk()) {
             std::string const & s = requestMessage.chunk.getContent();
@@ -144,10 +144,10 @@ int HTTP::reqBodyChunked() {
                 requestMessage.chunk.initChunk();
             }
             else
-                return SUCCESS;
+                return SUCCESS_REQ;
         }
     }
-    return FAIL;
+    return FAIL_REQ;
 }
 
 void    HTTP::additionalParseRequestHeader() {
@@ -199,7 +199,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_REQ_BODY;
     }
     if (isReadyRequestBody() &&
-        parseRequestBody() == SUCCESS) {
+        parseRequestBody() == SUCCESS_REQ) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {

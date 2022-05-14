@@ -23,6 +23,7 @@ private:
     void                            setServerBlock();
     void                            checkVariables();
     void                            checkRelativePath();
+    bool                            hasRootLocation();
     void                            checkPort();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
@@ -41,6 +42,8 @@ private:
 
 public:
     explicit                        Config(std::string const & conf_file);
+    Config(Config const & src);
+    Config  &                       operator=(Config const & src);
     std::vector<servers> const &    getConfig() const;
     global const &                  getGlobal() const;
     void                            runParse();

@@ -38,7 +38,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
+			// std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1) {
 				closeAllFd();
 				throw "kevent() error";
@@ -61,8 +61,10 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		if (curr_event->flags & EV_EOF)
-			kqueueEventError();
+		// if (curr_event->flags & EV_EOF) {
+		// 	std::cout << "EV_EOF" << std::endl;
+		// 	kqueueEventError();
+		// }
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -83,9 +85,6 @@ void Server::kqueueEventError() {
 	{
 		std::cerr << "client socket error" << std::endl;
 		disconnect_client(curr_event->ident);
-		/////////////////
-		exit(1);
-		/////////////////
 	}
 }
 
@@ -168,7 +167,6 @@ void Server::kqueueEventReadFileFd() {
 */
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
-
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 
@@ -195,7 +193,9 @@ void Server::setClientCGI() {
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
 	cgi_fd[read_fd] = curr_event->ident;
-	std::cout << write_fd << ", " << read_fd << std::endl;
+	// std::cout << "CGI FD CREATE!!!!!!!!!!! " << write_fd << ", " << read_fd << std::endl;
+
+	// std::cout << clients[curr_event->ident].getResponseBody().length() << std::endl;
 	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 
@@ -204,7 +204,7 @@ void Server::setClientCGI() {
 */
 void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() == 200)
-		setResOKMes();
+		;// setResOKMes();
 	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET_BIT)
@@ -232,11 +232,6 @@ void Server::kqueueEventWrite() {
 	}
 	else if (checkCGIFd())
 		writeCGI();
-	else {
+	else
 		sendResMessage();
-		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
-		checkKeepAlive();
-		clients[curr_event->ident].resetHTTP();
-	}
 }
