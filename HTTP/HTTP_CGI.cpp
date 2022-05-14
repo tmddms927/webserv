@@ -2,6 +2,7 @@
 #include "../CGIInterface/CGIInterface.hpp"
 #include "../utils.hpp"
 #include <iostream>
+#include "../Server/Server_define.hpp"
 
 void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiInfo    ci;
@@ -18,32 +19,40 @@ void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     pid = ci.pid;
 }
 
-bool    HTTP::cgi_write(size_t buf_size) {
+int    HTTP::cgi_write(size_t buf_size) {
     std::string buf;
     int         cgi_wr;
 
     if (cgi.CGI_getWrittenLength() == requestMessage.body.size()) {
         close(cgi.CGI_getWriteFd());
-        return true;
+        return 1;
     }
     buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), buf_size);
     cgi_wr = cgi.CGI_write(buf);
-    if (cgi_wr == 0)
+    if (cgi_wr == 0) {
         std::cout << "CGI_write error" << std::endl;
-    if (cgi_wr == -1)
+        return 0;
+    }
+    if (cgi_wr == -1) {
         std::cout << "CGI_write pipe buf error" << std::endl;
-    return false;
+        return -1;
+    }
+    return -2;
 }
 
-bool    HTTP::cgi_read(size_t buf_size) {
+int    HTTP::cgi_read(size_t buf_size) {
     int         cgi_rd;
     std::string tmp;
 
     cgi_rd = cgi.CGI_read(tmp);
-    if (cgi_rd == 0)
+    if (cgi_rd == 0) {
         std::cout << "CGI_read error" << std::endl;
-    if (cgi_rd == -1)
+        return 0;
+    }
+    if (cgi_rd == -1) {
         std::cout << "CGI_read pipe buf error" << std::endl;
+        return -1;
+    }
 
     if (status <= 0) {
         std::cout << "header parsing~" << std::endl;
@@ -80,6 +89,6 @@ bool    HTTP::cgi_read(size_t buf_size) {
         return false;
     setResponseHeader("Content-Length", ft_itoa(requestMessage.body.size()));
     close(cgi.CGI_getReadFd());
-    return true;
+    return CGI_READ_FINSHED;
 }
 

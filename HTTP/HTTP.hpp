@@ -157,8 +157,8 @@ public:
 
 	/*  CGI function  */
 	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
-	bool					cgi_write(size_t buf_size);
-	bool					cgi_read(size_t buf_size);
+	int						cgi_write(size_t buf_size);
+	int						cgi_read(size_t buf_size);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

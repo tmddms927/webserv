@@ -48,4 +48,7 @@ re		:	fclean all
 test	:	all
 		@ ./webserv test.conf
 
+s	:	all
+		@ ./webserv seungoh_test.conf
+
 .PHONY	:	all clean fclean re
