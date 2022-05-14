@@ -105,6 +105,21 @@ void Config::checkFile() {
     }
 }
 
+void Config::checkDirDepth() {
+    for (size_t i = 0; i < config.size() ; i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            int rootCnt = 0;
+            std::string::iterator it = config[i].location[j].location_uri.begin();
+            while (it != config[i].location[j].location_uri.end()) {
+                if (*it++ == '/')
+                    rootCnt++;
+            }
+            if (rootCnt > 2)
+                throw VariableRuleException();
+        }
+    }
+}
+
 void Config::checkDir() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
@@ -138,6 +153,7 @@ void Config::checkVariables() {
     checkDir();
     checkFile();
     checkPort();
+    checkDirDepth();
 }
 
 bool Config::hasRootLocation() {
