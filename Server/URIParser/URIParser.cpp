@@ -1,5 +1,5 @@
 #include "URIParser.hpp"
-#include "../autoindex/AutoIndex.hpp"
+#include "../../autoindex/AutoIndex.hpp"
 
 URIParser::URIParser(HTTP & _client, std::vector<uintptr_t> const & _server_socket,\
 						std::vector<servers> const & _config)
@@ -119,7 +119,6 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 	}
 	client.setResponseFileDirectory(\
 		config[server_block].location[client.getResLocationIndex()].location_root + uri);
-	// isFile();
 	return true;
 }
 
@@ -184,10 +183,8 @@ void URIParser::isFile() {
 	int location_index = client.getResLocationIndex();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1) {
-		checkAutoIndex();
+	if (stat(path.c_str(), &ss) == -1)
 		client.setStatus(404);
-	}
 	else if (S_ISDIR(ss.st_mode)) {
 		if (path == config[server_block_index].location[location_index].location_root) {
 			client.setResponseFileDirectory(path +\
@@ -284,5 +281,30 @@ void URIParser::checkAutoIndex() {
 		client.setResponseBody(body);
 		client.setResponseHeader("Content-Length", ft_itoa(body.length()));
 		client.setResponseLine();
+	}
+}
+
+void URIParser::isFileAutoIndex() {
+	std::string path = client.getResponseFileDirectory();
+	int server_block_index = client.getResServerBlockIndex();
+	int location_index = client.getResLocationIndex();
+	struct stat ss;
+
+	if (stat(path.c_str(), &ss) == -1) {
+		checkAutoIndex();
+	}
+	else if (S_ISDIR(ss.st_mode)) {
+		if (path == config[server_block_index].location[location_index].location_root) {
+			client.setResponseFileDirectory(path +\
+				config[server_block_index].location[location_index].index);
+		}
+		else {
+			if (path[path.length() - 1] == '/')
+				client.setResponseFileDirectory(path +\
+					config[server_block_index].location[location_index].err_page);
+			else
+				client.setResponseFileDirectory(path + "/" +\
+					config[server_block_index].location[location_index].err_page);
+		}
 	}
 }

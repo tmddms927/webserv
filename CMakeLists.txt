@@ -7,8 +7,10 @@ file(GLOB SRC ./*.hpp ./*.cpp
         config/*.h config/*.cpp config/*.hpp
         Server/*.hpp Server/*.cpp
         Server/ContentType/*.cpp Server/ContentType/*.hpp
+        Server/URIParser/*.cpp Server/URIParser/*.hpp
         HTTP/*.hpp HTTP/*.cpp
-        autoindex/AutoIndex.cpp autoindex/AutoIndex.hpp)
+        autoindex/*.cpp autoindex/*.hpp
+        CGIInterface/*.cpp CGIInterface/CGIInterface.hpp)
 file(GLOB CONF_TEST_SRC config/*.h config/*.cpp config/*.hpp)
 file(GLOB INDEX_TEST_SRC AutoIndex/*.hpp AutoIndex/*.cpp ${CONF_TEST_SRC})
 add_executable(untitled1 ${SRC})

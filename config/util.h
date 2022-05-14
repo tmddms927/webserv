@@ -17,7 +17,8 @@ typedef struct location_s {
     std::string            index;
     std::string            cgi;
     char                   allowed_method;
-    bool                   is_aster;
+    int                    is_aster;
+    int                    auto_index;
 }               locations;
 
 typedef struct  servers_s {
