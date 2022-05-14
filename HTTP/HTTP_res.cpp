@@ -1,7 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
 
-
 void HTTP::setResponseFileDirectory(std::string const & str) {
 	responseMessage.file_directory = str;
 }
@@ -85,6 +84,10 @@ bool HTTP::checkStatusError() {
 		return true;
 	else
 		return false;
+}
+
+void HTTP::resetResponseHeader() {
+	responseMessage.header = "";
 }
 
 void HTTP::setResponseHeader(std::string const & key, std::string const & value) {

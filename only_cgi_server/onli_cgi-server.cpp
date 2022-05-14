@@ -204,12 +204,15 @@ int main(int argc, char **argv) {
         for (int idx = 0; idx < event_count; idx++) {
             std::cout << kq.getEventList()[idx].ident << ", " << kq.getEventList()[idx].filter << std::endl;
             if (kq.getEventList()[idx].filter == EVFILT_READ) {
-                if (http.cgi_read(READ_BUF_SIZE))
+                if (http.cgi_read()) {
+                    http.cgi_setResponseline();
+                    http.cgi_setResponseHeader();
                     std::cout << "cgi_read end" << std::endl;
+                }
             }
             else if (kq.getEventList()[idx].filter == EVFILT_WRITE) {
                 if (kq.getEventList()[idx].ident == write_fd) {
-                    http.cgi_write(READ_BUF_SIZE);
+                    http.cgi_write();
                 }
                 else {
                     std::cout << "response to client" << std::endl;

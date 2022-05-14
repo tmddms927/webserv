@@ -38,7 +38,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
+			// std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1) {
 				closeAllFd();
 				throw "kevent() error";
@@ -61,8 +61,10 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		if (curr_event->flags & EV_EOF)
-			kqueueEventError();
+		// if (curr_event->flags & EV_EOF) {
+		// 	std::cout << "EV_EOF" << std::endl;
+		// 	kqueueEventError();
+		// }
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -83,9 +85,6 @@ void Server::kqueueEventError() {
 	{
 		std::cerr << "client socket error" << std::endl;
 		disconnect_client(curr_event->ident);
-		/////////////////
-		exit(1);
-		/////////////////
 	}
 }
 
@@ -168,7 +167,6 @@ void Server::kqueueEventReadFileFd() {
 */
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
-
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 
@@ -195,7 +193,9 @@ void Server::setClientCGI() {
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
 	cgi_fd[read_fd] = curr_event->ident;
-	std::cout << write_fd << ", " << read_fd << std::endl;
+	// std::cout << "CGI FD CREATE!!!!!!!!!!! " << write_fd << ", " << read_fd << std::endl;
+
+	// std::cout << clients[curr_event->ident].getResponseBody().length() << std::endl;
 	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 
