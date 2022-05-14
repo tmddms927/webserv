@@ -9,7 +9,7 @@ void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiArg     ca;
 
     requestMessage.buf = "";
-    // cgi.CGI_clear();
+
     ca.content_length = requestMessage.body.size();
     ca.method_name = requestMessage.method_name;
 
@@ -104,34 +104,3 @@ int    HTTP::cgi_setResponseHeader() {
         setResponseHeader("Content-Length", ft_itoa(getResponseBody().size()));
     return CGI_FINISHED;
 }
-
-    // if (status <= 0) {
-    //     std::cout << "header parsing~" << std::endl;
-    //     requestMessage.buf += tmp;
-    //     // std::cout << "[" << requestMessage.buf << "]" << std::endl;
-    //     tmp = "";
-    //     if (extractstr(tmp, requestMessage.buf, "\r\n\r\n")) {
-    //         std::vector<std::string> v;
-
-    //         ft_split(v,tmp, "\r\n");
-    //         for (std::vector<std::string>::iterator
-    //                 it = v.begin(); it != v.end(); it++) {
-    //                     std::cout << *it << std::endl;
-    //                     if (it == v.begin()) {
-    //                         setStatus(200);
-    //                         setResponseLine();
-    //                     }
-    //                     else {
-    //                         std::pair<std::string, std::string> pa;
-    //                         pa = ft_slice_str(*it, it->find(":"));
-    //                         setResponseHeader(pa.first, pa.second);
-    //                     }
-    //                 }
-    //         if (!requestMessage.buf.empty())
-    //             setResponseBody(requestMessage.buf);
-    //     }
-    //     else
-    //         return false;
-    // }
-    // setResponseHeader("Content-Length", ft_itoa(requestMessage.body.size()));
-
