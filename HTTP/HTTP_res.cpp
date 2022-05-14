@@ -90,6 +90,10 @@ void HTTP::resetResponseHeader() {
 	responseMessage.header = "";
 }
 
+void HTTP::resetResponseBody() {
+	responseMessage.body = "";
+}
+
 void HTTP::setResponseHeader(std::string const & key, std::string const & value) {
 	responseMessage.header += key;
 	responseMessage.header += ": ";

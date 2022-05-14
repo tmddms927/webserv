@@ -79,6 +79,7 @@ public:
 	void	readResHEADFile();
 
 	void	sendResMessage();
+	bool	checkRedirect();
 	void	sendResLine();
 	void	sendResHeader();
 	void	sendResBody();

@@ -170,6 +170,10 @@ void Server::finishedRead() {
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 
+	if (checkRedirect()) {
+		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+		// return ;
+	}
 	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
 		setClientCGI();
 	else

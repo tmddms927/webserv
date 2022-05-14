@@ -243,6 +243,22 @@ void Server::sendResMessage() {
 }
 
 /*
+** check redirect
+*/
+bool Server::checkRedirect() {
+	return false;
+	clients[curr_event->ident].resetResponseHeader();
+	clients[curr_event->ident].resetResponseBody();
+
+	setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setStatus(301);
+	clients[curr_event->ident].setResponseLine();
+	// hi -> 바꾸기!
+	clients[curr_event->ident].setResponseHeader("Location", "hi");
+	return true;
+}
+
+/*
 ** send response line to client
 */
 void Server::sendResLine() {
