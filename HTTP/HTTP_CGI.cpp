@@ -36,6 +36,7 @@ bool    HTTP::cgi_write(size_t buf_size) {
 }
 
 bool    HTTP::cgi_read(size_t buf_size) {
+    (void) buf_size;
     int         cgi_rd;
     std::string tmp;
 

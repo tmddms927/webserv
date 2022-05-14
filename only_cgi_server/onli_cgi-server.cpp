@@ -133,16 +133,16 @@ t_kevent*   KQueue::getEventList() {
 //     }
 // }
 
-void    sigpipe(int) {
-    std::cout << "sigpipe" << std::endl;
-    exit(1);
-}
+// void    sigpipe(int) {
+//     std::cout << "sigpipe" << std::endl;
+//     exit(1);
+// }
 
-void    sigchild(int) {
-    int status;
-    std::cout << "sigchild" << std::endl;
-    wait(&status);
-}
+// void    sigchild(int) {
+//     int status;
+//     std::cout << "sigchild" << std::endl;
+//     wait(&status);
+// }
 
 int main(int argc, char **argv) {
     (void)argc;
