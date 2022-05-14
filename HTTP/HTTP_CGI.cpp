@@ -42,26 +42,23 @@ int    HTTP::cgi_read() {
     std::string tmp;
 
     cgi_rd = cgi.CGI_read(tmp);
-    if (cgi_rd == 0)
-        return CGI_ERROR;
+    
     // -1 is not error, pipe 버퍼가 차 있으므로 다시 read 시도하면 됨
     // 만약 CGI가 시간 내에 요청을 처리하지 못하면 timeout
     if (cgi_rd == -1)
         return CGI_NOT_FINISHED;
-
+    if (cgi_rd == 0) {
+        close(cgi.CGI_getReadFd());
+        return CGI_FINISHED;
+    }
     cgi_buf = tmp;
+    // std::cout << "[" << cgi_buf << "]" << std::endl;
     if (cgi_header_buf.empty()) {
         if (!extractstr(cgi_header_buf, cgi_buf, "\r\n\r\n"))
             return CGI_NOT_FINISHED;
-        else
-            setResponseBody(cgi_buf);
     }
-    if (getResponseBody().size() < requestMessage.body.size()) {
-        return CGI_NOT_FINISHED;
-    }
-    //  getResponseBody().size() == requestMessage.body.size() 인경 read finish
-    close(cgi.CGI_getReadFd());
-    return CGI_FINISHED;
+    setResponseBody(cgi_buf);
+    return CGI_NOT_FINISHED;
 }
 
 int     HTTP::cgi_setResponseline() {
@@ -100,7 +97,7 @@ int    HTTP::cgi_setResponseHeader() {
                 setResponseHeader(tmp_p.first, tmp_p.second);
             }
 
-    if (getResponseBody().size())
-        setResponseHeader("Content-Length", ft_itoa(getResponseBody().size()));
+    // if (getResponseBody().size())
+    setResponseHeader("Content-Length", ft_itoa(getResponseBody().size()));
     return CGI_FINISHED;
 }

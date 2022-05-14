@@ -16,11 +16,20 @@ URIParser::~URIParser() {
 */
 void URIParser::checkReqHeader() {
 	findDefaultLocationIndex();
+	if (checkGoBeforeDirectory())
+		return ;
 	findServerBlockIndex();
 	findServerLocationIndex();
 	checkURICGI();
 	checkAllowedMethod();
-	isFile();
+}
+
+bool URIParser::checkGoBeforeDirectory() {
+	if (client.getURI().find("/../") != std::string::npos) {
+		client.setStatus(404);
+		return true;
+	}
+	return false;
 }
 
 /*
@@ -59,6 +68,7 @@ void URIParser::findServerBlockIndex() {
 */
 void URIParser::findServerLocationIndex() {
 	std::string uri = client.getURI();
+
 	if (uri[0] != '/')
 		client.setURI("/" + uri);
 	if (findServerLocationIndex_findRoot())
@@ -110,15 +120,20 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 			temp = uri.substr(config[server_block].location[i].location_uri.length());
 
 			client.setResLocationIndex(i);
-			if (temp == "" || temp == "/")
+			if (temp == "" || temp == "/") {
 				findServerLocationIndex_findServerBlock3();
-			else
+				isFileAutoIndex();
+			}
+			else {
 				client.setResponseFileDirectory(config[server_block].location[i].location_root + temp);
+				isFile();
+			}
 			return true;
 		}
 	}
 	client.setResponseFileDirectory(\
 		config[server_block].location[client.getResLocationIndex()].location_root + uri);
+	isFile();
 	return true;
 }
 
@@ -183,7 +198,8 @@ void URIParser::isFile() {
 	int location_index = client.getResLocationIndex();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1)
+	if (stat(path.c_str(), &ss) == -1 && client.getResponseCGIDirectory() == "" &&
+		client.getMethod() != PUT_BIT && client.getMethod() != POST_BIT)
 		client.setStatus(404);
 	else if (S_ISDIR(ss.st_mode)) {
 		if (path == config[server_block_index].location[location_index].location_root) {
@@ -267,12 +283,17 @@ void URIParser::checkAutoIndex() {
 	bool err;
 	std::string body;
 
+	if (config[client.getResServerBlockIndex()].\
+		location[client.getResLocationIndex()].auto_index != 1) {
+		client.setStatus(404);
+		return ;
+	}
+
 	AutoIndex autoIndex(config[client.getResServerBlockIndex()].\
 		location[client.getResLocationIndex()].location_root);
 	err = autoIndex.makeHTML();
-	if (err) {
+	if (err)
 		client.setStatus(404);
-	}
 	else {
 		body = autoIndex.getRes().body;
 		client.setResponseHeader("Server", SERVER_DEFAULT_NAME);
@@ -290,9 +311,8 @@ void URIParser::isFileAutoIndex() {
 	int location_index = client.getResLocationIndex();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1) {
+	if (stat(path.c_str(), &ss) == -1 && client.getResponseCGIDirectory() == "")
 		checkAutoIndex();
-	}
 	else if (S_ISDIR(ss.st_mode)) {
 		if (path == config[server_block_index].location[location_index].location_root) {
 			client.setResponseFileDirectory(path +\

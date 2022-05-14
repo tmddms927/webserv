@@ -62,6 +62,8 @@ void HTTP::resetHTTP() {
     requestMessage.keep_alive = true;
     requestMessage.port_num = 0;
     cgi.CGI_clear();
+	cgi_header_buf = "";
+	cgi_buf = "";
 
 	responseMessage.server_block_index = 0;
 	responseMessage.location_index = 0;
@@ -73,6 +75,8 @@ void HTTP::resetHTTP() {
 	responseMessage.response_line = "";
 	responseMessage.header = "";
 	responseMessage.body = "";
+	responseMessage.res_step = CLIENT_RES_LINE;
+	responseMessage.index = 0;
 }
 
 HTTP::~HTTP() {

@@ -75,7 +75,6 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo &ci ,struct s_cgiArg &ca) {
 		close(server_read_pipe[WRITE]);
 		fcntl(server_write_pipe[WRITE], F_SETFL, O_NONBLOCK);
 		fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK);
-		std::cout << "hihi" << std::endl;
 		read_fd = server_read_pipe[READ];
 		write_fd = server_write_pipe[WRITE];
 		ci.read_fd = server_read_pipe[READ];

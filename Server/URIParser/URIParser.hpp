@@ -18,6 +18,7 @@ public:
 				std::vector<servers> const & _config);
 	~URIParser();
     void	checkReqHeader();
+	bool	checkGoBeforeDirectory();
 	void	findServerBlockIndex();
 	void	findDefaultLocationIndex();
 	void	findServerLocationIndex();
