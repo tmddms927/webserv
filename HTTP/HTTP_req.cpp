@@ -234,10 +234,10 @@ void HTTP::reqPrint() {
     std::cout << requestMessage.method_name << " " << requestMessage.unparsed_uri << std::endl;
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
-    if (!requestMessage.non_body)
-        std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
-    else
-        std::cout << "************* there is no body ***************" << std::endl;
+    // if (!requestMessage.non_body)
+    //     std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
+    // else
+    //     std::cout << "************* there is no body ***************" << std::endl;
     std::cout << "port_num : " << requestMessage.port_num << std::endl
                 << "keep-alive : " << requestMessage.keep_alive << std::endl
                 << "content_length : " << requestMessage.content_length << std::endl
