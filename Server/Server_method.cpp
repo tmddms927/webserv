@@ -45,9 +45,8 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
-	if (fd <= 0) {
+	if (fd <= 0)
 		checkAutoIndex();
-	}
 	else {
 		file_fd[fd] = curr_event->ident;
 		clients[curr_event->ident].setResponseHaveFileFd(true);
@@ -141,23 +140,30 @@ void Server::readResErrorFile() {
 */
 void Server::readResGETFile() {
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
-	size_t len;
+	int len;
 	int fd;
 
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	std::cout << "[" << buf << "]" << std::endl;
+	std::cout << len << std::endl;
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
-	if (isMethodHEAD(fd) == false) {
+	// if (isMethodHEAD(fd) == false) {
+		std::cout << clients[fd].getResponseFileDirectory() << std::endl;
 		ContentType ct(clients[fd].getResponseFileDirectory());
 		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+		std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		std::cout << clients[fd].getResponseHeader() << std::endl;
 		clients[fd].setResponseBody(buf);
-		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
-	}
+		// clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
+		clients[fd].setResponseHeader("Content-Length", "3734");
+		std::cout << clients[fd].getResponseBody().length()<<std::endl;
+	// }
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	clients[fd].setResponseLine();
@@ -202,8 +208,8 @@ void Server::writeResPUTFile() {
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	// post body 있어야되나..?
-	clients[fd].setResponseBody("good!");
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(5));
+	// clients[fd].setResponseBody("good!");
+	// clients[fd].setResponseHeader("Content-Length", ft_itoa(5));
 	clients[fd].setResponseLine();
 }
 
@@ -232,37 +238,76 @@ void Server::readResHEADFile() {
 ** send response message to client
 */
 void Server::sendResMessage() {
-	std::string message;
+	std::cout << "[req message]" << std::endl;
+	std::cout << clients[curr_event->ident].getStatus() << std::endl;
+	std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 
-	message = clients[curr_event->ident].getResponseLine();
-	message += "\r\n";
-	message += clients[curr_event->ident].getResponseHeader();
-	message += "\r\n";
-	message += clients[curr_event->ident].getResponseBody();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_LINE)
+		sendResLine();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_HEADER)
+		sendResHeader();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_BODY)
+		sendResBody();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_FINISH) {
+		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
+		checkKeepAlive();
+		clients[curr_event->ident].resetHTTP();
+	}
+}
 
-	/////////////////////////////////////////////////////
-	std::cout << "==========================hi" << std::endl;
-	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	// std::cout << "==========================" << std::endl;
-	// std::cout << "[[[[ request message! ]]]]" << std::endl;
-	// clients[curr_event->ident].reqPrint();
+/*
+** send response line to client
+*/
+void Server::sendResLine() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
 
-	std::cout << "[[[[ response message! ]]]]" << std::endl;
-	std::cout << "[[[[" << message << "]]]]" << std::endl;
+	if (index == 0)
+		clients[curr_event->ident].setResponseHeaderFinish();
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseLine().c_str() + index,
+		clients[curr_event->ident].getResponseLine().length() - index);
+	if (index + length != clients[curr_event->ident].getResponseLine().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_HEADER);
+	}
+}
 
-	int i = 0;
-	int length = message.length();
-	int size = 0;
+/*
+** send response header to client
+*/
+void Server::sendResHeader() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
 
-	while (1) {
-		if (RW_MAX_SIZE * (i + 1) > length)
-			size = length;
-		else
-			size = RW_MAX_SIZE;
-		write(curr_event->ident, message.c_str() + i * RW_MAX_SIZE, size);
-		i++;
-		if (i * RW_MAX_SIZE > length)
-			break ;
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseHeader().c_str() + index,
+		clients[curr_event->ident].getResponseHeader().length() - index);
+	if (index + length != clients[curr_event->ident].getResponseHeader().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_BODY);
+	}
+}
+
+/*
+** send response body to client
+*/
+void Server::sendResBody() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
+
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseBody().c_str() + index,
+		clients[curr_event->ident].getResponseBody().length() - index);
+	std::cout << "length ! !!!!!!" << std::endl;
+	std::cout << index << ", " << length << ", " << clients[curr_event->ident].getResponseBody().length() << std::endl;
+	if (index + length != clients[curr_event->ident].getResponseBody().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_FINISH);
 	}
 }
 

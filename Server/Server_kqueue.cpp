@@ -232,11 +232,6 @@ void Server::kqueueEventWrite() {
 	}
 	else if (checkCGIFd())
 		writeCGI();
-	else {
+	else
 		sendResMessage();
-		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
-		checkKeepAlive();
-		clients[curr_event->ident].resetHTTP();
-	}
 }

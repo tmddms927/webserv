@@ -73,6 +73,8 @@ void HTTP::resetHTTP() {
 	responseMessage.response_line = "";
 	responseMessage.header = "";
 	responseMessage.body = "";
+	responseMessage.res_step = CLIENT_RES_LINE;
+	responseMessage.index = 0;
 }
 
 HTTP::~HTTP() {

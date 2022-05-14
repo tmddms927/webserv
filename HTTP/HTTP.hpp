@@ -73,6 +73,8 @@ struct ResponseMessage {
 	std::string             response_line;
 	std::string             header;
 	std::string             body;
+	int						res_step;
+	size_t					index;
 };
 
 class HTTP {
@@ -136,6 +138,8 @@ public:
 	std::string const & 	getResponseBody() const;
 	bool const &			getResponseHaveFileFd() const;
 	bool const &			getResponseHaveCGIFd() const;
+	int const &				getResponseStep() const;
+	size_t const & 			getResponseIndex() const;
 
 	void					setResponseFileDirectory(std::string const & str);
 	void					setResponseCGIDirectory(std::string const & str);
@@ -144,6 +148,8 @@ public:
 	void					setResponseBody(std::string const & str);
 	void 					setResponseHaveFileFd(bool const & have);
 	void 					setResponseHaveCGIFd(bool const & have);
+	void					setResponseStep(int const & i);
+	void					setResponseIndex(size_t const & i);
 	
 	bool					checkStatusError();
 	unsigned long long const &	getTimeOut();
@@ -154,6 +160,7 @@ public:
 	void					setResLocationIndex(int const & i);
 	int const & 			getResCgiIndex();
 	void					setResCgiIndex(int const & i);
+	void					setResponseHeaderFinish();
 
 	/*  CGI function  */
 	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
