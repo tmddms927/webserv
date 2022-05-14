@@ -83,6 +83,8 @@ private:
 	int             status;
 	unsigned long long	time_out;
 	CGIInterface	cgi;
+	std::string		cgi_header_buf;
+	std::string		cgi_buf;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -157,8 +159,10 @@ public:
 
 	/*  CGI function  */
 	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
-	int						cgi_write(size_t buf_size);
-	int						cgi_read(size_t buf_size);
+	int						cgi_write();
+	int						cgi_read();
+	int						cgi_setResponseline();
+	int						cgi_setResponseHeader();
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

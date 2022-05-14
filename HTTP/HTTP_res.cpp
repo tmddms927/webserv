@@ -1,7 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
 
-
 void HTTP::setResponseFileDirectory(std::string const & str) {
 	responseMessage.file_directory = str;
 }

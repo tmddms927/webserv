@@ -24,7 +24,7 @@ void Server::readCGI() {
 
 	client_fd = cgi_fd[curr_event->ident];
 	status = clients[client_fd].cgi_read(REQUEST_BODY_MAX_SIZE);
-	if (status == CGI_READ_FINSHED) {
+	if (status == CGI_FINISHED) {
 		setResDefaultHeaderField(client_fd);
 		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
 		std::cout <<  "read success" <<  cgi_fd[curr_event->ident] << std::endl;

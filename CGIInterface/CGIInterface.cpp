@@ -12,19 +12,19 @@
 /*
 **  SIGPIPE 감지 시에 실행할 함수
 */
-void    sigpipe(int) {
-	std::cout << "sigpipe" << std::endl;
-}
+// void    sigpipe(int) {
+// 	std::cout << "sigpipe" << std::endl;
+// }
 
 /*  
 **  SIGCHLD 감지 시에 실행할 함수
 **  종료됨을 알린 자식프로세스의 자원을 부모 프로세스가 회수 -> wait()
 */
-void    sigchild(int) {
-	int status;
-	std::cout << "sigchild" << std::endl;
-	wait(&status);
-}
+// void    sigchild(int) {
+// 	int status;
+// 	std::cout << "sigchild" << std::endl;
+// 	wait(&status);
+// }
 
 void    set_CGI_read_fd(int pipe[2]) {
 	close(pipe[WRITE]);
