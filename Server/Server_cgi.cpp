@@ -6,19 +6,18 @@
 void Server::writeCGI() {
     uintptr_t client_fd;
 
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!write" << std::endl;
     client_fd = cgi_fd[curr_event->ident];
-    clients[client_fd].cgi_write(REQUEST_BODY_MAX_SIZE);
+    if (clients[client_fd].cgi_write(REQUEST_BODY_MAX_SIZE))
+        std::cout <<  "write success" << std::endl;
 }
 
 void Server::readCGI() {
     uintptr_t client_fd;
 
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!read" << std::endl;
     client_fd = cgi_fd[curr_event->ident];
-    clients[client_fd].cgi_read(REQUEST_BODY_MAX_SIZE);
+    if (clients[client_fd].cgi_read(REQUEST_BODY_MAX_SIZE))
+        std::cout <<  "read success" <<  cgi_fd[curr_event->ident] << std::endl;
+
 	setResDefaultHeaderField(client_fd);
-    change_events(client_fd, EVFILT_READ, EV_ENABLE);
-	checkKeepAlive();
-	clients[curr_event->ident].resetHTTP();
+    change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
 }

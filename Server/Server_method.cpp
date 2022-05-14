@@ -241,9 +241,7 @@ void Server::sendResMessage() {
 	message += clients[curr_event->ident].getResponseBody();
 
 	/////////////////////////////////////////////////////
-	// std::cout << "==========================" << std::endl;
-	// std::cout << clients[curr_event->ident].getURI() << std::endl;
-	// std::cout << clients[curr_event->ident].getResLocationIndex() << std::endl;
+	std::cout << "==========================hi" << std::endl;
 	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
 	// std::cout << "==========================" << std::endl;
 	// std::cout << "[[[[ request message! ]]]]" << std::endl;
@@ -252,7 +250,20 @@ void Server::sendResMessage() {
 	std::cout << "[[[[ response message! ]]]]" << std::endl;
 	std::cout << "[[[[" << message << "]]]]" << std::endl;
 
-	write(curr_event->ident, message.c_str(), message.length());
+	int i = 0;
+	int length = message.length();
+	int size = 0;
+
+	while (1) {
+		if (RW_MAX_SIZE * (i + 1) > length)
+			size = length;
+		else
+			size = RW_MAX_SIZE;
+		write(curr_event->ident, message.c_str() + i * RW_MAX_SIZE, size);
+		i++;
+		if (i * RW_MAX_SIZE > length)
+			break ;
+	}
 }
 
 /*

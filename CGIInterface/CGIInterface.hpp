@@ -31,17 +31,21 @@ private:
 
     /* util */
     size_t      written_length;
-
+    int   read_fd;
+    int   write_fd;
+    // CGIInterface(CGIInterface const &);
+    // CGIInterface & operator=(CGIInterface const &);
 public:
-    uintptr_t   read_fd;
-    uintptr_t   write_fd;
-    CGIInterface(/* args */);
+    CGIInterface();
     ~CGIInterface();
 
     void    CGI_fork(struct s_cgiInfo &ci, struct s_cgiArg &ca);
     int     CGI_write(std::string const &body);
-    int     CGI_read(std::string & buf, size_t buf_size);
+    int     CGI_read(std::string & buf);
     size_t  CGI_getWrittenLength();
+    void    CGI_clear();
+    int     CGI_getReadFd();
+    int     CGI_getWriteFd();
 };
 
 // CGIInterface::CGIInterface(/* args */)

@@ -38,7 +38,7 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
+			std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1) {
 				closeAllFd();
 				throw "kevent() error";
@@ -83,6 +83,9 @@ void Server::kqueueEventError() {
 	{
 		std::cerr << "client socket error" << std::endl;
 		disconnect_client(curr_event->ident);
+		/////////////////
+		exit(1);
+		/////////////////
 	}
 }
 
@@ -95,7 +98,7 @@ void Server::kqueueEventRead() {
 			kqueueConnectAccept();
 		else if (checkFileFd())
 			kqueueEventReadFileFd();
-		else if (checkCgiFd())
+		else if (checkCGIFd())
 			readCGI();
 		else
 			kqueueEventReadClient();
@@ -119,7 +122,8 @@ void Server::kqueueConnectAccept() {
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
-	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
+	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP()));
+	clients[client_socket].setServerFd(curr_event->ident);
 	std::cout << "accept new client : " << client_socket << std::endl;
 }
 
@@ -172,7 +176,7 @@ void Server::finishedRead() {
 		setClientCGI();
 	else
 		checkMethod();
-	if (clients[curr_event->ident].getResponseHaveFileFd() == false || 
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false && 
 		clients[curr_event->ident].getResponseHaveCGIFd() == false) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 	}
@@ -187,11 +191,11 @@ void Server::setClientCGI() {
 	pid_t pid;
 
 	clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid);
-
 	change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
 	cgi_fd[read_fd] = curr_event->ident;
+	std::cout << write_fd << ", " << read_fd << std::endl;
 	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 
@@ -226,7 +230,7 @@ void Server::kqueueEventWrite() {
 			writeResPUTFile();
 		disconnect_file_fd();
 	}
-	else if (checkCgiFd())
+	else if (checkCGIFd())
 		writeCGI();
 	else {
 		sendResMessage();

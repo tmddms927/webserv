@@ -77,13 +77,12 @@ struct ResponseMessage {
 
 class HTTP {
 private:
-
 	uintptr_t       server_fd;
 	RequestMessage  requestMessage;
 	ResponseMessage responseMessage;
 	int             status;
 	unsigned long long	time_out;
-	CGIInterface		*cgi;
+	CGIInterface	cgi;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -101,9 +100,12 @@ private:
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
 
+	
 public:
 	HTTP();
-	HTTP(uintptr_t _server_fd);
+	HTTP(HTTP const &);
+	HTTP & operator=(HTTP const &);
+
 	void					resetHTTP();
 	~HTTP();
 
@@ -116,6 +118,7 @@ public:
 	char				 	getMethod() const;
 	bool const &			getKeepAlive() const;
 
+	void					setServerFd(uintptr_t const fd);
 	void					setPort();
 	void					setStatus(int const & s);
 

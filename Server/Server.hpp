@@ -90,7 +90,7 @@ public:
 	void	disconnect_client(uintptr_t fd);
 	int		checkServerSocket(uintptr_t const & fd) const;
 	bool	checkFileFd() const;
-	bool	checkCgiFd() const;
+	bool	checkCGIFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
