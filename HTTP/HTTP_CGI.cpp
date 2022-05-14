@@ -40,12 +40,7 @@ int    HTTP::cgi_write(size_t buf_size) {
     return -2;
 }
 
-<<<<<<< HEAD
-bool    HTTP::cgi_read(size_t buf_size) {
-    (void) buf_size;
-=======
 int    HTTP::cgi_read(size_t buf_size) {
->>>>>>> 16396359aae286c4902183c40bef7a59c54d5905
     int         cgi_rd;
     std::string tmp;
 
