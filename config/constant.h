@@ -9,6 +9,7 @@
 #define SERVERV "server"
 #define PORT "port "
 #define HOSTV "host "
+#define RETURNV "return "
 #define ROOT "root "
 #define CGI "cgi "
 #define AUTO_INDEXV "auto_index "

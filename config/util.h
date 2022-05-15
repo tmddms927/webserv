@@ -16,6 +16,8 @@ typedef struct location_s {
     std::string            err_page;
     std::string            index;
     std::string            cgi;
+    std::string            redirect_code;
+    std::string            redirect_url;
     char                   allowed_method;
     int                    is_aster;
     int                    auto_index;

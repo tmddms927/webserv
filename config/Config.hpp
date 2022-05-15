@@ -25,6 +25,7 @@ private:
     void                            checkRelativePath();
     bool                            hasRootLocation();
     void                            checkDirDepth();
+    void                            checkAllowedMethod();
     void                            checkPort();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
