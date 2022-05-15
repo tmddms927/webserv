@@ -78,8 +78,8 @@ void URIParser::findServerLocationIndex() {
 	// server block location과 uri가 맞지 않은 경우
 	client.setResponseFileDirectory(\
 			config[client.getResServerBlockIndex()].location[client.getResLocationIndex()].location_root\
-			+ config[client.getResServerBlockIndex()].location[client.getResLocationIndex()].err_page);
-	client.setStatus(404);
+			+ client.getURI());
+	isFile();
 }
 
 /*

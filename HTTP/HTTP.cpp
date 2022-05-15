@@ -38,6 +38,10 @@ int const & HTTP::getStatus() {
 	return status;
 }
 
+void HTTP::setRedirectStatus(int const & s) {
+	this->status = s;
+}
+
 void HTTP::setStatus(int const & s) {
 	if (this->status == 0 || this->status == -1)
 		this->status = s;

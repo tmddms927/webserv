@@ -4,21 +4,6 @@
 #include "../autoindex/AutoIndex.hpp"
 
 /*
-** set OK response message - directory doesn't have index file
-*/
-void Server::setResOKMes() {
-	setResDefaultHeaderField(curr_event->ident);
-	clients[curr_event->ident].setResponseLine();
-
-	if (isMethodHEAD(curr_event->ident) == false) {
-		ContentType ct(clients[curr_event->ident].getResponseFileDirectory());
-		clients[curr_event->ident].setResponseHeader("Content-Type", ct.getContentType());
-		clients[curr_event->ident].setResponseBody("123");
-		clients[curr_event->ident].setResponseHeader("Content-Length", "3");
-	}
-}
-
-/*
 ** set error response message
 */
 void Server::setResErrorMes(int const & client) {
@@ -26,6 +11,9 @@ void Server::setResErrorMes(int const & client) {
 	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
 			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
 
+	clients[curr_event->ident].setResponseFileDirectory(file);
+	if (checkReadFileEmpty(curr_event->ident))
+		return ;
 	fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0) {
 		setResDefaultHeaderField(curr_event->ident);
@@ -44,6 +32,8 @@ void Server::setResErrorMes(int const & client) {
 void Server::setResMethodGET() {
 	int fd;
 
+	if (checkReadFileEmpty(curr_event->ident))
+		return ;
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd <= 0)
 		checkAutoIndex();
@@ -58,10 +48,6 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-	////////////////////////////// 수정하기 //////////////////////////////
-	if (clients[curr_event->ident].getBody().length() > 100)
-		return changeStatusToError(curr_event->ident, 413);
-	
 	clients[curr_event->ident].setStatus(204);
 	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setResponseLine();
@@ -126,6 +112,8 @@ void Server::readResErrorFile() {
 	int fd;
 
 	fd = file_fd[curr_event->ident];
+	if (setReadFileEmpty(fd))
+		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
@@ -147,6 +135,8 @@ void Server::readResGETFile() {
 	int fd;
 
 	fd = file_fd[curr_event->ident];
+	if (setReadFileEmpty(fd))
+		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
 	if (len > RECIEVE_BODY_MAX_SIZE)
@@ -198,7 +188,8 @@ void Server::readResHEADFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
-
+	if (setReadFileEmpty(fd))
+		return ;
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
 	else if (len < 0)
@@ -231,15 +222,19 @@ void Server::sendResMessage() {
 ** check redirect
 */
 bool Server::checkRedirect() {
-	return false;
+	int sb = clients[curr_event->ident].getResServerBlockIndex();
+	int lb = clients[curr_event->ident].getResLocationIndex();
+
+	if (config[sb].location[lb].redirect_code == -1)
+		return false;
+
 	clients[curr_event->ident].resetResponseHeader();
 	clients[curr_event->ident].resetResponseBody();
 
 	setResDefaultHeaderField(curr_event->ident);
-	clients[curr_event->ident].setStatus(301);
+	clients[curr_event->ident].setRedirectStatus(config[sb].location[lb].redirect_code);
 	clients[curr_event->ident].setResponseLine();
-	// hi -> 바꾸기!
-	clients[curr_event->ident].setResponseHeader("Location", "hi");
+	clients[curr_event->ident].setResponseHeader("Location", config[sb].location[lb].redirect_uri);
 	return true;
 }
 
@@ -249,11 +244,6 @@ bool Server::checkRedirect() {
 void Server::sendResLine() {
 	size_t length = 0;
 	size_t index = clients[curr_event->ident].getResponseIndex();
-	
-	// std::cout << "[req message]" << std::endl;
-	// clients[curr_event->ident].reqPrint();
-	// std::cout << "[res message]" << std::endl;
-	// std::cout << "[" << clients[curr_event->ident].getResponseLine() << "]" << std::endl;
 
 	if (index == 0)
 		clients[curr_event->ident].setResponseHeaderFinish();
@@ -274,7 +264,6 @@ void Server::sendResHeader() {
 	size_t length = 0;
 	size_t index = clients[curr_event->ident].getResponseIndex();
 
-	// std::cout << "[" << clients[curr_event->ident].getResponseHeader() << "]" << std::endl;
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseHeader().c_str() + index,
 		clients[curr_event->ident].getResponseHeader().length() - index);
 	if (index + length != clients[curr_event->ident].getResponseHeader().length())
@@ -292,7 +281,6 @@ void Server::sendResBody() {
 	size_t length = 0;
 	size_t index = clients[curr_event->ident].getResponseIndex();
 
-	// std::cout << "[" << clients[curr_event->ident].getResponseBody() << "]" << std::endl;
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseBody().c_str() + index,
 		clients[curr_event->ident].getResponseBody().length() - index);
 	if (index + length != clients[curr_event->ident].getResponseBody().length())

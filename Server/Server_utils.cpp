@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "../config/Config.hpp"
+#include "ContentType/ContentType.hpp"
 
 /*
 ** server block 확인
@@ -108,4 +109,67 @@ bool Server::existFile() {
 		return false;
 	else
 		return true;
+}
+
+/*
+**
+*/
+bool Server::checkMaxBodySize() {
+	int sb = clients[curr_event->ident].getResServerBlockIndex();
+	int lb = clients[curr_event->ident].getResLocationIndex();
+
+	if (clients[curr_event->ident].getBody().length() > static_cast<size_t>(config[sb].location[lb].client_max_body_size)) {
+		clients[curr_event->ident].setStatus(413);
+		return false;
+	}
+	return true;
+}
+
+/*
+** read 해야 하는 파일에 아무 내용도 없을 경우 (file open 후에)
+*/
+bool Server::setReadFileEmpty(int const & fd) {
+	int 	ret;
+	struct	stat buf;
+
+	ret = stat(clients[fd].getResponseFileDirectory().c_str(), &buf);
+
+	if (buf.st_size != 0)
+		return false;
+
+	setResDefaultHeaderField(fd);
+	clients[fd].setStatus(200);
+	clients[fd].setResponseLine();
+	if (isMethodHEAD(fd))
+		return true;
+	ContentType ct(clients[fd].getResponseFileDirectory());
+	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+	clients[fd].setResponseBody("");
+	clients[fd].setResponseHeader("Content-Length", "0");
+	return true;
+}
+
+/*
+** read 해야 하는 파일에 아무 내용도 없을 경우 (file open 전에)
+*/
+bool Server::checkReadFileEmpty(int const & fd) {
+	int 	ret;
+	struct	stat buf;
+
+	ret = stat(clients[fd].getResponseFileDirectory().c_str(), &buf);
+
+	if (buf.st_size != 0)
+		return false;
+
+	setResDefaultHeaderField(fd);
+	clients[fd].setStatus(200);
+	clients[fd].setResponseLine();
+	if (isMethodHEAD(fd))
+		return true;
+	ContentType ct(clients[fd].getResponseFileDirectory());
+	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+	clients[fd].setResponseBody("");
+	clients[fd].setResponseHeader("Content-Length", "0");
+	change_events(fd, EVFILT_WRITE, EV_ENABLE);
+	return true;
 }
