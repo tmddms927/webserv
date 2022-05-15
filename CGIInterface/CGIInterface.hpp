@@ -16,13 +16,13 @@ struct s_cgiInfo {
     pid_t       pid;   
 };
 
-struct s_cgiArg {
-    std::string cgi_path;
-    size_t      content_length; // if body exist
-    std::string method_name;
-    std::string http_protocol;
-    std::string path_info;
-};
+// struct s_cgiArg {
+//     std::string cgi_path;
+//     size_t      content_length; // if body exist
+//     std::string method_name;
+//     std::string http_protocol;
+//     std::string path_info;
+// };
 
 class CGIInterface
 {
@@ -39,7 +39,9 @@ public:
     CGIInterface();
     ~CGIInterface();
 
-    void    CGI_fork(struct s_cgiInfo &ci, struct s_cgiArg &ca);
+    void    CGI_fork(struct s_cgiInfo & ci, 
+                        std::vector<std::string> & arg, 
+                        std::vector<std::string> & env);
     int     CGI_write(std::string const &body);
     int     CGI_read(std::string & buf);
     size_t  CGI_getWrittenLength();

@@ -169,8 +169,9 @@ void    HTTP::additionalParseRequestHeader() {
             requestMessage.keep_alive = false;
 
     requestMessage.method = methodStringtoBit(requestMessage.method_name);
-    if (requestMessage.method == 0)
+    if (requestMessage.method == 0) {
         setStatus(NOT_ALLOWED);
+    }
 }
 
 char    HTTP::methodStringtoBit(std::string str) {
@@ -203,8 +204,8 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {
-        if (requestMessage.method_name == "POST" && requestMessage.body.empty())
-            setStatus(NOT_ALLOWED);
+        // if (requestMessage.method_name == "POST" && requestMessage.body.empty())
+            // setStatus(NOT_ALLOWED);
         setStatus(0);
         // reqPrint();
     }

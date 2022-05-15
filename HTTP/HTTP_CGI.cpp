@@ -3,17 +3,41 @@
 #include "../utils.hpp"
 #include <iostream>
 #include "../Server/Server_define.hpp"
+#include <cstring>
+#include "HTTPHeaderField.hpp"
+
+void    HTTP::makeCGIArg(std::vector<std::string> & arg) {
+    arg.push_back(responseMessage.cgi_directory);
+    arg.push_back(responseMessage.file_directory);
+}
+
+void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
+    env.push_back("REQUEST_METHOD=" + requestMessage.method_name);
+    env.push_back("PATH_INFO=/Users/hwan/Documents/webserv");
+    env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+
+    if (requestMessage.header_in.find(CONTENT_TYPE_STR) != requestMessage.header_in.end())
+        env.push_back("CONTENT_TYPE=" + requestMessage.header_in[CONTENT_TYPE_STR]);
+
+    for (HTTPHeaderField::iterator it = requestMessage.header_in.begin();
+            it != requestMessage.header_in.end(); it++) {
+                std::cout << "HTTP CGI : " <<it->first << ":" << it->second << std::endl;
+                if (!strncmp(it->first.c_str(), "X-", 2))
+                    env.push_back("HTTP_" + it->first + "=" + it->second);
+            }
+}
 
 void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiInfo    ci;
-    struct s_cgiArg     ca;
+    std::vector<std::string> args;
+    std::vector<std::string> envs;
 
     requestMessage.buf = "";
-    // cgi.CGI_clear();
-    ca.content_length = requestMessage.body.size();
-    ca.method_name = requestMessage.method_name;
 
-    cgi.CGI_fork(ci, ca);
+    makeCGIArg(args);
+    makeCGIEnv(envs);
+    
+    cgi.CGI_fork(ci, args, envs);
     write_fd = ci.write_fd;
     read_fd = ci.read_fd;
     pid = ci.pid;
@@ -48,6 +72,8 @@ int    HTTP::cgi_read() {
     if (cgi_rd == -1)
         return CGI_NOT_FINISHED;
     if (cgi_rd == 0) {
+        if (cgi_header_buf.empty())
+            std::cout << "no body" << std::endl;
         close(cgi.CGI_getReadFd());
         return CGI_FINISHED;
     }
@@ -66,8 +92,11 @@ int     HTTP::cgi_setResponseline() {
     std::string cgi_response_line;
     std::vector<std::string> tmp_v;
 
-    if (cgi_header_buf.empty())
+    std::cout << "cgi set response line" << std::endl;
+    if (cgi_header_buf.empty()) {
+        exit(1);
         return CGI_ERROR;
+    }
     found = cgi_header_buf.find("\r\n");
     if (found == std::string::npos)
         return CGI_ERROR;
@@ -75,6 +104,7 @@ int     HTTP::cgi_setResponseline() {
     ft_split(tmp_v, cgi_response_line, " ");
     if (tmp_v.size() != 3)
         return CGI_ERROR;
+    std::cout << "cgi response line : " << tmp_v[1] << std::endl;
     setStatus(std::strtod(tmp_v[1].c_str(), 0));
     setResponseLine();
     return CGI_FINISHED;
@@ -101,34 +131,3 @@ int    HTTP::cgi_setResponseHeader() {
     setResponseHeader("Content-Length", ft_itoa(getResponseBody().size()));
     return CGI_FINISHED;
 }
-
-    // if (status <= 0) {
-    //     std::cout << "header parsing~" << std::endl;
-    //     requestMessage.buf += tmp;
-    //     // std::cout << "[" << requestMessage.buf << "]" << std::endl;
-    //     tmp = "";
-    //     if (extractstr(tmp, requestMessage.buf, "\r\n\r\n")) {
-    //         std::vector<std::string> v;
-
-    //         ft_split(v,tmp, "\r\n");
-    //         for (std::vector<std::string>::iterator
-    //                 it = v.begin(); it != v.end(); it++) {
-    //                     std::cout << *it << std::endl;
-    //                     if (it == v.begin()) {
-    //                         setStatus(200);
-    //                         setResponseLine();
-    //                     }
-    //                     else {
-    //                         std::pair<std::string, std::string> pa;
-    //                         pa = ft_slice_str(*it, it->find(":"));
-    //                         setResponseHeader(pa.first, pa.second);
-    //                     }
-    //                 }
-    //         if (!requestMessage.buf.empty())
-    //             setResponseBody(requestMessage.buf);
-    //     }
-    //     else
-    //         return false;
-    // }
-    // setResponseHeader("Content-Length", ft_itoa(requestMessage.body.size()));
-

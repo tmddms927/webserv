@@ -248,6 +248,7 @@ void URIParser::checkAllowedMethod() {
 		if ((config[block].location[cgi].allowed_method & a) == HEAD_BIT)
 			return;
 	}
+	std::cout << "uri parser" << cgi << std::endl;
 	client.setStatus(405);
 }
 

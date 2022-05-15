@@ -5,7 +5,7 @@
 /*
 ** HTTP class default constructor.
 */
-HTTP::HTTP(): cgi() {
+HTTP::HTTP(): cgi(), cgi_header_buf(), cgi_buf() {
 	// std::cout << "HTTP default constructor called" << std::endl;
 	resetHTTP();
 }
@@ -107,7 +107,7 @@ bool const & HTTP::getKeepAlive() const {
 	return requestMessage.keep_alive;
 }
 
-HTTP::HTTP(HTTP const &): cgi() {
+HTTP::HTTP(HTTP const &): cgi(), cgi_header_buf(), cgi_buf() {
 	resetHTTP();
 }
 

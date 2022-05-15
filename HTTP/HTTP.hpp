@@ -171,6 +171,8 @@ public:
 	int						cgi_read();
 	int						cgi_setResponseline();
 	int						cgi_setResponseHeader();
+	void    				makeCGIArg(std::vector<std::string> & arg);
+	void    				makeCGIEnv(std::vector<std::string> & env);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);
