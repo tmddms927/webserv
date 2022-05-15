@@ -38,7 +38,6 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			// std::cout << "kevent : "<< curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1) {
 				closeAllFd();
 				throw "kevent() error";
