@@ -85,6 +85,24 @@ void Config::openDir(std::string const & str) {
     fs ? closedir(fs) : throw VariableRuleException();
 }
 
+void Config::checkResponseCode() {
+    int     responses[RESPONSE_CNT] = {RESPONSE_CODES};
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            bool    res = false;
+            if (config[i].location[j].redirect_code != -1) {
+                for (int k = 0; k < RESPONSE_CNT; k++) {
+                    if (config[i].location[j].redirect_code == responses[k])
+                        res = true;
+                }
+            } else
+                res = true;
+            if (!res)
+                throw VariableRuleException();
+         }
+    }
+}
+
 void Config::checkAllowedMethod() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
@@ -164,6 +182,7 @@ void Config::checkVariables() {
     checkPort();
     checkDirDepth();
     checkAllowedMethod();
+    checkResponseCode();
 }
 
 bool Config::hasRootLocation() {
