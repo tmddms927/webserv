@@ -49,6 +49,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
     tmp.is_aster = -1;
     tmp.auto_index = -1;
     tmp.client_max_body_size = -1;
+    tmp.redirect_code = -1;
     while (!(*it).empty()) {
         if (tmp.location_uri.empty() && FIND(LOCATIONV)) {
             GET_RAW_VALUE(LOCATIONV);
@@ -72,7 +73,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             GET_RAW_VALUE(DEFAULT_ERROR);
             SET_TMP_VALUE(tmp.err_page);
         }
-        else if (tmp.redirect_uri.empty() && FIND(RETURNV)) {
+        else if (tmp.redirect_uri.empty()  && tmp.redirect_code == -1 && FIND(RETURNV)) {
             GET_RAW_VALUE(RETURNV);
             SET_TMP_VALUE(tmp.redirect_code);
             SET_TMP_VALUE(tmp.redirect_uri);
