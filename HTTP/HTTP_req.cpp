@@ -169,8 +169,9 @@ void    HTTP::additionalParseRequestHeader() {
             requestMessage.keep_alive = false;
 
     requestMessage.method = methodStringtoBit(requestMessage.method_name);
-    if (requestMessage.method == 0)
+    if (requestMessage.method == 0) {
         setStatus(NOT_ALLOWED);
+    }
 }
 
 char    HTTP::methodStringtoBit(std::string str) {
@@ -203,8 +204,8 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {
-        if (requestMessage.method_name == "POST" && requestMessage.body.empty())
-            setStatus(NOT_ALLOWED);
+        // if (requestMessage.method_name == "POST" && requestMessage.body.empty())
+            // setStatus(NOT_ALLOWED);
         setStatus(0);
         // reqPrint();
     }
@@ -234,10 +235,10 @@ void HTTP::reqPrint() {
     std::cout << requestMessage.method_name << " " << requestMessage.unparsed_uri << std::endl;
     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
         std::cout << it->first << ": " << it->second << std::endl;
-    if (!requestMessage.non_body)
-        std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
-    else
-        std::cout << "************* there is no body ***************" << std::endl;
+    // if (!requestMessage.non_body)
+    //     std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
+    // else
+    //     std::cout << "************* there is no body ***************" << std::endl;
     std::cout << "port_num : " << requestMessage.port_num << std::endl
                 << "keep-alive : " << requestMessage.keep_alive << std::endl
                 << "content_length : " << requestMessage.content_length << std::endl

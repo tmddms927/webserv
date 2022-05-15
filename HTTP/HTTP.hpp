@@ -73,17 +73,20 @@ struct ResponseMessage {
 	std::string             response_line;
 	std::string             header;
 	std::string             body;
+	int						res_step;
+	size_t					index;
 };
 
 class HTTP {
 private:
-
 	uintptr_t       server_fd;
 	RequestMessage  requestMessage;
 	ResponseMessage responseMessage;
 	int             status;
 	unsigned long long	time_out;
-	CGIInterface		*cgi;
+	CGIInterface	cgi;
+	std::string		cgi_header_buf;
+	std::string		cgi_buf;
 
 	/* request function */
 	bool	isReadyRequestLine();
@@ -101,9 +104,12 @@ private:
 	bool    extractstr(std::string & dest, std::string & src, std::string const & cut);
 	bool    extractstr(std::string & dest, std::string & src, size_t len);
 
+	
 public:
 	HTTP();
-	HTTP(uintptr_t _server_fd);
+	HTTP(HTTP const &);
+	HTTP & operator=(HTTP const &);
+
 	void					resetHTTP();
 	~HTTP();
 
@@ -116,6 +122,7 @@ public:
 	char				 	getMethod() const;
 	bool const &			getKeepAlive() const;
 
+	void					setServerFd(uintptr_t const fd);
 	void					setPort();
 	void					setStatus(int const & s);
 
@@ -133,6 +140,8 @@ public:
 	std::string const & 	getResponseBody() const;
 	bool const &			getResponseHaveFileFd() const;
 	bool const &			getResponseHaveCGIFd() const;
+	int const &				getResponseStep() const;
+	size_t const & 			getResponseIndex() const;
 
 	void					setResponseFileDirectory(std::string const & str);
 	void					setResponseCGIDirectory(std::string const & str);
@@ -141,6 +150,8 @@ public:
 	void					setResponseBody(std::string const & str);
 	void 					setResponseHaveFileFd(bool const & have);
 	void 					setResponseHaveCGIFd(bool const & have);
+	void					setResponseStep(int const & i);
+	void					setResponseIndex(size_t const & i);
 	
 	bool					checkStatusError();
 	unsigned long long const &	getTimeOut();
@@ -151,11 +162,17 @@ public:
 	void					setResLocationIndex(int const & i);
 	int const & 			getResCgiIndex();
 	void					setResCgiIndex(int const & i);
-
+	void					setResponseHeaderFinish();
+	void					resetResponseHeader();
+	void					resetResponseBody();
 	/*  CGI function  */
 	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
-	bool					cgi_write(size_t buf_size);
-	bool					cgi_read(size_t buf_size);
+	int						cgi_write();
+	int						cgi_read();
+	int						cgi_setResponseline();
+	int						cgi_setResponseHeader();
+	void    				makeCGIArg(std::vector<std::string> & arg);
+	void    				makeCGIEnv(std::vector<std::string> & env);
 
 	// uintptr_t const & getResponseFd();
 	// void setResponseFd(uintptr_t const & s);

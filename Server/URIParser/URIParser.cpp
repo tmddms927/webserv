@@ -16,11 +16,20 @@ URIParser::~URIParser() {
 */
 void URIParser::checkReqHeader() {
 	findDefaultLocationIndex();
+	if (checkGoBeforeDirectory())
+		return ;
 	findServerBlockIndex();
 	findServerLocationIndex();
 	checkURICGI();
 	checkAllowedMethod();
-	isFile();
+}
+
+bool URIParser::checkGoBeforeDirectory() {
+	if (client.getURI().find("/../") != std::string::npos) {
+		client.setStatus(404);
+		return true;
+	}
+	return false;
 }
 
 /*
@@ -59,6 +68,7 @@ void URIParser::findServerBlockIndex() {
 */
 void URIParser::findServerLocationIndex() {
 	std::string uri = client.getURI();
+
 	if (uri[0] != '/')
 		client.setURI("/" + uri);
 	if (findServerLocationIndex_findRoot())
@@ -110,16 +120,21 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 			temp = uri.substr(config[server_block].location[i].location_uri.length());
 
 			client.setResLocationIndex(i);
-			if (temp == "" || temp == "/")
+			if (temp == "" || temp == "/") {
+				std::cout << client.getResLocationIndex() << std::endl;
 				findServerLocationIndex_findServerBlock3();
-			else
+				isFileAutoIndex();
+			}
+			else {
 				client.setResponseFileDirectory(config[server_block].location[i].location_root + temp);
+				isFile();
+			}
 			return true;
 		}
 	}
 	client.setResponseFileDirectory(\
 		config[server_block].location[client.getResLocationIndex()].location_root + uri);
-	// isFile();
+	isFile();
 	return true;
 }
 
@@ -184,10 +199,9 @@ void URIParser::isFile() {
 	int location_index = client.getResLocationIndex();
 	struct stat ss;
 
-	if (stat(path.c_str(), &ss) == -1) {
-		checkAutoIndex();
+	if (stat(path.c_str(), &ss) == -1 && client.getResponseCGIDirectory() == "" &&
+		client.getMethod() != PUT_BIT && client.getMethod() != POST_BIT)
 		client.setStatus(404);
-	}
 	else if (S_ISDIR(ss.st_mode)) {
 		if (path == config[server_block_index].location[location_index].location_root) {
 			client.setResponseFileDirectory(path +\
@@ -270,12 +284,17 @@ void URIParser::checkAutoIndex() {
 	bool err;
 	std::string body;
 
+	if (config[client.getResServerBlockIndex()].\
+		location[client.getResLocationIndex()].auto_index != 1) {
+		client.setStatus(404);
+		return ;
+	}
+
 	AutoIndex autoIndex(config[client.getResServerBlockIndex()].\
 		location[client.getResLocationIndex()].location_root);
 	err = autoIndex.makeHTML();
-	if (err) {
+	if (err)
 		client.setStatus(404);
-	}
 	else {
 		body = autoIndex.getRes().body;
 		client.setResponseHeader("Server", SERVER_DEFAULT_NAME);
@@ -284,5 +303,29 @@ void URIParser::checkAutoIndex() {
 		client.setResponseBody(body);
 		client.setResponseHeader("Content-Length", ft_itoa(body.length()));
 		client.setResponseLine();
+	}
+}
+
+void URIParser::isFileAutoIndex() {
+	std::string path = client.getResponseFileDirectory();
+	int server_block_index = client.getResServerBlockIndex();
+	int location_index = client.getResLocationIndex();
+	struct stat ss;
+
+	if (stat(path.c_str(), &ss) == -1 && client.getResponseCGIDirectory() == "")
+		checkAutoIndex();
+	else if (S_ISDIR(ss.st_mode)) {
+		if (path == config[server_block_index].location[location_index].location_root) {
+			client.setResponseFileDirectory(path +\
+				config[server_block_index].location[location_index].index);
+		}
+		else {
+			if (path[path.length() - 1] == '/')
+				client.setResponseFileDirectory(path +\
+					config[server_block_index].location[location_index].err_page);
+			else
+				client.setResponseFileDirectory(path + "/" +\
+					config[server_block_index].location[location_index].err_page);
+		}
 	}
 }

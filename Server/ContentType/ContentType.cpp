@@ -117,6 +117,8 @@ void ContentType::setContentType() {
 		content_type = "image/x-xpixmap";
 	else if (temp == "xwd")
 		content_type = "image/x-xwindowdump";
+	else if (temp == "png")
+		content_type = "image/apng";
 	else if (temp == "gzip")
 		content_type = "multipart/x-gzip";
 	else if (temp == "zip")

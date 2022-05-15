@@ -1,7 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
 
-
 void HTTP::setResponseFileDirectory(std::string const & str) {
 	responseMessage.file_directory = str;
 }
@@ -73,6 +72,7 @@ void HTTP::setResponseLine() {
 	responseMessage.response_line += stream.str();
 	responseMessage.response_line += " ";
 	responseMessage.response_line += "haha hoho";
+	responseMessage.response_line += "\r\n";
 }
 
 void HTTP::setResponseBody(std::string const & str) {
@@ -86,9 +86,37 @@ bool HTTP::checkStatusError() {
 		return false;
 }
 
+void HTTP::resetResponseHeader() {
+	responseMessage.header = "";
+}
+
+void HTTP::resetResponseBody() {
+	responseMessage.body = "";
+}
+
 void HTTP::setResponseHeader(std::string const & key, std::string const & value) {
 	responseMessage.header += key;
 	responseMessage.header += ": ";
 	responseMessage.header += value;
 	responseMessage.header += "\r\n";
+}
+
+void HTTP::setResponseHeaderFinish() {
+	responseMessage.header += "\r\n";
+}
+
+void HTTP::setResponseStep(int const & i) {
+	responseMessage.res_step = i;
+}
+
+void HTTP::setResponseIndex(size_t const & i) {
+	responseMessage.index = i;
+}
+
+int const & HTTP::getResponseStep() const {
+	return responseMessage.res_step;
+}
+
+size_t const & HTTP::getResponseIndex() const {
+	return responseMessage.index;
 }

@@ -4,21 +4,33 @@
 ** write to cgi
 */
 void Server::writeCGI() {
-    uintptr_t client_fd;
+	uintptr_t client_fd;
+	int status;
 
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!write" << std::endl;
-    client_fd = cgi_fd[curr_event->ident];
-    clients[client_fd].cgi_write(REQUEST_BODY_MAX_SIZE);
+	client_fd = cgi_fd[curr_event->ident];
+	status = clients[client_fd].cgi_write();
+	if (status == CGI_FINISHED)
+		cgi_fd.erase(curr_event->ident);
+	if (status == CGI_ERROR)
+		; // pipe의 이상이 생겼을 때 체크추가
 }
 
 void Server::readCGI() {
-    uintptr_t client_fd;
+	uintptr_t client_fd;
+	int status;
 
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!read" << std::endl;
-    client_fd = cgi_fd[curr_event->ident];
-    clients[client_fd].cgi_read(REQUEST_BODY_MAX_SIZE);
-	setResDefaultHeaderField(client_fd);
-    change_events(client_fd, EVFILT_READ, EV_ENABLE);
-	checkKeepAlive();
-	clients[curr_event->ident].resetHTTP();
+	client_fd = cgi_fd[curr_event->ident];
+	status = clients[client_fd].cgi_read();
+	if (status == CGI_ERROR)
+		; // pipe의 이상이 생겼을 때 체크추가
+	if (status == CGI_FINISHED) {
+		if (clients[client_fd].cgi_setResponseline() == CGI_FINISHED)
+			; // error 처리
+		if (clients[client_fd].cgi_setResponseHeader() == CGI_FINISHED)
+			; // error 처리
+		setResDefaultHeaderField(client_fd);
+		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
+		cgi_fd.erase(curr_event->ident);
+		wait(NULL);
+	}
 }

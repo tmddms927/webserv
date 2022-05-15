@@ -38,7 +38,6 @@ void Server::kqueueEventRun() {
 		for (int i = 0; i < new_events; ++i)
 		{
 			curr_event = &event_list[i];
-			std::cout << curr_event->ident << ", " << curr_event->filter << std::endl;
 			if (new_events == -1) {
 				closeAllFd();
 				throw "kevent() error";
@@ -61,8 +60,8 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		if (curr_event->flags & EV_EOF)
-			kqueueEventError();
+		// if (curr_event->flags & EV_EOF) {
+		// }
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -82,7 +81,7 @@ void Server::kqueueEventError() {
 	else
 	{
 		std::cerr << "client socket error" << std::endl;
-		disconnect_client(curr_event->ident);
+		// disconnect_client(curr_event->ident);
 	}
 }
 
@@ -95,7 +94,7 @@ void Server::kqueueEventRead() {
 			kqueueConnectAccept();
 		else if (checkFileFd())
 			kqueueEventReadFileFd();
-		else if (checkCgiFd())
+		else if (checkCGIFd())
 			readCGI();
 		else
 			kqueueEventReadClient();
@@ -119,7 +118,8 @@ void Server::kqueueConnectAccept() {
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 	change_events(client_socket, EVFILT_READ, EV_ADD | EV_ENABLE);
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
-	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP(curr_event->ident)));
+	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP()));
+	clients[client_socket].setServerFd(curr_event->ident);
 	std::cout << "accept new client : " << client_socket << std::endl;
 }
 
@@ -164,15 +164,18 @@ void Server::kqueueEventReadFileFd() {
 */
 void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
-
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 
+	if (checkRedirect()) {
+		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+		// return ;
+	}
 	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
 		setClientCGI();
 	else
 		checkMethod();
-	if (clients[curr_event->ident].getResponseHaveFileFd() == false || 
+	if (clients[curr_event->ident].getResponseHaveFileFd() == false && 
 		clients[curr_event->ident].getResponseHaveCGIFd() == false) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 	}
@@ -187,7 +190,6 @@ void Server::setClientCGI() {
 	pid_t pid;
 
 	clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid);
-
 	change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
@@ -220,19 +222,12 @@ void Server::checkMethod() {
 */
 void Server::kqueueEventWrite() {
 	if (checkFileFd()) {
-		if (clients[file_fd[curr_event->ident]].getMethod() == POST_BIT)
-			writeResPOSTFile();
-		else if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
+		if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
 			writeResPUTFile();
 		disconnect_file_fd();
 	}
-	else if (checkCgiFd())
+	else if (checkCGIFd())
 		writeCGI();
-	else {
+	else
 		sendResMessage();
-		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
-		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
-		checkKeepAlive();
-		clients[curr_event->ident].resetHTTP();
-	}
 }

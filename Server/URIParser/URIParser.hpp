@@ -18,6 +18,7 @@ public:
 				std::vector<servers> const & _config);
 	~URIParser();
     void	checkReqHeader();
+	bool	checkGoBeforeDirectory();
 	void	findServerBlockIndex();
 	void	findDefaultLocationIndex();
 	void	findServerLocationIndex();
@@ -32,6 +33,7 @@ public:
 	void	checkURICGI();
 	void	setCGIPATH(int const & block, int const & i);
 	void	checkAutoIndex();
+	void	isFileAutoIndex();
 };
 
 #endif

@@ -79,6 +79,10 @@ public:
 	void	readResHEADFile();
 
 	void	sendResMessage();
+	bool	checkRedirect();
+	void	sendResLine();
+	void	sendResHeader();
+	void	sendResBody();
 	void	setResDefaultHeaderField(uintptr_t fd);
 	void	changeStatusToError(int const & client, int const & st);
 	bool	isMethodHEAD(uintptr_t fd);
@@ -90,10 +94,11 @@ public:
 	void	disconnect_client(uintptr_t fd);
 	int		checkServerSocket(uintptr_t const & fd) const;
 	bool	checkFileFd() const;
-	bool	checkCgiFd() const;
+	bool	checkCGIFd() const;
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
+	bool	existFile();
 
 	/* Server_cgi */
 	void writeCGI();

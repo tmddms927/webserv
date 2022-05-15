@@ -45,9 +45,8 @@ void Server::setResMethodGET() {
 	int fd;
 
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
-	if (fd <= 0) {
+	if (fd <= 0)
 		checkAutoIndex();
-	}
 	else {
 		file_fd[fd] = curr_event->ident;
 		clients[curr_event->ident].setResponseHaveFileFd(true);
@@ -59,16 +58,13 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-	int fd;
-
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd < 0)
-		changeStatusToError(curr_event->ident, 404);
-	else {
-		file_fd[fd] = curr_event->ident;
-		clients[curr_event->ident].setResponseHaveFileFd(true);
-		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-	}
+	////////////////////////////// 수정하기 //////////////////////////////
+	if (clients[curr_event->ident].getBody().length() > 100)
+		return changeStatusToError(curr_event->ident, 413);
+	
+	clients[curr_event->ident].setStatus(204);
+	setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setResponseLine();
 }
 
 /*
@@ -77,6 +73,12 @@ void Server::setResMethodPOST() {
 void Server::setResMethodPUT() {
 	int fd;
 
+	if (existFile()) {
+		clients[curr_event->ident].setStatus(204);
+		setResDefaultHeaderField(curr_event->ident);
+		clients[curr_event->ident].setResponseLine();
+		return ;
+	}
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
@@ -129,7 +131,7 @@ void Server::readResErrorFile() {
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
 		ContentType ct(clients[fd].getResponseFileDirectory());
 		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-		clients[fd].setResponseBody(buf);
+		clients[fd].setResponseBody(std::string(buf, len));
 		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
 	setResDefaultHeaderField(fd);
@@ -141,7 +143,7 @@ void Server::readResErrorFile() {
 */
 void Server::readResGETFile() {
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
-	size_t len;
+	int len;
 	int fd;
 
 	fd = file_fd[curr_event->ident];
@@ -152,36 +154,13 @@ void Server::readResGETFile() {
 	else if (len < 0)
 		return changeStatusToError(fd, 500);
 
-	if (isMethodHEAD(fd) == false) {
-		ContentType ct(clients[fd].getResponseFileDirectory());
-		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-		clients[fd].setResponseBody(buf);
-		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
-	}
-	setResDefaultHeaderField(fd);
-	clients[fd].setStatus(200);
-	clients[fd].setResponseLine();
-}
-
-/*
-** write POST file
-*/
-void Server::writeResPOSTFile() {
-	std::string req_body;
-	size_t		len;
-	int fd;
-
-	fd = file_fd[curr_event->ident];
-	req_body = clients[fd].getBody();
-	len = write(curr_event->ident, req_body.c_str(), req_body.length());
-	if (len != req_body.length())
-		return changeStatusToError(fd, 404);
+	ContentType ct(clients[fd].getResponseFileDirectory());
+	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
+	clients[fd].setResponseBody(std::string(buf, len));
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
-	// post body 있어야되나..?
-	// clients[fd].setResponseBody("");
-	// clients[fd].setResponseHeader("Content-Length", ft_itoa(0));
 	clients[fd].setResponseLine();
 }
 
@@ -199,12 +178,13 @@ void Server::writeResPUTFile() {
 	if (len != req_body.length())
 		return changeStatusToError(fd, 404);
 
+	std::string file = clients[fd].getResponseFileDirectory();
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
-	// post body 있어야되나..?
-	clients[fd].setResponseBody("good!");
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(5));
 	clients[fd].setResponseLine();
+	clients[fd].setResponseHeader("Content-Type", "text/plain");
+	clients[fd].setResponseBody(file);
+	clients[fd].setResponseHeader("Content-Length", ft_itoa(file.length()));
 }
 
 /*
@@ -218,6 +198,7 @@ void Server::readResHEADFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
 	else if (len < 0)
@@ -232,27 +213,94 @@ void Server::readResHEADFile() {
 ** send response message to client
 */
 void Server::sendResMessage() {
-	std::string message;
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_LINE)
+		sendResLine();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_HEADER)
+		sendResHeader();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_BODY)
+		sendResBody();
+	if (clients[curr_event->ident].getResponseStep() == CLIENT_RES_FINISH) {
+		change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
+		change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
+		checkKeepAlive();
+		clients[curr_event->ident].resetHTTP();
+	}
+}
 
-	message = clients[curr_event->ident].getResponseLine();
-	message += "\r\n";
-	message += clients[curr_event->ident].getResponseHeader();
-	message += "\r\n";
-	message += clients[curr_event->ident].getResponseBody();
+/*
+** check redirect
+*/
+bool Server::checkRedirect() {
+	return false;
+	clients[curr_event->ident].resetResponseHeader();
+	clients[curr_event->ident].resetResponseBody();
 
-	/////////////////////////////////////////////////////
-	// std::cout << "==========================" << std::endl;
-	// std::cout << clients[curr_event->ident].getURI() << std::endl;
-	// std::cout << clients[curr_event->ident].getResLocationIndex() << std::endl;
-	// std::cout << clients[curr_event->ident].getResponseFileDirectory() << std::endl;
-	// std::cout << "==========================" << std::endl;
-	// std::cout << "[[[[ request message! ]]]]" << std::endl;
+	setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setStatus(301);
+	clients[curr_event->ident].setResponseLine();
+	// hi -> 바꾸기!
+	clients[curr_event->ident].setResponseHeader("Location", "hi");
+	return true;
+}
+
+/*
+** send response line to client
+*/
+void Server::sendResLine() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
+	
+	// std::cout << "[req message]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
+	// std::cout << "[res message]" << std::endl;
+	// std::cout << "[" << clients[curr_event->ident].getResponseLine() << "]" << std::endl;
 
-	std::cout << "[[[[ response message! ]]]]" << std::endl;
-	std::cout << "[[[[" << message << "]]]]" << std::endl;
+	if (index == 0)
+		clients[curr_event->ident].setResponseHeaderFinish();
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseLine().c_str() + index,
+		clients[curr_event->ident].getResponseLine().length() - index);
+	if (index + length != clients[curr_event->ident].getResponseLine().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_HEADER);
+	}
+}
 
-	write(curr_event->ident, message.c_str(), message.length());
+/*
+** send response header to client
+*/
+void Server::sendResHeader() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
+
+	// std::cout << "[" << clients[curr_event->ident].getResponseHeader() << "]" << std::endl;
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseHeader().c_str() + index,
+		clients[curr_event->ident].getResponseHeader().length() - index);
+	if (index + length != clients[curr_event->ident].getResponseHeader().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_BODY);
+	}
+}
+
+/*
+** send response body to client
+*/
+void Server::sendResBody() {
+	size_t length = 0;
+	size_t index = clients[curr_event->ident].getResponseIndex();
+
+	// std::cout << "[" << clients[curr_event->ident].getResponseBody() << "]" << std::endl;
+	length = write(curr_event->ident, clients[curr_event->ident].getResponseBody().c_str() + index,
+		clients[curr_event->ident].getResponseBody().length() - index);
+	if (index + length != clients[curr_event->ident].getResponseBody().length())
+		clients[curr_event->ident].setResponseIndex(index + length);
+	else {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_FINISH);
+	}
 }
 
 /*
@@ -287,11 +335,16 @@ void Server::checkAutoIndex() {
 	bool err;
 	std::string body;
 
+	if (config[clients[curr_event->ident].getResServerBlockIndex()].\
+		location[clients[curr_event->ident].getResLocationIndex()].auto_index != 1) {
+		return changeStatusToError(curr_event->ident, 404);
+	}
+
 	AutoIndex autoIndex(config[clients[curr_event->ident].getResServerBlockIndex()].\
 		location[clients[curr_event->ident].getResLocationIndex()].location_root);
 	err = autoIndex.makeHTML();
 	if (err) {
-		changeStatusToError(curr_event->ident, 404);
+		return changeStatusToError(curr_event->ident, 404);
 	}
 	else {
 		body = autoIndex.getRes().body;
@@ -299,5 +352,6 @@ void Server::checkAutoIndex() {
 		clients[curr_event->ident].setResponseBody(body);
 		clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(body.length()));
 		clients[curr_event->ident].setResponseLine();
+		setResDefaultHeaderField(curr_event->ident);
 	}
 }

@@ -28,7 +28,7 @@ bool Server::checkFileFd() const {
 /*
 ** cgi fd인지 확인
 */
-bool Server::checkCgiFd() const {
+bool Server::checkCGIFd() const {
 	if (cgi_fd.find(curr_event->ident) != cgi_fd.end())
 		return true;
 	else
@@ -63,7 +63,6 @@ void Server::disconnect_client(uintptr_t fd) {
 ** disconnect file fd : close fd & erase fd at file_fd
 */
 void Server::disconnect_file_fd() {
-	std::cout << "file close : " << curr_event->ident << std::endl;
 	change_events(file_fd[curr_event->ident], EVFILT_WRITE, EV_ENABLE);
 	close(curr_event->ident);
 	file_fd.erase(curr_event->ident);
@@ -96,4 +95,17 @@ void Server::checkClientTimeout() {
 void Server::checkKeepAlive() {
 	if (clients[curr_event->ident].getKeepAlive() == false)
 		disconnect_client(curr_event->ident);
+}
+
+/*
+** 파일이 존재하는지 확인
+*/
+bool Server::existFile() {
+	struct stat ss;
+	std::string path = clients[curr_event->ident].getResponseFileDirectory();
+
+	if (stat(path.c_str(), &ss) == -1 || S_ISDIR(ss.st_mode))
+		return false;
+	else
+		return true;
 }
