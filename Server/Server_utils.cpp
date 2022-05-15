@@ -109,3 +109,17 @@ bool Server::existFile() {
 	else
 		return true;
 }
+
+/*
+**
+*/
+bool Server::checkMaxBodySize() {
+	int sb = clients[curr_event->ident].getResServerBlockIndex();
+	int lb = clients[curr_event->ident].getResLocationIndex();
+
+	if (clients[curr_event->ident].getBody().length() > static_cast<size_t>(config[sb].location[lb].client_max_body_size)) {
+		clients[curr_event->ident].setStatus(413);
+		return false;
+	}
+	return true;
+}

@@ -64,7 +64,6 @@ public:
 	/* Server_method */
     void	uriParser();
 
-	void	setResOKMes();
 	void	setResErrorMes(int const & client);
 	void	setResMethodGET();
 	void	setResMethodPOST();
@@ -99,10 +98,11 @@ public:
 	void	checkClientTimeout();
 	void	checkKeepAlive();
 	bool	existFile();
+	bool	checkMaxBodySize();
 
 	/* Server_cgi */
-	void writeCGI();
-	void readCGI();
+	void	writeCGI();
+	void	readCGI();
 
 	/* CGI/CGI.cpp */
 	void    CGI_fork();

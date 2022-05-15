@@ -79,7 +79,7 @@ void Server::kqueueEventError() {
 	else
 	{
 		std::cerr << "client socket error" << std::endl;
-		// disconnect_client(curr_event->ident);
+		disconnect_client(curr_event->ident);
 	}
 }
 
@@ -110,7 +110,6 @@ void Server::kqueueConnectAccept() {
 	int server_index = checkServerSocket(curr_event->ident);
 
 	client_socket = accept(server_socket[server_index], NULL, NULL);
-	// todo accept 실패 시 어떻게 할 것인지
 	if (client_socket == -1)
 		throw "accept() error";
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
@@ -164,7 +163,8 @@ void Server::finishedRead() {
 	change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
-
+	checkMaxBodySize();
+	
 	if (checkRedirect()) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 		return ;
@@ -200,7 +200,7 @@ void Server::setClientCGI() {
 */
 void Server::checkMethod() {
 	if (clients[curr_event->ident].getStatus() == 200)
-		;// setResOKMes();
+		;
 	else if (clients[curr_event->ident].getStatus() != 0 && clients[curr_event->ident].getStatus() != -1)
 		setResErrorMes(curr_event->ident);
 	else if (clients[curr_event->ident].getMethod() == GET_BIT)
