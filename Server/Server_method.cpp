@@ -60,6 +60,10 @@ void Server::setResMethodGET() {
 void Server::setResMethodPOST() {
 	int fd;
 
+	if (clients[curr_event->ident].getBody().length() > 100)
+		return changeStatusToError(curr_event->ident, 413);
+	return changeStatusToError(curr_event->ident, 200);
+/////////////////////
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
@@ -214,6 +218,7 @@ void Server::readResHEADFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
 	else if (len < 0)
@@ -290,7 +295,6 @@ void Server::sendResHeader() {
 	size_t index = clients[curr_event->ident].getResponseIndex();
 
 	// std::cout << "[" << clients[curr_event->ident].getResponseHeader() << "]" << std::endl;
-	// std::cout << clients[curr_event->ident].getResponseBody().length() << std::endl;
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseHeader().c_str() + index,
 		clients[curr_event->ident].getResponseHeader().length() - index);
 	if (index + length != clients[curr_event->ident].getResponseHeader().length())

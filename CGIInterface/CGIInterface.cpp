@@ -65,14 +65,13 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 				i++;
 			}
 	i = 0;
-	std::cout << env_v.size() << std::endl;
 	for (std::vector<std::string>::iterator
 			it = env_v.begin(); it != env_v.end(); it++) {
 				env[i] = new char[it->size() + 1];
 				memset(env[i], 0, it->size() + 1);
 				for (size_t j = 0; j < it->size(); j++)
 					env[i][j] = it->c_str()[j];
-				std::cout << "env : " << env[i++] << std::endl;
+				i++;
 			}
 				
 	pid = fork();

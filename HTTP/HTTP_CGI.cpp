@@ -21,7 +21,6 @@ void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
 
     for (HTTPHeaderField::iterator it = requestMessage.header_in.begin();
             it != requestMessage.header_in.end(); it++) {
-                std::cout << "HTTP CGI : " <<it->first << ":" << it->second << std::endl;
                 if (!strncmp(it->first.c_str(), "X-", 2))
                     env.push_back("HTTP_" + it->first + "=" + it->second);
             }
@@ -92,7 +91,6 @@ int     HTTP::cgi_setResponseline() {
     std::string cgi_response_line;
     std::vector<std::string> tmp_v;
 
-    std::cout << "cgi set response line" << std::endl;
     if (cgi_header_buf.empty()) {
         exit(1);
         return CGI_ERROR;
@@ -104,7 +102,6 @@ int     HTTP::cgi_setResponseline() {
     ft_split(tmp_v, cgi_response_line, " ");
     if (tmp_v.size() != 3)
         return CGI_ERROR;
-    std::cout << "cgi response line : " << tmp_v[1] << std::endl;
     setStatus(std::strtod(tmp_v[1].c_str(), 0));
     setResponseLine();
     return CGI_FINISHED;

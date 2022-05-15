@@ -1,7 +1,7 @@
 #ifndef Server_DEFINE_HPP
 #define Server_DEFINE_HPP
 
-#define SOCKET_LISTEN_BACKLOG   5
+#define SOCKET_LISTEN_BACKLOG   1000
 #define SOCKET_PORT             80
 #define SOCKET_ADDR             INADDR_ANY
 #define SOCKET_READ_BUF         16384

@@ -61,10 +61,9 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		// if (curr_event->flags & EV_EOF) {
-		// 	std::cout << "EV_EOF" << std::endl;
-		// 	kqueueEventError();
-		// }
+		if (curr_event->flags & EV_EOF) {
+			// disconnect_client(curr_event->ident);
+		}
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -84,7 +83,7 @@ void Server::kqueueEventError() {
 	else
 	{
 		std::cerr << "client socket error" << std::endl;
-		disconnect_client(curr_event->ident);
+		// disconnect_client(curr_event->ident);
 	}
 }
 
@@ -197,9 +196,6 @@ void Server::setClientCGI() {
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	cgi_fd[write_fd] = curr_event->ident;
 	cgi_fd[read_fd] = curr_event->ident;
-	// std::cout << "CGI FD CREATE!!!!!!!!!!! " << write_fd << ", " << read_fd << std::endl;
-
-	// std::cout << clients[curr_event->ident].getResponseBody().length() << std::endl;
 	clients[curr_event->ident].setResponseHaveCGIFd(true);
 }
 

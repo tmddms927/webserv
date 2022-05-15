@@ -63,7 +63,6 @@ void Server::disconnect_client(uintptr_t fd) {
 ** disconnect file fd : close fd & erase fd at file_fd
 */
 void Server::disconnect_file_fd() {
-	std::cout << "file close : " << curr_event->ident << std::endl;
 	change_events(file_fd[curr_event->ident], EVFILT_WRITE, EV_ENABLE);
 	close(curr_event->ident);
 	file_fd.erase(curr_event->ident);

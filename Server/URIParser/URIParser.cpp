@@ -121,6 +121,7 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 
 			client.setResLocationIndex(i);
 			if (temp == "" || temp == "/") {
+				std::cout << client.getResLocationIndex() << std::endl;
 				findServerLocationIndex_findServerBlock3();
 				isFileAutoIndex();
 			}
@@ -248,7 +249,6 @@ void URIParser::checkAllowedMethod() {
 		if ((config[block].location[cgi].allowed_method & a) == HEAD_BIT)
 			return;
 	}
-	std::cout << "uri parser" << cgi << std::endl;
 	client.setStatus(405);
 }
 
