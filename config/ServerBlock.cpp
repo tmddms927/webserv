@@ -48,6 +48,7 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
     tmp.allowed_method = -1;
     tmp.is_aster = -1;
     tmp.auto_index = -1;
+    tmp.client_max_body_size = -1;
     while (!(*it).empty()) {
         if (tmp.location_uri.empty() && FIND(LOCATIONV)) {
             GET_RAW_VALUE(LOCATIONV);
@@ -71,9 +72,14 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             GET_RAW_VALUE(DEFAULT_ERROR);
             SET_TMP_VALUE(tmp.err_page);
         }
-        else if (tmp.redirect_url.empty() && FIND(RETURNV)) {
+        else if (tmp.redirect_uri.empty() && FIND(RETURNV)) {
             GET_RAW_VALUE(RETURNV);
-            SET_TMP_VALUE(tmp.redirect_url);
+            SET_TMP_VALUE(tmp.redirect_code);
+            SET_TMP_VALUE(tmp.redirect_uri);
+        }
+        else if (tmp.client_max_body_size == -1 && FIND(CLIENT_BODY_SIZE)) {
+            GET_RAW_VALUE(CLIENT_BODY_SIZE);
+            SET_TMP_VALUE(tmp.client_max_body_size);
         }
         else if (tmp.allowed_method == -1 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
@@ -101,6 +107,8 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
     }
     raw.erase(raw.begin(), it);
     it = raw.begin();
+    if (tmp.auto_index == -1)
+        tmp.auto_index = false;
     return tmp;
 }
 

@@ -16,8 +16,9 @@ typedef struct location_s {
     std::string            err_page;
     std::string            index;
     std::string            cgi;
-    std::string            redirect_code;
-    std::string            redirect_url;
+    std::string            redirect_code; //int로 바꾸기~
+    std::string            redirect_uri;
+    int                    client_max_body_size;
     char                   allowed_method;
     int                    is_aster;
     int                    auto_index;
