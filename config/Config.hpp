@@ -23,6 +23,7 @@ private:
     void                            setServerBlock();
     void                            checkVariables();
     void                            checkRelativePath();
+    void                            checkResponseCode();
     bool                            hasRootLocation();
     void                            checkDirDepth();
     void                            checkAllowedMethod();
