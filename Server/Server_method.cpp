@@ -11,6 +11,9 @@ void Server::setResErrorMes(int const & client) {
 	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
 			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
 
+	clients[curr_event->ident].setResponseFileDirectory(file);
+	if (checkReadFileEmpty(curr_event->ident))
+		return ;
 	fd = open(file.c_str(), O_RDONLY);
 	if (fd < 0) {
 		setResDefaultHeaderField(curr_event->ident);
@@ -29,6 +32,8 @@ void Server::setResErrorMes(int const & client) {
 void Server::setResMethodGET() {
 	int fd;
 
+	if (checkReadFileEmpty(curr_event->ident))
+		return ;
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_RDONLY);
 	if (fd <= 0)
 		checkAutoIndex();
@@ -107,6 +112,8 @@ void Server::readResErrorFile() {
 	int fd;
 
 	fd = file_fd[curr_event->ident];
+	if (setReadFileEmpty(fd))
+		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
@@ -128,6 +135,8 @@ void Server::readResGETFile() {
 	int fd;
 
 	fd = file_fd[curr_event->ident];
+	if (setReadFileEmpty(fd))
+		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
 	if (len > RECIEVE_BODY_MAX_SIZE)
@@ -179,7 +188,8 @@ void Server::readResHEADFile() {
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
-
+	if (setReadFileEmpty(fd))
+		return ;
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
 	else if (len < 0)
@@ -222,7 +232,7 @@ bool Server::checkRedirect() {
 	clients[curr_event->ident].resetResponseBody();
 
 	setResDefaultHeaderField(curr_event->ident);
-	clients[curr_event->ident].setStatus(301);
+	clients[curr_event->ident].setRedirectStatus(config[sb].location[lb].redirect_code);
 	clients[curr_event->ident].setResponseLine();
 	clients[curr_event->ident].setResponseHeader("Location", config[sb].location[lb].redirect_uri);
 	return true;

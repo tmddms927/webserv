@@ -99,6 +99,8 @@ public:
 	void	checkKeepAlive();
 	bool	existFile();
 	bool	checkMaxBodySize();
+	bool	setReadFileEmpty(int const & file);
+	bool	checkReadFileEmpty(int const & fd);
 
 	/* Server_cgi */
 	void	writeCGI();

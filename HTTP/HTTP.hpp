@@ -125,6 +125,7 @@ public:
 	void					setServerFd(uintptr_t const fd);
 	void					setPort();
 	void					setStatus(int const & s);
+	void					setRedirectStatus(int const & s);
 
 	/* request function */
 	void	reqInputBuf(std::string const & str);
