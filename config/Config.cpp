@@ -85,6 +85,15 @@ void Config::openDir(std::string const & str) {
     fs ? closedir(fs) : throw VariableRuleException();
 }
 
+void Config::checkAllowedMethod() {
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            if (config[i].location[j].allowed_method == -1)
+                throw VariableRuleException();
+        }
+    }
+}
+
 void Config::checkPort() {
     int port = config[0].port;
 
@@ -154,6 +163,7 @@ void Config::checkVariables() {
     checkFile();
     checkPort();
     checkDirDepth();
+    checkAllowedMethod();
 }
 
 bool Config::hasRootLocation() {

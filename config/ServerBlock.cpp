@@ -71,6 +71,10 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             GET_RAW_VALUE(DEFAULT_ERROR);
             SET_TMP_VALUE(tmp.err_page);
         }
+        else if (tmp.redirect_url.empty() && FIND(RETURNV)) {
+            GET_RAW_VALUE(RETURNV);
+            SET_TMP_VALUE(tmp.redirect_url);
+        }
         else if (tmp.allowed_method == -1 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
         else if (tmp.cgi.empty() && FIND(CGI)) {
