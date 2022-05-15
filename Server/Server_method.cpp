@@ -231,15 +231,19 @@ void Server::sendResMessage() {
 ** check redirect
 */
 bool Server::checkRedirect() {
-	return false;
+	int sb = clients[curr_event->ident].getResServerBlockIndex();
+	int lb = clients[curr_event->ident].getResLocationIndex();
+
+	if (config[sb].location[lb].redirect_code == -1)
+		return false;
+
 	clients[curr_event->ident].resetResponseHeader();
 	clients[curr_event->ident].resetResponseBody();
 
 	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(301);
 	clients[curr_event->ident].setResponseLine();
-	// hi -> 바꾸기!
-	clients[curr_event->ident].setResponseHeader("Location", "hi");
+	clients[curr_event->ident].setResponseHeader("Location", config[sb].location[lb].redirect_uri);
 	return true;
 }
 
@@ -252,8 +256,8 @@ void Server::sendResLine() {
 	
 	// std::cout << "[req message]" << std::endl;
 	// clients[curr_event->ident].reqPrint();
-	// std::cout << "[res message]" << std::endl;
-	// std::cout << "[" << clients[curr_event->ident].getResponseLine() << "]" << std::endl;
+	std::cout << "[res message]" << std::endl;
+	std::cout << "[" << clients[curr_event->ident].getResponseLine() << "]" << std::endl;
 
 	if (index == 0)
 		clients[curr_event->ident].setResponseHeaderFinish();

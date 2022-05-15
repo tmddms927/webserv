@@ -60,8 +60,6 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		// if (curr_event->flags & EV_EOF) {
-		// }
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -168,8 +166,8 @@ void Server::finishedRead() {
 	uriParser.checkReqHeader();
 
 	if (checkRedirect()) {
-		// change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
-		// return ;
+		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
+		return ;
 	}
 	if (clients[curr_event->ident].getResponseCGIDirectory() != "")
 		setClientCGI();
