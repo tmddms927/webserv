@@ -81,7 +81,7 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 		//  pipe setting
 		set_CGI_read_fd(server_write_pipe); // server 기준 write, cgi 기준 read
 		set_CGI_write_fd(server_read_pipe);
-		::execve("cgi_tester", arg , env);
+		::execve(arg[0], arg , env);
 	}
 	else {                  //  << Server(parent) >>
 		//  pipe setting

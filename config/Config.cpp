@@ -85,6 +85,15 @@ void Config::openDir(std::string const & str) {
     fs ? closedir(fs) : throw VariableRuleException();
 }
 
+void Config::checkAllowedMethod() {
+    for (size_t i = 0; i < config.size(); i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            if (config[i].location[j].allowed_method == -1)
+                throw VariableRuleException();
+        }
+    }
+}
+
 void Config::checkPort() {
     int port = config[0].port;
 
@@ -101,6 +110,21 @@ void Config::checkFile() {
             openFile(config[i].location[j].location_root + "/" + config[i].location[j].err_page);
             if (!config[i].location[j].cgi.empty())
                 openFile(config[i].location[j].cgi);
+        }
+    }
+}
+
+void Config::checkDirDepth() {
+    for (size_t i = 0; i < config.size() ; i++) {
+        for (size_t j = 0; j < config[i].location.size() ; j++) {
+            int rootCnt = 0;
+            std::string::iterator it = config[i].location[j].location_uri.begin();
+            while (it != config[i].location[j].location_uri.end()) {
+                if (*it++ == '/')
+                    rootCnt++;
+            }
+            if (rootCnt > 2)
+                throw VariableRuleException();
         }
     }
 }
@@ -138,6 +162,8 @@ void Config::checkVariables() {
     checkDir();
     checkFile();
     checkPort();
+    checkDirDepth();
+    checkAllowedMethod();
 }
 
 bool Config::hasRootLocation() {
@@ -178,6 +204,9 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
             std::cout << "    is_aster : " << config.config[i].location[j].is_aster << std::endl;
             std::cout << "    CGI : " << config.config[i].location[j].cgi << std::endl;
             std::cout << "    auto_index : " << config.config[i].location[j].auto_index << std::endl;
+            std::cout << "    client_max_body_size : " << config.config[i].location[j].client_max_body_size << std::endl;
+            std::cout << "    redirect_uri : " << config.config[i].location[j].redirect_uri << std::endl;
+            std::cout << "    redirect_code : " << config.config[i].location[j].redirect_code << std::endl;
             j++;
         }
         std::cout << "--------------------------------------" << std::endl;
