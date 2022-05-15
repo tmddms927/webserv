@@ -46,8 +46,8 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	char	**arg = new char*[arg_v.size() + 1];
 	char	**env = new char*[env_v.size() + 1];
 
-	// memset(arg, 0, sizeof(char *) * (arg_v.size() + 1));
-	// memset(env, 0, sizeof(char *) * (env_v.size() + 1));
+	memset(arg, 0, sizeof(char *) * (arg_v.size() + 1));
+	memset(env, 0, sizeof(char *) * (env_v.size() + 1));
 
 	//file open, read, write error체크 엄밀히 하기
 	if (pipe(server_read_pipe) == -1)
@@ -58,15 +58,21 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	int i = 0;
 	for (std::vector<std::string>::iterator
 			it = arg_v.begin(); it != arg_v.end(); it++) {
-				*(arg[i++]) = arg_v[0][i];
-				arg[i++] = const_cast<char *>(it->c_str());
-				std::cout << arg[i] << std::endl;
+				arg[i] = new char[it->size() + 1];
+				memset(arg[i], 0, it->size() + 1);
+				for (size_t j = 0; j < it->size(); j++)
+					arg[i][j] = it->c_str()[j];
+				i++;
 			}
 	i = 0;
+	std::cout << env_v.size() << std::endl;
 	for (std::vector<std::string>::iterator
 			it = env_v.begin(); it != env_v.end(); it++) {
-				env[i++] = const_cast<char *>(it->c_str());
-				std::cout << env[i] << std::endl;
+				env[i] = new char[it->size() + 1];
+				memset(env[i], 0, it->size() + 1);
+				for (size_t j = 0; j < it->size(); j++)
+					env[i][j] = it->c_str()[j];
+				std::cout << "env : " << env[i++] << std::endl;
 			}
 				
 	pid = fork();
@@ -76,7 +82,6 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 		//  pipe setting
 		set_CGI_read_fd(server_write_pipe); // server 기준 write, cgi 기준 read
 		set_CGI_write_fd(server_read_pipe);
-		
 		::execve("cgi_tester", arg , env);
 	}
 	else {                  //  << Server(parent) >>
@@ -93,17 +98,6 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	}
 }
 
-//  arg, env 세팅
-		// arg[0] = const_cast<char*>("cgi_tester");
-		// arg[1] = NULL;
-		// std::cout << ca.method_name;
-		// env[0] = const_cast<char*>(("REQUEST_METHOD=" + ca.method_name).c_str());     //method
-		// env[1] = const_cast<char*>("SERVER_PROTOCOL=HTTP/1.1");
-		// env[2] = const_cast<char*>("PATH_INFO=/Users/hwan/Documents/webserv/hello");
-		// env[3] = const_cast<char*>(("CONTENT_LENGTH=" + ft_itoa(ca.content_length)).c_str());
-		// env[4] = NULL;
-		// ::execve("cgi_tester",  , );
-
 int    CGIInterface::CGI_write(std::string const &body) {
 	ssize_t wr = 0;
 	size_t length = body.size();
@@ -117,14 +111,6 @@ int    CGIInterface::CGI_write(std::string const &body) {
 	wr = write(write_fd, body.c_str(), write_size);
 	if (wr != -1)
 		written_length += wr;
-	// if (wr == -1) {
-	// 	// std::cout << "wr : " << wr << std::endl;
-	// 	// exit(1);
-	// }
-	// if (wr == 0) {
-	// 	std::cout << "CGI_write error" << std::endl;			
-	// 	return false;
-	// }
 	return wr;
 }
 
@@ -137,12 +123,6 @@ int    CGIInterface::CGI_read(std::string & buf) {
 	rd = read(read_fd, tmp, RW_MAX_SIZE);
 	if (rd > 0)
 		buf = tmp;
-	if (rd == 0) {
-		std::cout << "CGI_read error" << std::endl;
-		std::cout << errno << std::endl;
-	}
-	if (rd == -1)
-		std::cout << "CGI_read have no buf to read" << std::endl;
 	return rd;
 }
 
@@ -154,6 +134,14 @@ void  CGIInterface::CGI_clear() {
 	write_fd = 0;
 	read_fd = 0;
 	written_length = 0;
+}
+
+int     CGIInterface::CGI_getReadFd() {
+	return read_fd;
+}
+
+int     CGIInterface::CGI_getWriteFd() {
+	return write_fd;
 }
 
 CGIInterface::CGIInterface(/* args */): written_length(0) {
@@ -172,11 +160,3 @@ CGIInterface::~CGIInterface() {
 //     // std::cout << "CGIInterface destructor called" << std::endl;
 //     return *this;
 // }
-
-int     CGIInterface::CGI_getReadFd() {
-	return read_fd;
-}
-
-int     CGIInterface::CGI_getWriteFd() {
-	return write_fd;
-}
