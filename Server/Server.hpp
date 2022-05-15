@@ -98,6 +98,7 @@ public:
 	void	disconnect_file_fd();
 	void	checkClientTimeout();
 	void	checkKeepAlive();
+	bool	existFile();
 
 	/* Server_cgi */
 	void writeCGI();

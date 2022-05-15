@@ -58,20 +58,13 @@ void Server::setResMethodGET() {
 ** set POST response message
 */
 void Server::setResMethodPOST() {
-	int fd;
-
+	////////////////////////////// 수정하기 //////////////////////////////
 	if (clients[curr_event->ident].getBody().length() > 100)
 		return changeStatusToError(curr_event->ident, 413);
-	return changeStatusToError(curr_event->ident, 200);
-/////////////////////
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd < 0)
-		changeStatusToError(curr_event->ident, 404);
-	else {
-		file_fd[fd] = curr_event->ident;
-		clients[curr_event->ident].setResponseHaveFileFd(true);
-		change_events(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-	}
+	
+	clients[curr_event->ident].setStatus(204);
+	setResDefaultHeaderField(curr_event->ident);
+	clients[curr_event->ident].setResponseLine();
 }
 
 /*
@@ -80,6 +73,12 @@ void Server::setResMethodPOST() {
 void Server::setResMethodPUT() {
 	int fd;
 
+	if (existFile()) {
+		clients[curr_event->ident].setStatus(204);
+		setResDefaultHeaderField(curr_event->ident);
+		clients[curr_event->ident].setResponseLine();
+		return ;
+	}
 	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
@@ -159,25 +158,6 @@ void Server::readResGETFile() {
 	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
 	clients[fd].setResponseBody(std::string(buf, len));
 	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
-
-	setResDefaultHeaderField(fd);
-	clients[fd].setStatus(200);
-	clients[fd].setResponseLine();
-}
-
-/*
-** write POST file
-*/
-void Server::writeResPOSTFile() {
-	std::string req_body;
-	size_t		len;
-	int fd;
-
-	fd = file_fd[curr_event->ident];
-	req_body = clients[fd].getBody();
-	len = write(curr_event->ident, req_body.c_str(), req_body.length());
-	if (len != req_body.length())
-		return changeStatusToError(fd, 404);
 
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);

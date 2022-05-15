@@ -31,5 +31,6 @@ void Server::readCGI() {
 		setResDefaultHeaderField(client_fd);
 		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
 		cgi_fd.erase(curr_event->ident);
+		wait(NULL);
 	}
 }

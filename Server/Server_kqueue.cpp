@@ -61,9 +61,8 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		if (curr_event->flags & EV_EOF) {
-			// disconnect_client(curr_event->ident);
-		}
+		// if (curr_event->flags & EV_EOF) {
+		// }
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -224,9 +223,7 @@ void Server::checkMethod() {
 */
 void Server::kqueueEventWrite() {
 	if (checkFileFd()) {
-		if (clients[file_fd[curr_event->ident]].getMethod() == POST_BIT)
-			writeResPOSTFile();
-		else if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
+		if (clients[file_fd[curr_event->ident]].getMethod() == PUT_BIT)
 			writeResPUTFile();
 		disconnect_file_fd();
 	}
