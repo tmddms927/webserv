@@ -82,12 +82,16 @@ void Server::setResMethodPUT() {
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
-	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
+	std::string file = clients[curr_event->ident].getResponseFileDirectory();
+	if (remove(file.c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
 	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setResponseHeader("Content-Type", "text/plain");
+	clients[curr_event->ident].setResponseBody(file);
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(file.length()));
 }
 
 /*
@@ -187,7 +191,7 @@ void Server::writeResPUTFile() {
 
 	std::string file = clients[fd].getResponseFileDirectory();
 	setResDefaultHeaderField(fd);
-	clients[fd].setStatus(200);
+	clients[fd].setStatus(201);
 	clients[fd].setResponseLine();
 	clients[fd].setResponseHeader("Content-Type", "text/plain");
 	clients[fd].setResponseBody(file);
