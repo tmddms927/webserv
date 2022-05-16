@@ -49,7 +49,6 @@ void Server::kqueueEventRun() {
 				throw err;
 			}
 		}
-		// checkClientTimeout();
 	}
 }
 
@@ -60,8 +59,6 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		// if (curr_event->flags & EV_EOF)
-		// 	close(curr_event->flags);
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -136,6 +133,8 @@ void Server::kqueueEventReadClient() {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client(curr_event->ident);
 	}
+	else if (n == -1)
+		return ;
 	else
 		clients[curr_event->ident].reqInputBuf(buf);
 	if (clients[curr_event->ident].reqCheckFinished())
