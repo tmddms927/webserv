@@ -11,8 +11,17 @@ void Server::writeCGI() {
 	status = clients[client_fd].cgi_write();
 	if (status == CGI_FINISHED)
 		cgi_fd.erase(curr_event->ident);
-	if (status == CGI_ERROR)
-		; // pipe의 이상이 생겼을 때 체크추가
+	if (status == CGI_ERROR) {
+		setResDefaultHeaderField(client_fd);
+		clients[client_fd].setStatus(500);
+		clients[client_fd].setResponseLine();
+		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
+		cgi_fd.erase(curr_event->ident);
+		cgi_fd.erase(clients[client_fd].getResponseCGIReadFd());
+		close(clients[client_fd].getResponseCGIReadFd());
+		close(curr_event->ident);
+		wait(NULL);
+	}
 }
 
 void Server::readCGI() {
@@ -21,8 +30,15 @@ void Server::readCGI() {
 
 	client_fd = cgi_fd[curr_event->ident];
 	status = clients[client_fd].cgi_read();
-	if (status == CGI_ERROR)
-		; // pipe의 이상이 생겼을 때 체크추가
+	if (status == CGI_ERROR) {
+		setResDefaultHeaderField(client_fd);
+		clients[client_fd].setStatus(500);
+		clients[client_fd].setResponseLine();
+		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
+		cgi_fd.erase(curr_event->ident);
+		close(curr_event->ident);
+		wait(NULL);
+	}
 	if (status == CGI_FINISHED) {
 		if (clients[client_fd].cgi_setResponseline() == CGI_FINISHED)
 			; // error 처리

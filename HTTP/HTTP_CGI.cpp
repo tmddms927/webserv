@@ -1,6 +1,6 @@
 #include "HTTP.hpp"
 #include "../CGIInterface/CGIInterface.hpp"
-#include "../utils.hpp"
+#include "../utils/utils.hpp"
 #include <iostream>
 #include "../Server/Server_define.hpp"
 #include <cstring>

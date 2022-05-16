@@ -121,7 +121,6 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 
 			client.setResLocationIndex(i);
 			if (temp == "" || temp == "/") {
-				std::cout << client.getResLocationIndex() << std::endl;
 				findServerLocationIndex_findServerBlock3();
 				isFileAutoIndex();
 			}

@@ -1,9 +1,8 @@
 OUT		=	webserv
 CC		=	clang++
-CFLAGS	=	-I./HTTP -I./config -Wall -Wextra -Werror
+CFLAGS	=	-I./HTTP -I./config -I./Server -Wall -Wextra -Werror -fsanitize=address -g
 SRCS	=	main.cpp\
 			\
-			HTTP/HeaderFieldInfo.cpp\
 			HTTP/HTTP.cpp\
 			HTTP/HTTP_Chunk.cpp\
 			HTTP/HTTP_req.cpp\
@@ -25,7 +24,7 @@ SRCS	=	main.cpp\
 			autoindex/AutoIndex.cpp\
 			\
 			CGIInterface/CGIInterface.cpp\
-			utils.cpp
+			utils/utils.cpp
 OBJS	=	${SRCS:.cpp=.o}
 
 all		:	${OUT}

@@ -120,3 +120,11 @@ int const & HTTP::getResponseStep() const {
 size_t const & HTTP::getResponseIndex() const {
 	return responseMessage.index;
 }
+
+void HTTP::setResponseCGIReadFd(int const & fd) {
+	responseMessage.cgi_read_fd = fd;
+}
+
+int const & HTTP::getResponseCGIReadFd() const {
+	return responseMessage.cgi_read_fd;
+}
