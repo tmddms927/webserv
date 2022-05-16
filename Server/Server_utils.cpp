@@ -79,7 +79,7 @@ void Server::checkClientTimeout() {
 	// todo req 중이면 끝내지 않기
 	for (std::map<uintptr_t, HTTP>::iterator it = clients.begin();
 		it != clients.end(); ++it) {
-			if (get_time() - it->second.getTimeOut() > TIME_OUT) {
+			if (!(it->second.reqCheckFinished()) && get_time() - it->second.getTimeOut() > TIME_OUT) {
 				std::cout << get_time() - it->second.getTimeOut() << std::endl;
 				fd[i++] = it->first;
 			}
