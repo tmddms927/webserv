@@ -10,7 +10,7 @@
 #define SET_TMP_VALUE(X) ss >> X
 #define SERVER_BLOCK_END (*it).empty() && (*it) != SERVERV
 #define UNDEFINED_END it->empty() && (it + 1) != raw.end() && *(it + 1) != SERVERV && (it + 1)->find(LOCATIONV) == std::string::npos
-#define CHECK_NULL(X) if (X.empty()) throw InvalidLocationBlock()
+#define CHECK_NULL(X) if (X.empty()) throw InvalidLocationBlock("cgi value can't be NULL")
 typedef std::vector<std::string> rawtxt;
 
 servers ServerBlock::parse(rawtxt &raw) {
@@ -38,7 +38,7 @@ servers ServerBlock::parse(rawtxt &raw) {
             it++;
     }
     if (tmp.location.empty())
-        throw InvalidServerBlock();
+        throw ServerBlock::InvalidServerBlock("location block can't be NULL");
     return tmp;
 }
 
@@ -98,13 +98,13 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
             else if (value == "off")
                 tmp.auto_index = false;
             else
-                throw InvalidLocationBlock();
+                throw InvalidLocationBlock("auto_index value is on or off");
         }
         else
-            throw InvalidLocationBlock();
+            throw InvalidLocationBlock("invalid variable");
         it++;
         if (UNDEFINED_END)
-            throw InvalidLocationBlock();
+            throw InvalidLocationBlock("end of block is undefined form");
     }
     raw.erase(raw.begin(), it);
     it = raw.begin();
@@ -137,14 +137,14 @@ void ServerBlock::validMethod(char & allowed_bits, std::string const & methods) 
         tmp.replace(tmp.find(CONF_HEAD), strlen(CONF_HEAD), "");
     }
     if (!tmp.empty())
-        throw std::exception();
+        throw InvalidLocationBlock("Undefined Request Method");
 
 }
 
-const char *ServerBlock::InvalidServerBlock::what() const throw(){
-    return "InvalidServerBlock";
+const char *ServerBlock::InvalidServerBlock::what() const _NOEXCEPT{
+    return message.c_str();
 }
 
-const char *ServerBlock::InvalidLocationBlock::what() const throw() {
-    return "InvalidLocationBlock";
+const char *ServerBlock::InvalidLocationBlock::what() const _NOEXCEPT{
+    return message.c_str();
 }

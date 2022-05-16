@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     Config conf(argv[1]);
     try {
         conf.runParse();
-    } catch (std::exception const &e) {
+    } catch (std::exception & e) {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
