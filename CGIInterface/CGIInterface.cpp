@@ -9,36 +9,23 @@
 #define READ    0
 #define WRITE   1
 
-/*
-**  SIGPIPE 감지 시에 실행할 함수
-*/
-// void    sigpipe(int) {
-// 	std::cout << "sigpipe" << std::endl;
-// }
-
-/*  
-**  SIGCHLD 감지 시에 실행할 함수
-**  종료됨을 알린 자식프로세스의 자원을 부모 프로세스가 회수 -> wait()
-*/
-// void    sigchild(int) {
-// 	int status;
-// 	std::cout << "sigchild" << std::endl;
-// 	wait(&status);
-// }
-
-void    set_CGI_read_fd(int pipe[2]) {
-	close(pipe[WRITE]);
-	dup2(pipe[READ], STDIN_FILENO);
-	close(pipe[READ]);
+int    set_CGI_read_fd(int pipe[2]) {
+	if (close(pipe[WRITE]) == -1 ||
+		dup2(pipe[READ], STDIN_FILENO) == -1 ||
+		close(pipe[READ]) == -1)
+		return -1;
+	return 0;
 }
 
-void    set_CGI_write_fd(int pipe[2]) {
-	close(pipe[READ]);
-	dup2(pipe[WRITE], STDOUT_FILENO);
-	close(pipe[WRITE]);
+int    set_CGI_write_fd(int pipe[2]) {
+	if (close(pipe[READ]) == -1 ||
+		dup2(pipe[WRITE], STDOUT_FILENO) == -1 ||
+		close(pipe[WRITE]) == -1)
+		return -1;
+	return 0;
 }
 
-void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
+int    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	std::vector<std::string> & arg_v, std::vector<std::string> & env_v) {
 	pid_t   pid;
 	int     server_read_pipe[2];
@@ -46,17 +33,15 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	char	**arg;
 	char	**env;
 
-	
 
 	//file open, read, write error체크 엄밀히 하기
-	if (pipe(server_read_pipe) == -1)
-		std::cout << "pipe open error";
-	if (pipe(server_write_pipe) == -1)
-		std::cout << "pipe open error";
+	if (pipe(server_read_pipe) == -1 ||
+		pipe(server_write_pipe) == -1)
+		return CGI_ERROR;
 
 	pid = fork();
 	if (pid < 0)
-		;
+		return CGI_ERROR;
 	else if (pid == 0) {    //  << CGI(child) >>
 		arg = new char*[arg_v.size() + 1];
 		env = new char*[env_v.size() + 1];
@@ -68,40 +53,46 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	int i = 0;
 	for (std::vector<std::string>::iterator
 			it = arg_v.begin(); it != arg_v.end(); it++) {
-				arg[i] = new char[it->size() + 1];
-				memset(arg[i], 0, it->size() + 1);
-				for (size_t j = 0; j < it->size(); j++)
-					arg[i][j] = it->c_str()[j];
-				i++;
+				// arg[i] = new char[it->size() + 1];
+				// memset(arg[i], 0, it->size() + 1);
+				// for (size_t j = 0; j < it->size(); j++)
+				// 	arg[i][j] = it->c_str()[j];
+				// i++;
+				arg[i++] = ft_to_c_str(*it);
 			}
 	i = 0;
 	for (std::vector<std::string>::iterator
 			it = env_v.begin(); it != env_v.end(); it++) {
-				env[i] = new char[it->size() + 1];
-				memset(env[i], 0, it->size() + 1);
-				for (size_t j = 0; j < it->size(); j++)
-					env[i][j] = it->c_str()[j];
-				i++;
+				// env[i] = new char[it->size() + 1];
+				// memset(env[i], 0, it->size() + 1);
+				// for (size_t j = 0; j < it->size(); j++)
+				// 	env[i][j] = it->c_str()[j];
+				// i++;
+				env[i++] = ft_to_c_str(*it);
 			}
 				
-
 		//  pipe setting
-		set_CGI_read_fd(server_write_pipe); // server 기준 write, cgi 기준 read
-		set_CGI_write_fd(server_read_pipe);
+		if (set_CGI_read_fd(server_write_pipe) == -1 || // server 기준 write, cgi 기준 read
+			set_CGI_write_fd(server_read_pipe) == -1) {
+				std::cout << "CGI fork fail" << std::endl;
+			exit(1);
+			}
 		::execve(arg[0], arg , env);
 	}
-	else {                  //  << Server(parent) >>
-		//  pipe setting
-		close(server_write_pipe[READ]);
-		close(server_read_pipe[WRITE]);
-		fcntl(server_write_pipe[WRITE], F_SETFL, O_NONBLOCK);
-		fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK);
-		read_fd = server_read_pipe[READ];
-		write_fd = server_write_pipe[WRITE];
-		ci.read_fd = server_read_pipe[READ];
-		ci.write_fd = server_write_pipe[WRITE];
-		ci.pid = pid;
-	}
+                  //  << Server(parent) >>
+	//  pipe setting
+	if (close(server_write_pipe[READ]) == -1 ||
+		close(server_read_pipe[WRITE]) == -1)
+		return CGI_ERROR;
+	if (fcntl(server_write_pipe[WRITE], F_SETFL, O_NONBLOCK) == -1 ||
+		fcntl(server_read_pipe[READ], F_SETFL, O_NONBLOCK) == -1)
+		return CGI_ERROR;
+	read_fd = server_read_pipe[READ];
+	write_fd = server_write_pipe[WRITE];
+	ci.read_fd = server_read_pipe[READ];
+	ci.write_fd = server_write_pipe[WRITE];
+	ci.pid = pid;
+	return CGI_FINISHED;
 }
 
 int    CGIInterface::CGI_write(std::string const &body) {

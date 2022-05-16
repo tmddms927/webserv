@@ -67,6 +67,17 @@ std::pair<std::string, std::string> ft_slice_str(std::string const & src, size_t
 	return p;
 }
 
+char	*ft_to_c_str(std::string const & str) {
+	char *cstr;
+
+	cstr = new char[str.size() + 1];
+
+	memset(cstr, 0 , str.size() + 1);
+	for (size_t idx = 0; idx < str.size(); idx++)
+		cstr[idx] = str.c_str()[idx];
+	return cstr;
+}
+
 /*
 ** 현재 시간을 반환
 ** 단위 : second

@@ -7,8 +7,10 @@
 #include "HTTPHeaderField.hpp"
 
 void    HTTP::makeCGIArg(std::vector<std::string> & arg) {
+    //error 처리
     arg.push_back(responseMessage.cgi_directory);
-    arg.push_back(requestMessage.unparsed_uri);
+    if (!requestMessage.unparsed_uri.empty())
+        arg.push_back(requestMessage.unparsed_uri);
 }
 
 void    HTTP::makeCGIEnv(std::vector<std::string> & env) {

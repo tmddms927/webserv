@@ -15,6 +15,7 @@ void    ft_trim_space(std::string & str);
 void    ft_ltrim_space(std::string & str);
 void    ft_rtrim_space(std::string & str);
 std::pair<std::string, std::string> ft_slice_str(std::string const & src, size_t pos);
+char	*ft_to_c_str(std::string const & str);
 
 unsigned long long get_time();
 
