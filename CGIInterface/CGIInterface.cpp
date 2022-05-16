@@ -43,17 +43,27 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 	pid_t   pid;
 	int     server_read_pipe[2];
 	int     server_write_pipe[2];
-	char	**arg = new char*[arg_v.size() + 1];
-	char	**env = new char*[env_v.size() + 1];
+	char	**arg;
+	char	**env;
 
-	memset(arg, 0, sizeof(char *) * (arg_v.size() + 1));
-	memset(env, 0, sizeof(char *) * (env_v.size() + 1));
+	
 
 	//file open, read, write error체크 엄밀히 하기
 	if (pipe(server_read_pipe) == -1)
 		std::cout << "pipe open error";
 	if (pipe(server_write_pipe) == -1)
 		std::cout << "pipe open error";
+
+	pid = fork();
+	if (pid < 0)
+		;
+	else if (pid == 0) {    //  << CGI(child) >>
+		arg = new char*[arg_v.size() + 1];
+		env = new char*[env_v.size() + 1];
+
+		memset(arg, 0, sizeof(char *) * (arg_v.size() + 1));
+		memset(env, 0, sizeof(char *) * (env_v.size() + 1));
+
 
 	int i = 0;
 	for (std::vector<std::string>::iterator
@@ -74,10 +84,7 @@ void    CGIInterface::CGI_fork(struct s_cgiInfo & ci,
 				i++;
 			}
 				
-	pid = fork();
-	if (pid < 0)
-		;
-	else if (pid == 0) {    //  << CGI(child) >>
+
 		//  pipe setting
 		set_CGI_read_fd(server_write_pipe); // server 기준 write, cgi 기준 read
 		set_CGI_write_fd(server_read_pipe);

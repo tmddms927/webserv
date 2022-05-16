@@ -1,6 +1,6 @@
 #include "HTTP.hpp"
 #include "HTTPHeaderField.hpp"
-#include "../utils.hpp"
+#include "../utils/utils.hpp"
 
 /*
 ** HTTP class default constructor.
@@ -73,6 +73,7 @@ void HTTP::resetHTTP() {
 	responseMessage.location_index = 0;
 	responseMessage.cgi_index = -1;
 	responseMessage.have_cgi_fd = false;
+	responseMessage.cgi_read_fd = -1;
 	responseMessage.have_file_fd = false;
 	responseMessage.cgi_directory = "";
 	responseMessage.file_directory = "";

@@ -67,6 +67,7 @@ struct ResponseMessage {
 	int						location_index;
 	int						cgi_index;
 	bool					have_cgi_fd;
+	int						cgi_read_fd;
 	bool					have_file_fd;
 	std::string				cgi_directory;
 	std::string             file_directory;
@@ -143,6 +144,7 @@ public:
 	bool const &			getResponseHaveCGIFd() const;
 	int const &				getResponseStep() const;
 	size_t const & 			getResponseIndex() const;
+	int const &				getResponseCGIReadFd() const;
 
 	void					setResponseFileDirectory(std::string const & str);
 	void					setResponseCGIDirectory(std::string const & str);
@@ -153,6 +155,7 @@ public:
 	void 					setResponseHaveCGIFd(bool const & have);
 	void					setResponseStep(int const & i);
 	void					setResponseIndex(size_t const & i);
+	void					setResponseCGIReadFd(int const & fd);
 	
 	bool					checkStatusError();
 	unsigned long long const &	getTimeOut();

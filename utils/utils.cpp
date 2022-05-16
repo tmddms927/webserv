@@ -75,5 +75,5 @@ unsigned long long get_time() {
 	struct timespec	time;
 
 	clock_gettime(CLOCK_REALTIME, &time);
-	return (time.tv_sec) + (time.tv_nsec / 1000 / 1000);
+	return ((time.tv_sec) + (time.tv_nsec / 1000 / 1000));
 }

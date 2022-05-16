@@ -1,6 +1,6 @@
 #include "HTTP.hpp"
 #include "../CGIInterface/CGIInterface.hpp"
-#include "../utils.hpp"
+#include "../utils/utils.hpp"
 #include <iostream>
 #include "../Server/Server_define.hpp"
 #include <cstring>
@@ -8,13 +8,14 @@
 
 void    HTTP::makeCGIArg(std::vector<std::string> & arg) {
     arg.push_back(responseMessage.cgi_directory);
-    arg.push_back(responseMessage.file_directory);
+    arg.push_back(requestMessage.unparsed_uri);
 }
 
 void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
     env.push_back("REQUEST_METHOD=" + requestMessage.method_name);
-    env.push_back("PATH_INFO=/Users/hwan/Documents/webserv");
+    env.push_back("PATH_INFO=" + requestMessage.unparsed_uri);
     env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    env.push_back("CONTENT_LENGTH=" + ft_itoa(requestMessage.body.size()));
 
     if (requestMessage.header_in.find(CONTENT_TYPE_STR) != requestMessage.header_in.end())
         env.push_back("CONTENT_TYPE=" + requestMessage.header_in[CONTENT_TYPE_STR]);
