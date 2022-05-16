@@ -125,8 +125,8 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 				isFileAutoIndex();
 			}
 			else {
-				temp += temp[0] == '/' ? "" : "/";
-				client.setResponseFileDirectory(config[server_block].location[i].location_root + temp);
+				uri = temp[0] == '/' ? "" : "/";
+				client.setResponseFileDirectory(config[server_block].location[i].location_root + uri + temp);
 				isFile();
 			}
 			return true;

@@ -165,7 +165,7 @@ void Server::finishedRead() {
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 	checkMaxBodySize();
-	
+
 	if (checkRedirect()) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 		return ;
@@ -215,6 +215,10 @@ void Server::checkMethod() {
 		setResMethodHEAD();
 	else if (clients[curr_event->ident].getMethod() == PUT_BIT)
 		setResMethodPUT();
+	else {
+		clients[curr_event->ident].setStatus(500);
+		setResErrorMes(curr_event->ident);
+	}
 }
 
 /*
