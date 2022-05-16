@@ -54,6 +54,10 @@ int    HTTP::cgi_write() {
     buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), RW_MAX_SIZE);
     cgi_wr = cgi.CGI_write(buf);
     if (cgi_wr == 0) {
+        std::cout << "CGI_write buffer full" << std::endl;
+        return CGI_NOT_FINISHED;
+    }
+    if (cgi_wr == -1) {
         std::cout << "CGI_write error" << std::endl;
         return CGI_ERROR;
     }
@@ -62,7 +66,7 @@ int    HTTP::cgi_write() {
 }
 
 int    HTTP::cgi_read() {
-    int         cgi_rd;
+    int         cgi_rd; 
     std::string tmp;
 
     cgi_rd = cgi.CGI_read(tmp);
