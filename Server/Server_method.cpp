@@ -8,8 +8,11 @@
 */
 void Server::setResErrorMes(int const & client) {
 	int fd;
-	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
-			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
+	int block = clients[curr_event->ident].getResServerBlockIndex();
+	int location = clients[curr_event->ident].getResLocationIndex();
+
+	std::string file = config[block].location[location].location_root\
+			+ "/" + config[block].location[location].err_page;
 
 	clients[curr_event->ident].setResponseFileDirectory(file);
 	if (checkReadFileEmpty(curr_event->ident))
@@ -210,7 +213,7 @@ void Server::readResHEADFile() {
 	}
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
-	else if (len == 0)
+	else if (len == -1)
 		clients[fd].setStatus(200);
 	else
 		clients[fd].setStatus(200);
@@ -330,8 +333,7 @@ void Server::sendResBody() {
 ** input default response header field
 */
 void Server::setResDefaultHeaderField(uintptr_t fd) {
-	clients[fd].setResponseHeader("Server", SERVER_DEFAULT_NAME);
-	clients[fd].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
+	clients[fd].setResponseHeader("Server", config[clients[fd].getResServerBlockIndex()].host);
 }
 
 /*

@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
 
     if (argc != 2)
         exit(1);
+
     Config conf(argv[1]);
     try {
         conf.runParse();
@@ -23,14 +24,6 @@ int main(int argc, char *argv[]) {
     }
 
     signal(SIGPIPE, sigpipe);
-    // run:
-        // try {
-            Server server(conf);
-            server.socketRun();
-        // }
-        // catch (std::exception e){
-        //     // std::cout << e.what() << std::endl;
-        //     std::cout << "webserv restart..." << std::endl;
-        //     goto run;
-        // }
+    Server server(conf);
+    server.socketRun();
 }
