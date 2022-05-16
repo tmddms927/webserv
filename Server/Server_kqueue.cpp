@@ -60,6 +60,8 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
+		if (curr_event->flags & EV_EOF)
+			close(curr_event->flags);
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -117,7 +119,7 @@ void Server::kqueueConnectAccept() {
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP()));
 	clients[client_socket].setServerFd(curr_event->ident);
-	std::cout << "accept new client : " << client_socket << std::endl;
+	// std::cout << curr_event->ident << ", accept new client : " << client_socket << std::endl;
 }
 
 /*
