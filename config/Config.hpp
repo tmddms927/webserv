@@ -28,6 +28,7 @@ private:
     void                            checkDirDepth();
     void                            checkAllowedMethod();
     void                            checkPort();
+    void                            checkHost();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
     void                            checkFile();

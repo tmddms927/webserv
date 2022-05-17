@@ -113,12 +113,19 @@ void Config::checkAllowedMethod() {
     }
 }
 
+void Config::checkHost() {
+    for (size_t i = 0; i < config.size(); i++) {
+        if (config[i].host.empty())
+            throw VariableRuleException("host can't be NULL");
+    }
+}
+
 void Config::checkPort() {
     int port = config[0].port;
 
     for (size_t i = 0; i < config.size(); i++) {
         if ((config[i].port < 80 || config[i].port > 87) && config[i].port < 1024)
-            throw VariableRuleException("invalid port number");
+            throw VariableRuleException("invalid port number, it can't be well known port");
     }
     for (size_t i = 1; i < config.size(); i++) {
         if (port == config[i].port)
@@ -185,6 +192,7 @@ void Config::checkVariables() {
     checkDir();
     checkFile();
     checkPort();
+    checkHost();
     checkDirDepth();
     checkAllowedMethod();
     checkResponseCode();
