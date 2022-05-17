@@ -79,7 +79,7 @@ void    HTTP::parseRequestHeader() {
             it = v.begin(); it != v.end(); it++) {
         found = it->find(":");
         if (found == std::string::npos)
-            return ;//return error
+            continue ;
         header = ft_slice_str(*it, found);
         addHeader(header);
     }
@@ -92,7 +92,7 @@ bool    HTTP::parseRequestBody() {
         requestMessage.buf = "";            //  non_body일 경우, 모든 body를 버리기
 
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
-        setStatus(PATLOAD_TOO_LARGE);       //  body_len이 REQUEST_BODY_MAX_SIZE보다 크면 error
+        setStatus(PATLOAD_TOO_LARGE);
 
     if (requestMessage.content_length >= 0) //  Content-Length, Transfer-Encoding 모두 있을 경우
         ret = reqBodyContentLength();       //  Content-Length를 우선함

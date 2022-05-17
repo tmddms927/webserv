@@ -188,7 +188,11 @@ void Server::setClientCGI() {
 	uintptr_t read_fd;
 	pid_t pid;
 
-	clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid);
+	if (clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid) == CGI_ERROR) {
+		clients[curr_event->ident].setRedirectStatus(500);
+		setResErrorMes(curr_event->ident);
+		return ;
+	}
 	clients[curr_event->ident].setResponseCGIReadFd(read_fd);
 	change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);

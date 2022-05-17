@@ -11,17 +11,26 @@
 
 class ServerBlock {
 private:
-    class InvalidServerBlock : std::exception {
-        const char *what() const throw();
-    };
-    class InvalidLocationBlock : std::exception {
-        const char *what() const throw();
-    };
-    static bool        checkVariables(servers const & tmp, servers const & src);
-    static locations   parse_location(std::vector<std::string> & raw, std::vector<std::string>::iterator & it);
-    static void        validMethod(char & allowed_bits, std::string const & methods);
+    locations   parse_location(std::vector<std::string> & raw, std::vector<std::string>::iterator & it);
+    void        validMethod(char & allowed_bits, std::string const & methods);
 public:
-    static servers     parse(std::vector<std::string> & raw);
+    class InvalidServerBlock : public std::exception {
+    private:
+        std::string message;
+    public:
+        explicit InvalidServerBlock(std::string const & _m) : message("Invalid Server Block : " + _m) {};
+        ~InvalidServerBlock() _NOEXCEPT{};
+        const char *what() const _NOEXCEPT;
+    };
+    class InvalidLocationBlock : public std::exception {
+    private:
+        std::string message;
+    public:
+        explicit InvalidLocationBlock(std::string const & _m) : message("Invalid Location Block : " + _m) {};
+        ~InvalidLocationBlock()_NOEXCEPT{};
+        const char *what() const _NOEXCEPT;
+    };
+    servers     parse(std::vector<std::string> & raw);
 };
 
 

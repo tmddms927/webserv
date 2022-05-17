@@ -172,7 +172,7 @@ public:
 	void					resetResponseHeader();
 	void					resetResponseBody();
 	/*  CGI function  */
-	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
+	int						cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
 	int						cgi_write();
 	int						cgi_read();
 	int						cgi_setResponseline();

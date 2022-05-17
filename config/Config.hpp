@@ -28,6 +28,7 @@ private:
     void                            checkDirDepth();
     void                            checkAllowedMethod();
     void                            checkPort();
+    void                            checkHost();
     void                            openFile(std::string const & str);
     void                            openDir(std::string const & str);
     void                            checkFile();
@@ -36,11 +37,15 @@ private:
 private:
     class   GlobalConfigException : public std::exception {
     public:
-        const char                  *what() const throw();
+        const char                  *what() const _NOEXCEPT;
     };
     class   VariableRuleException : public std::exception {
+    private:
+        std::string message;
     public:
-        const char                  *what() const throw();
+        explicit VariableRuleException(std::string const & _m) : message("Check config file : " + _m) {}
+        ~VariableRuleException() _NOEXCEPT {};
+        const char *what() const _NOEXCEPT;
     };
 
 public:

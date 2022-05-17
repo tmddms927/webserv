@@ -27,7 +27,7 @@ void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
             }
 }
 
-void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
+int    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiInfo    ci;
     std::vector<std::string> args;
     std::vector<std::string> envs;
@@ -37,10 +37,12 @@ void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     makeCGIArg(args);
     makeCGIEnv(envs);
     
-    cgi.CGI_fork(ci, args, envs);
+    if (cgi.CGI_fork(ci, args, envs) == CGI_ERROR)
+        return CGI_ERROR;
     write_fd = ci.write_fd;
     read_fd = ci.read_fd;
     pid = ci.pid;
+    return CGI_FINISHED;
 }
 
 int    HTTP::cgi_write() {

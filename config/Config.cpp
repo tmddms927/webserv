@@ -42,7 +42,7 @@ void Config::readFile() {
         std::exit(1);
     }
     if (!(raw.end() - 1)->empty())
-        throw VariableRuleException();
+        throw VariableRuleException("end of file is not \\n\\n");
 }
 
 void Config::setMainConfig() {
@@ -63,13 +63,14 @@ void Config::eraseCompleted() {
 
 void Config::setServerBlock() {
     std::vector<std::string>::iterator it = raw.begin();
+    ServerBlock sb;
     while (!raw.empty()) {
         if (*it == SERVERV)
-            config.push_back(ServerBlock::parse(raw));
+            config.push_back(sb.parse(raw));
         else if (it->empty())
             raw.erase(raw.begin());
         else
-            throw std::exception();
+            throw VariableRuleException("server block is not exist");
         it = raw.begin();
     }
 }
@@ -77,12 +78,12 @@ void Config::setServerBlock() {
 void Config::openFile(std::string const & str) {
     std::fstream fs;
     fs.open(str);
-    fs.is_open() ? fs.close() : throw VariableRuleException();
+    fs.is_open() ? fs.close() : throw VariableRuleException("file is not exist");
 }
 
 void Config::openDir(std::string const & str) {
     DIR* fs = opendir(str.c_str());
-    fs ? closedir(fs) : throw VariableRuleException();
+    fs ? closedir(fs) : throw VariableRuleException("directory is not exist");
 }
 
 void Config::checkResponseCode() {
@@ -98,7 +99,7 @@ void Config::checkResponseCode() {
             } else
                 res = true;
             if (!res)
-                throw VariableRuleException();
+                throw VariableRuleException("invalid response code");
          }
     }
 }
@@ -107,17 +108,28 @@ void Config::checkAllowedMethod() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
             if (config[i].location[j].allowed_method == -1)
-                throw VariableRuleException();
+                throw VariableRuleException("you must set allowed_method");
         }
+    }
+}
+
+void Config::checkHost() {
+    for (size_t i = 0; i < config.size(); i++) {
+        if (config[i].host.empty())
+            throw VariableRuleException("host can't be NULL");
     }
 }
 
 void Config::checkPort() {
     int port = config[0].port;
 
+    for (size_t i = 0; i < config.size(); i++) {
+        if ((config[i].port < 80 || config[i].port > 87) && config[i].port < 1024)
+            throw VariableRuleException("invalid port number, it can't be well known port");
+    }
     for (size_t i = 1; i < config.size(); i++) {
         if (port == config[i].port)
-            throw VariableRuleException();
+            throw VariableRuleException("not allow duplicated port");
     }
 }
 
@@ -142,7 +154,7 @@ void Config::checkDirDepth() {
                     rootCnt++;
             }
             if (rootCnt > 2)
-                throw VariableRuleException();
+                throw VariableRuleException("max dir depth is 1");
         }
     }
 }
@@ -151,7 +163,7 @@ void Config::checkDir() {
     for (size_t i = 0; i < config.size(); i++) {
         for (size_t j = 0; j < config[i].location.size() ; j++) {
             if (*(config[i].location[j].location_root.end() - 1) == '/')
-                throw VariableRuleException();
+                throw VariableRuleException("end of dir is can't be \\");
             openDir(config[i].location[j].location_root);
         }
     }
@@ -173,13 +185,14 @@ void Config::checkRelativePath() {
         }
     }
     if (res)
-        throw VariableRuleException();
+        throw VariableRuleException("can't use relative path");
 }
 
 void Config::checkVariables() {
     checkDir();
     checkFile();
     checkPort();
+    checkHost();
     checkDirDepth();
     checkAllowedMethod();
     checkResponseCode();
@@ -200,7 +213,7 @@ void Config::validateServerBlock() {
     checkVariables();
     checkRelativePath();
     if (!hasRootLocation())
-        throw VariableRuleException();
+        throw VariableRuleException("must have root variable");
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
@@ -247,6 +260,6 @@ global const & Config::getGlobal() const{
     return global_config;
 }
 
-const char *Config::VariableRuleException::what() const throw() {
-    return "Check config file";
+const char *Config::VariableRuleException::what() const _NOEXCEPT{
+    return message.c_str();
 }
