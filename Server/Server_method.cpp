@@ -21,6 +21,8 @@ void Server::setResErrorMes(int const & client) {
 	if (fd < 0) {
 		setResDefaultHeaderField(curr_event->ident);
 		clients[client].setResponseLine();
+		clients[client].setResponseHeader("Content-Type", "text/plain");
+		clients[client].setResponseHeader("Content-Length", "0");
 	}
 	else {
 		file_fd[fd] = client;
@@ -54,6 +56,8 @@ void Server::setResMethodPOST() {
 	clients[curr_event->ident].setStatus(204);
 	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setResponseHeader("Content-Type", "text/plain");
+	clients[curr_event->ident].setResponseHeader("Content-Length", "0");
 }
 
 /*
@@ -126,6 +130,8 @@ void Server::readResErrorFile() {
 	if (setReadFileEmpty(fd) || len == 0 || len == -1) {
 		setResDefaultHeaderField(fd);
 		clients[fd].setResponseLine();
+		clients[fd].setResponseHeader("Content-Type", "text/plain");
+		clients[fd].setResponseHeader("Content-Length", "0");
 		return ;
 	}
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
@@ -155,21 +161,21 @@ void Server::readResGETFile() {
 		clients[fd].setStatus(500);
 		setResDefaultHeaderField(fd);
 		clients[fd].setResponseLine();
+		clients[fd].setResponseHeader("Content-Type", "text/plain");
+		clients[fd].setResponseHeader("Content-Length", "0");
 		return ;
 	}
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
-	else if (len == -1) {
-		clients[fd].setResponseBody("");
+	else if (len == -1)
 		clients[fd].setResponseHeader("Content-Length", "0");
-	}
 	else {
 		clients[fd].setResponseBody(std::string(buf, len));
 		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 	}
+
 	ContentType ct(clients[fd].getResponseFileDirectory());
 	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
 	clients[fd].setResponseLine();
