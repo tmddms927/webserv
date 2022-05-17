@@ -64,21 +64,14 @@ void Config::eraseCompleted() {
 void Config::setServerBlock() {
     std::vector<std::string>::iterator it = raw.begin();
     ServerBlock sb;
-    servers tmp;
-    try {
-        while (!raw.empty()) {
-            if (*it == SERVERV) {
-                tmp = sb.parse(raw);
-                config.push_back(tmp);
-            } else if (it->empty())
-                raw.erase(raw.begin());
-            else
-                throw std::exception();
-            it = raw.begin();
-        }
-    } catch (std::exception & e) {
-        std::cout << e.what() << std::endl;
-        exit(1);
+    while (!raw.empty()) {
+        if (*it == SERVERV)
+            config.push_back(sb.parse(raw));
+        else if (it->empty())
+            raw.erase(raw.begin());
+        else
+            throw VariableRuleException("server block is not exist");
+        it = raw.begin();
     }
 }
 
@@ -123,6 +116,10 @@ void Config::checkAllowedMethod() {
 void Config::checkPort() {
     int port = config[0].port;
 
+    for (size_t i = 0; i < config.size(); i++) {
+        if ((config[i].port < 80 || config[i].port > 87) && config[i].port < 1024)
+            throw VariableRuleException("invalid port number");
+    }
     for (size_t i = 1; i < config.size(); i++) {
         if (port == config[i].port)
             throw VariableRuleException("not allow duplicated port");
