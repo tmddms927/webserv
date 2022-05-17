@@ -5,9 +5,12 @@
 int main(int argc, char *argv[]) {
     std::vector<servers> ss;
 
-    if (argc != 2)
+    if (argc != 2) {
+        std::cout << "you need config file!" << std::endl;
         exit(1);
+    }
 
+    signal(SIGPIPE, SIG_IGN);
     Config conf(argv[1]);
     try {
         conf.runParse();
