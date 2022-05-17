@@ -79,7 +79,7 @@ void    HTTP::parseRequestHeader() {
             it = v.begin(); it != v.end(); it++) {
         found = it->find(":");
         if (found == std::string::npos)
-            return ;//return error
+            continue ;
         header = ft_slice_str(*it, found);
         addHeader(header);
     }
@@ -228,19 +228,19 @@ bool HTTP::reqCheckHeaderFinished() {
 /*
 ** request message print
 */
-// void HTTP::reqPrint() {
-//     std::cout << "==============<<  request parsing finish  >>==============" << std::endl; 
-//     std::cout << requestMessage.method_name << " " << requestMessage.unparsed_uri << std::endl;
-//     for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
-//         std::cout << it->first << ": " << it->second << std::endl;
-//     // if (!requestMessage.non_body)
-//     //     std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
-//     // else
-//     //     std::cout << "************* there is no body ***************" << std::endl;
-//     std::cout << "port_num : " << requestMessage.port_num << std::endl
-//                 << "keep-alive : " << requestMessage.keep_alive << std::endl
-//                 << "content_length : " << requestMessage.content_length << std::endl
-//                 << "chunked : " << requestMessage.chunked << std::endl
-//                 << "method : " << static_cast<int>(requestMessage.method) << std::endl;
-//     std::cout << "==============<< ststus : " << status << " >>================" << std::endl;
-// }
+void HTTP::reqPrint() {
+    std::cout << "==============<<  request parsing finish  >>==============" << std::endl; 
+    std::cout << requestMessage.method_name << " " << requestMessage.unparsed_uri << std::endl;
+    for (std::map<std::string, std::string>::iterator it = requestMessage.header_in.begin(); it != requestMessage.header_in.end(); ++it)
+        std::cout << it->first << ": " << it->second << std::endl;
+    // if (!requestMessage.non_body)
+    //     std::cout << requestMessage.body << "<----------BODY END]" << std::endl;
+    // else
+    //     std::cout << "************* there is no body ***************" << std::endl;
+    std::cout << "port_num : " << requestMessage.port_num << std::endl
+                << "keep-alive : " << requestMessage.keep_alive << std::endl
+                << "content_length : " << requestMessage.content_length << std::endl
+                << "chunked : " << requestMessage.chunked << std::endl
+                << "method : " << static_cast<int>(requestMessage.method) << std::endl;
+    std::cout << "==============<< ststus : " << status << " >>================" << std::endl;
+}
