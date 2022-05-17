@@ -49,6 +49,10 @@ void Config::setMainConfig() {
     if (raw[0].find(CLIENT_BODY_SIZE) != std::string::npos) {
         std::stringstream ss(raw[0].substr(strlen(CLIENT_BODY_SIZE)));
         ss >> global_config.client_max_body_size;
+        if (global_config.client_max_body_size < 0)
+            throw VariableRuleException("client max body size can't be less than 0");
+        if (global_config.client_max_body_size > 100000000)
+            throw VariableRuleException("client max body size is too large");
         eraseCompleted();
         return;
     }
