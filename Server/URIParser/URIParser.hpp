@@ -34,6 +34,7 @@ public:
 	void	setCGIPATH(int const & block, int const & i);
 	void	checkAutoIndex();
 	void	isFileAutoIndex();
+	void	checkHostName();
 };
 
 #endif

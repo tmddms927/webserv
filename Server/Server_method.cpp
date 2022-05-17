@@ -337,7 +337,7 @@ void Server::sendResBody() {
 ** input default response header field
 */
 void Server::setResDefaultHeaderField(uintptr_t fd) {
-	clients[fd].setResponseHeader("Server", config[clients[fd].getResServerBlockIndex()].host);
+	clients[fd].setResponseHeader("Server", clients[fd].getHostName());
 }
 
 /*

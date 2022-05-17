@@ -22,6 +22,7 @@ void URIParser::checkReqHeader() {
 	findServerLocationIndex();
 	checkURICGI();
 	checkAllowedMethod();
+	checkHostName();
 }
 
 bool URIParser::checkGoBeforeDirectory() {
@@ -328,4 +329,14 @@ void URIParser::isFileAutoIndex() {
 					config[server_block_index].location[location_index].err_page);
 		}
 	}
+}
+
+void URIParser::checkHostName() {
+	std::string hostname;
+	int sbi = client.getResServerBlockIndex();
+
+	hostname = config[sbi].host;
+	std::cout << client.getHostName() << ", " << hostname << std::endl;
+	if (client.getHostName() != hostname)
+		client.setStatus(400);
 }
