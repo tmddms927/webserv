@@ -116,7 +116,7 @@ void Server::kqueueConnectAccept() {
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP()));
 	clients[client_socket].setServerFd(curr_event->ident);
-	// std::cout << curr_event->ident << ", accept new client : " << client_socket << std::endl;
+	std::cout << "accept new client : " << client_socket << std::endl;
 }
 
 /*
