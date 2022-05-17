@@ -20,7 +20,6 @@ void Server::writeCGI() {
 		cgi_fd.erase(clients[client_fd].getResponseCGIReadFd());
 		close(clients[client_fd].getResponseCGIReadFd());
 		close(curr_event->ident);
-		wait(NULL);
 	}
 }
 
@@ -37,7 +36,6 @@ void Server::readCGI() {
 		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
 		cgi_fd.erase(curr_event->ident);
 		close(curr_event->ident);
-		wait(NULL);
 	}
 	if (status == CGI_FINISHED) {
 		if (clients[client_fd].cgi_setResponseline() == CGI_ERROR) {

@@ -2,13 +2,6 @@
 #include "HTTP/HeaderFieldInfo.hpp"
 #include "HTTP/HTTP.hpp"
 
-/*
-**  SIGPIPE 감지 시에 실행할 함수
-*/
-void    sigpipe(int) {
-	std::cout << "sigpipe" << std::endl;
-}
-
 int main(int argc, char *argv[]) {
     std::vector<servers> ss;
 
@@ -23,7 +16,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    signal(SIGPIPE, sigpipe);
     Server server(conf);
     server.socketRun();
 }
