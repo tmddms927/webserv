@@ -80,7 +80,8 @@ void URIParser::findServerLocationIndex() {
 	client.setResponseFileDirectory(\
 			config[client.getResServerBlockIndex()].location[client.getResLocationIndex()].location_root\
 			+ client.getURI());
-	isFile();
+	if (client.getMethod() != DELETE_BIT)
+		isFile();
 }
 
 /*
@@ -92,7 +93,7 @@ bool URIParser::findServerLocationIndex_findRoot() {
 	std::string uri = client.getURI();
 
 	found = uri.find("/");
-	if (uri.length() == 1) {
+	if (uri.length() == 1 && client.getMethod() != DELETE_BIT) {
 		client.setResponseFileDirectory(\
 			config[client.getResServerBlockIndex()].location[client.getResLocationIndex()].location_root\
 			+ "/" + config[client.getResServerBlockIndex()].location[client.getResLocationIndex()].index);
@@ -128,14 +129,16 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 			else {
 				uri = temp[0] == '/' ? "" : "/";
 				client.setResponseFileDirectory(config[server_block].location[i].location_root + uri + temp);
-				isFile();
+				if (client.getMethod() != DELETE_BIT)
+					isFile();
 			}
 			return true;
 		}
 	}
 	client.setResponseFileDirectory(\
 		config[server_block].location[client.getResLocationIndex()].location_root + uri);
-	isFile();
+	if (client.getMethod() != DELETE_BIT)
+		isFile();
 	return true;
 }
 
@@ -147,9 +150,10 @@ void URIParser::findServerLocationIndex_findServerBlock3() {
 	int server_block = client.getResServerBlockIndex();
 	int location = client.getResLocationIndex();
 
-	client.setResponseFileDirectory(\
-		config[server_block].location[location].location_root + \
-		"/" + config[server_block].location[location].index);
+	if (client.getMethod() != DELETE_BIT)
+		client.setResponseFileDirectory(\
+			config[server_block].location[location].location_root + \
+			"/" + config[server_block].location[location].index);
 }
 
 /*

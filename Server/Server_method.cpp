@@ -67,12 +67,12 @@ void Server::setResMethodPUT() {
 	int fd;
 
 	if (existFile()) {
-		clients[curr_event->ident].setStatus(204);
+		clients[curr_event->ident].setRedirectStatus(204);
 		setResDefaultHeaderField(curr_event->ident);
 		clients[curr_event->ident].setResponseLine();
 		return ;
 	}
-	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	fd = open(clients[curr_event->ident].getResponseFileDirectory().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);\
 	if (fd < 0)
 		changeStatusToError(curr_event->ident, 404);
 	else {
@@ -192,12 +192,14 @@ void Server::writeResPUTFile() {
 	fd = file_fd[curr_event->ident];
 	req_body = clients[fd].getBody();
 	len = write(curr_event->ident, req_body.c_str(), req_body.length());
-	if (len != static_cast<int>(req_body.length()) || len == -1 || len == 0)
+	if (len != static_cast<int>(req_body.length()) || len == -1)
 		return changeStatusToError(fd, 404);
-
+	
 	std::string file = clients[fd].getResponseFileDirectory();
+	if (len == 0)
+		file = "";
 	setResDefaultHeaderField(fd);
-	clients[fd].setStatus(201);
+	clients[fd].setRedirectStatus(201);
 	clients[fd].setResponseLine();
 	clients[fd].setResponseHeader("Content-Type", "text/plain");
 	clients[fd].setResponseBody(file);
@@ -343,7 +345,7 @@ void Server::sendResBody() {
 ** input default response header field
 */
 void Server::setResDefaultHeaderField(uintptr_t fd) {
-	clients[fd].setResponseHeader("Server", clients[fd].getHostName());
+	clients[fd].setResponseHeader("Server", config[clients[fd].getResServerBlockIndex()].host);
 }
 
 /*
