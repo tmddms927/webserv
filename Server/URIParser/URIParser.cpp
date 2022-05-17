@@ -22,6 +22,7 @@ void URIParser::checkReqHeader() {
 	findServerLocationIndex();
 	checkURICGI();
 	checkAllowedMethod();
+	checkHostName();
 }
 
 bool URIParser::checkGoBeforeDirectory() {
@@ -125,7 +126,8 @@ bool URIParser::findServerLocationIndex_findServerBlock2() {
 				isFileAutoIndex();
 			}
 			else {
-				client.setResponseFileDirectory(config[server_block].location[i].location_root + temp);
+				uri = temp[0] == '/' ? "" : "/";
+				client.setResponseFileDirectory(config[server_block].location[i].location_root + uri + temp);
 				isFile();
 			}
 			return true;
@@ -327,4 +329,13 @@ void URIParser::isFileAutoIndex() {
 					config[server_block_index].location[location_index].err_page);
 		}
 	}
+}
+
+void URIParser::checkHostName() {
+	std::string hostname;
+	int sbi = client.getResServerBlockIndex();
+
+	hostname = config[sbi].host + ":" + ft_itoa(config[sbi].port);
+	if (client.getHostName() != hostname)
+		client.setStatus(400);
 }

@@ -51,6 +51,7 @@ struct  RequestMessage {
 	HTTPHeaderField         header_in;
 	unsigned int			port_num;
 	bool					keep_alive;
+	std::string				host_name;
 
 	/* request body */
 	std::string             body;
@@ -122,6 +123,7 @@ public:
 	unsigned int const &	getPort();
 	char				 	getMethod() const;
 	bool const &			getKeepAlive() const;
+	std::string const	&	getHostName() const;
 
 	void					setServerFd(uintptr_t const fd);
 	void					setPort();
@@ -170,7 +172,7 @@ public:
 	void					resetResponseHeader();
 	void					resetResponseBody();
 	/*  CGI function  */
-	void					cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
+	int						cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid);
 	int						cgi_write();
 	int						cgi_read();
 	int						cgi_setResponseline();

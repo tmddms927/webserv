@@ -9,7 +9,6 @@ void    HTTP::addHeader(std::pair<std::string, std::string> & header) {
     ft_trim_space(header.first);
     ft_trim_space(header.second);
     requestMessage.header_in.insert(header);
-    //header validate
 }
 
 bool    HTTP::extractstr(std::string & dest, std::string & src, std::string const & cut) {
@@ -80,7 +79,7 @@ void    HTTP::parseRequestHeader() {
             it = v.begin(); it != v.end(); it++) {
         found = it->find(":");
         if (found == std::string::npos)
-            return ;//return error
+            continue ;
         header = ft_slice_str(*it, found);
         addHeader(header);
     }
@@ -93,7 +92,7 @@ bool    HTTP::parseRequestBody() {
         requestMessage.buf = "";            //  non_body일 경우, 모든 body를 버리기
 
     if (requestMessage.body.size() > REQUEST_BODY_MAX_SIZE)
-        setStatus(PATLOAD_TOO_LARGE);       //  body_len이 REQUEST_BODY_MAX_SIZE보다 크면 error
+        setStatus(PATLOAD_TOO_LARGE);
 
     if (requestMessage.content_length >= 0) //  Content-Length, Transfer-Encoding 모두 있을 경우
         ret = reqBodyContentLength();       //  Content-Length를 우선함
@@ -172,6 +171,8 @@ void    HTTP::additionalParseRequestHeader() {
     if (requestMessage.method == 0) {
         setStatus(NOT_ALLOWED);
     }
+    if (requestMessage.header_in.find(HOST_STR) != requestMessage.header_in.end())
+        requestMessage.host_name = requestMessage.header_in[HOST_STR];
 }
 
 char    HTTP::methodStringtoBit(std::string str) {
@@ -204,10 +205,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {
-        // if (requestMessage.method_name == "POST" && requestMessage.body.empty())
-            // setStatus(NOT_ALLOWED);
         setStatus(0);
-        // reqPrint();
     }
 }
 

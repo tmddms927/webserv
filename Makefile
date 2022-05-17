@@ -1,6 +1,6 @@
 OUT		=	webserv
 CC		=	clang++
-CFLAGS	=	-I./HTTP -I./config -I./Server -Wall -Wextra -Werror -fsanitize=address -g
+CFLAGS	=	-I./HTTP -I./config -I./Server -Wall -Wextra -Werror
 SRCS	=	main.cpp\
 			\
 			HTTP/HTTP.cpp\
@@ -52,4 +52,4 @@ s	:	all
 j	:	all
 		@ ./webserv jeokim_test.conf
 
-.PHONY	:	all clean fclean re
+.PHONY	:	all clean fclean re test s j

@@ -63,8 +63,6 @@ void HTTP::setResCgiIndex(int const & i) {
 */
 #include <sstream>
 void HTTP::setResponseLine() {
-	// 수정
-
 	responseMessage.response_line = "HTTP/1.1 ";
 
 	std::stringstream stream;

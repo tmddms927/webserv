@@ -8,8 +8,11 @@
 */
 void Server::setResErrorMes(int const & client) {
 	int fd;
-	std::string file = config[clients[curr_event->ident].getResServerBlockIndex()].location[0].location_root\
-			+ "/" + config[clients[curr_event->ident].getResServerBlockIndex()].location[0].err_page;
+	int block = clients[curr_event->ident].getResServerBlockIndex();
+	int location = clients[curr_event->ident].getResLocationIndex();
+
+	std::string file = config[block].location[location].location_root\
+			+ "/" + config[block].location[location].err_page;
 
 	clients[curr_event->ident].setResponseFileDirectory(file);
 	if (checkReadFileEmpty(curr_event->ident))
@@ -79,12 +82,16 @@ void Server::setResMethodPUT() {
 ** set DELETE response message
 */
 void Server::setResMethodDELETE() {
-	if (remove(clients[curr_event->ident].getResponseFileDirectory().c_str()) != 0)
+	std::string file = clients[curr_event->ident].getResponseFileDirectory();
+	if (remove(file.c_str()) != 0)
 		return changeStatusToError(curr_event->ident, 404);
 
 	setResDefaultHeaderField(curr_event->ident);
 	clients[curr_event->ident].setStatus(200);
 	clients[curr_event->ident].setResponseLine();
+	clients[curr_event->ident].setResponseHeader("Content-Type", "text/plain");
+	clients[curr_event->ident].setResponseBody(file);
+	clients[curr_event->ident].setResponseHeader("Content-Length", ft_itoa(file.length()));
 }
 
 /*
@@ -108,7 +115,7 @@ void Server::setResMethodHEAD() {
 */
 void Server::readResErrorFile() {
 	char buf[RECIEVE_BODY_MAX_SIZE + 1];
-	size_t len;
+	int len;
 	int fd;
 
 	fd = file_fd[curr_event->ident];
@@ -116,6 +123,11 @@ void Server::readResErrorFile() {
 		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	if (setReadFileEmpty(fd) || len == 0 || len == -1) {
+		setResDefaultHeaderField(fd);
+		clients[fd].setResponseLine();
+		return ;
+	}
 	if (len <= RECIEVE_BODY_MAX_SIZE && len > 0 && !isMethodHEAD(fd)) {
 		ContentType ct(clients[fd].getResponseFileDirectory());
 		clients[fd].setResponseHeader("Content-Type", ct.getContentType());
@@ -139,15 +151,24 @@ void Server::readResGETFile() {
 		return ;
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
+	if (setReadFileEmpty(fd) || len == 0) {
+		clients[fd].setStatus(500);
+		setResDefaultHeaderField(fd);
+		clients[fd].setResponseLine();
+		return ;
+	}
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
-	else if (len < 0)
-		return changeStatusToError(fd, 500);
-
+	else if (len == -1) {
+		clients[fd].setResponseBody("");
+		clients[fd].setResponseHeader("Content-Length", "0");
+	}
+	else {
+		clients[fd].setResponseBody(std::string(buf, len));
+		clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
+	}
 	ContentType ct(clients[fd].getResponseFileDirectory());
 	clients[fd].setResponseHeader("Content-Type", ct.getContentType());
-	clients[fd].setResponseBody(std::string(buf, len));
-	clients[fd].setResponseHeader("Content-Length", ft_itoa(len));
 
 	setResDefaultHeaderField(fd);
 	clients[fd].setStatus(200);
@@ -159,18 +180,18 @@ void Server::readResGETFile() {
 */
 void Server::writeResPUTFile() {
 	std::string req_body;
-	size_t		len;
-	int fd;
+	int			len;
+	int			fd;
 
 	fd = file_fd[curr_event->ident];
 	req_body = clients[fd].getBody();
 	len = write(curr_event->ident, req_body.c_str(), req_body.length());
-	if (len != req_body.length())
+	if (len != static_cast<int>(req_body.length()) || len == -1 || len == 0)
 		return changeStatusToError(fd, 404);
 
 	std::string file = clients[fd].getResponseFileDirectory();
 	setResDefaultHeaderField(fd);
-	clients[fd].setStatus(200);
+	clients[fd].setStatus(201);
 	clients[fd].setResponseLine();
 	clients[fd].setResponseHeader("Content-Type", "text/plain");
 	clients[fd].setResponseBody(file);
@@ -181,21 +202,25 @@ void Server::writeResPUTFile() {
 ** read HEAD file
 */
 void Server::readResHEADFile() {
-	char buf[RECIEVE_BODY_MAX_SIZE + 1];
-	size_t len;
-	int fd;
+	char	buf[RECIEVE_BODY_MAX_SIZE + 1];
+	int		len;
+	int		fd;
 
 	fd = file_fd[curr_event->ident];
 	std::memset(buf, 0, RECIEVE_BODY_MAX_SIZE + 1);
 	len = read(curr_event->ident, buf, RECIEVE_BODY_MAX_SIZE + 1);
-	if (setReadFileEmpty(fd))
+	if (setReadFileEmpty(fd) || len == 0) {
+		clients[fd].setStatus(500);
+		setResDefaultHeaderField(fd);
+		clients[fd].setResponseLine();
 		return ;
+	}
 	if (len > RECIEVE_BODY_MAX_SIZE)
 		return changeStatusToError(fd, 404);
-	else if (len < 0)
-		return changeStatusToError(fd, 500);
-
-	clients[fd].setStatus(200);
+	else if (len == -1)
+		clients[fd].setStatus(200);
+	else
+		clients[fd].setStatus(200);
 	setResDefaultHeaderField(fd);
 	clients[fd].setResponseLine();
 }
@@ -242,13 +267,17 @@ bool Server::checkRedirect() {
 ** send response line to client
 */
 void Server::sendResLine() {
-	size_t length = 0;
-	size_t index = clients[curr_event->ident].getResponseIndex();
+	int		length = 0;
+	size_t	index = clients[curr_event->ident].getResponseIndex();
 
 	if (index == 0)
 		clients[curr_event->ident].setResponseHeaderFinish();
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseLine().c_str() + index,
 		clients[curr_event->ident].getResponseLine().length() - index);
+	if (length == 0)
+		return ;
+	if (length == -1)
+		return disconnect_client(curr_event->ident);
 	if (index + length != clients[curr_event->ident].getResponseLine().length())
 		clients[curr_event->ident].setResponseIndex(index + length);
 	else {
@@ -261,11 +290,15 @@ void Server::sendResLine() {
 ** send response header to client
 */
 void Server::sendResHeader() {
-	size_t length = 0;
-	size_t index = clients[curr_event->ident].getResponseIndex();
+	int		length = 0;
+	size_t	index = clients[curr_event->ident].getResponseIndex();
 
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseHeader().c_str() + index,
 		clients[curr_event->ident].getResponseHeader().length() - index);
+	if (length == 0)
+		return ;
+	if (length == -1)
+		return disconnect_client(curr_event->ident);
 	if (index + length != clients[curr_event->ident].getResponseHeader().length())
 		clients[curr_event->ident].setResponseIndex(index + length);
 	else {
@@ -278,11 +311,20 @@ void Server::sendResHeader() {
 ** send response body to client
 */
 void Server::sendResBody() {
-	size_t length = 0;
-	size_t index = clients[curr_event->ident].getResponseIndex();
+	int		length = 0;
+	size_t	index = clients[curr_event->ident].getResponseIndex();
 
+	if (clients[curr_event->ident].getResponseBody().length() == 0) {
+		clients[curr_event->ident].setResponseIndex(0);
+		clients[curr_event->ident].setResponseStep(CLIENT_RES_FINISH);
+		return ;
+	}
 	length = write(curr_event->ident, clients[curr_event->ident].getResponseBody().c_str() + index,
 		clients[curr_event->ident].getResponseBody().length() - index);
+	if (length == 0)
+		return ;
+	if (length == -1)
+		return disconnect_client(curr_event->ident);
 	if (index + length != clients[curr_event->ident].getResponseBody().length())
 		clients[curr_event->ident].setResponseIndex(index + length);
 	else {
@@ -295,8 +337,7 @@ void Server::sendResBody() {
 ** input default response header field
 */
 void Server::setResDefaultHeaderField(uintptr_t fd) {
-	clients[fd].setResponseHeader("Server", SERVER_DEFAULT_NAME);
-	clients[fd].setResponseHeader("Date", "Tue, 26 Apr 2022 10:59:45 GMT");
+	clients[fd].setResponseHeader("Server", clients[fd].getHostName());
 }
 
 /*

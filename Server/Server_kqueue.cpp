@@ -49,7 +49,6 @@ void Server::kqueueEventRun() {
 				throw err;
 			}
 		}
-		// checkClientTimeout();
 	}
 }
 
@@ -60,8 +59,6 @@ void Server::checkKeventFilter() {
 	try {
 		if (curr_event->flags & EV_ERROR)
 			kqueueEventError();
-		// if (curr_event->flags & EV_EOF)
-		// 	close(curr_event->flags);
 		if (curr_event->filter == EVFILT_READ)
 			kqueueEventRead();
 		if (curr_event->filter == EVFILT_WRITE)
@@ -119,7 +116,7 @@ void Server::kqueueConnectAccept() {
 	change_events(client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 	clients.insert(std::pair<uintptr_t, HTTP>(client_socket, HTTP()));
 	clients[client_socket].setServerFd(curr_event->ident);
-	// std::cout << curr_event->ident << ", accept new client : " << client_socket << std::endl;
+	std::cout << "accept new client : " << client_socket << std::endl;
 }
 
 /*
@@ -136,6 +133,8 @@ void Server::kqueueEventReadClient() {
 		std::cerr << "client read error!" << std::endl;
 		disconnect_client(curr_event->ident);
 	}
+	else if (n == -1)
+		return ;
 	else
 		clients[curr_event->ident].reqInputBuf(buf);
 	if (clients[curr_event->ident].reqCheckFinished())
@@ -166,7 +165,7 @@ void Server::finishedRead() {
 	URIParser uriParser(clients[curr_event->ident], server_socket, config);
 	uriParser.checkReqHeader();
 	checkMaxBodySize();
-	
+
 	if (checkRedirect()) {
 		change_events(curr_event->ident, EVFILT_WRITE, EV_ENABLE);
 		return ;
@@ -189,7 +188,11 @@ void Server::setClientCGI() {
 	uintptr_t read_fd;
 	pid_t pid;
 
-	clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid);
+	if (clients[curr_event->ident].cgi_creat(write_fd, read_fd, pid) == CGI_ERROR) {
+		clients[curr_event->ident].setRedirectStatus(500);
+		setResErrorMes(curr_event->ident);
+		return ;
+	}
 	clients[curr_event->ident].setResponseCGIReadFd(read_fd);
 	change_events(write_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	change_events(read_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
@@ -216,6 +219,10 @@ void Server::checkMethod() {
 		setResMethodHEAD();
 	else if (clients[curr_event->ident].getMethod() == PUT_BIT)
 		setResMethodPUT();
+	else {
+		clients[curr_event->ident].setStatus(500);
+		setResErrorMes(curr_event->ident);
+	}
 }
 
 /*

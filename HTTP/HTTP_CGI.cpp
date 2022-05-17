@@ -27,7 +27,7 @@ void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
             }
 }
 
-void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
+int    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     struct s_cgiInfo    ci;
     std::vector<std::string> args;
     std::vector<std::string> envs;
@@ -37,10 +37,12 @@ void    HTTP::cgi_creat(uintptr_t &write_fd, uintptr_t &read_fd, pid_t &pid) {
     makeCGIArg(args);
     makeCGIEnv(envs);
     
-    cgi.CGI_fork(ci, args, envs);
+    if (cgi.CGI_fork(ci, args, envs) == CGI_ERROR)
+        return CGI_ERROR;
     write_fd = ci.write_fd;
     read_fd = ci.read_fd;
     pid = ci.pid;
+    return CGI_FINISHED;
 }
 
 int    HTTP::cgi_write() {
@@ -54,6 +56,10 @@ int    HTTP::cgi_write() {
     buf = requestMessage.body.substr(cgi.CGI_getWrittenLength(), RW_MAX_SIZE);
     cgi_wr = cgi.CGI_write(buf);
     if (cgi_wr == 0) {
+        std::cout << "CGI_write buffer full" << std::endl;
+        return CGI_NOT_FINISHED;
+    }
+    if (cgi_wr == -1) {
         std::cout << "CGI_write error" << std::endl;
         return CGI_ERROR;
     }
@@ -62,7 +68,7 @@ int    HTTP::cgi_write() {
 }
 
 int    HTTP::cgi_read() {
-    int         cgi_rd;
+    int         cgi_rd; 
     std::string tmp;
 
     cgi_rd = cgi.CGI_read(tmp);
