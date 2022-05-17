@@ -81,6 +81,10 @@ locations ServerBlock::parse_location(rawtxt & raw, rawtxt::iterator & it) {
         else if (tmp.client_max_body_size == -1 && FIND(CLIENT_BODY_SIZE)) {
             GET_RAW_VALUE(CLIENT_BODY_SIZE);
             SET_TMP_VALUE(tmp.client_max_body_size);
+            if (tmp.client_max_body_size < 0)
+                throw InvalidLocationBlock("client max body size can't be less than 0");
+            if (tmp.client_max_body_size > 100000000)
+                throw InvalidLocationBlock("client max body size is too large");
         }
         else if (tmp.allowed_method == -1 && FIND(ALLOWED_METHODV))
             validMethod(tmp.allowed_method, (*it).substr(strlen(ALLOWED_METHODV)));
