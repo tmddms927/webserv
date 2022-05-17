@@ -124,8 +124,8 @@ void Config::checkPort() {
     int port = config[0].port;
 
     for (size_t i = 0; i < config.size(); i++) {
-        if ((config[i].port < 80 || config[i].port > 87) && config[i].port < 1024)
-            throw VariableRuleException("invalid port number, it can't be well known port");
+        if (((config[i].port < 80 || config[i].port > 87) && config[i].port < 1024) || config[i].port > 65535)
+            throw VariableRuleException("invalid port number");
     }
     for (size_t i = 1; i < config.size(); i++) {
         if (port == config[i].port)
@@ -182,6 +182,10 @@ void Config::checkRelativePath() {
             res |= config[i].location[j].err_page.find("./") != std::string::npos ? 1 : 0;
             res |= config[i].location[j].location_uri.find("..") != std::string::npos ? 1 : 0;
             res |= config[i].location[j].location_uri.find("./") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].cgi.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].cgi.find("./") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].redirect_uri.find("..") != std::string::npos ? 1 : 0;
+            res |= config[i].location[j].redirect_uri.find("./") != std::string::npos ? 1 : 0;
         }
     }
     if (res)
