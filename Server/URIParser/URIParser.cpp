@@ -27,7 +27,7 @@ void URIParser::checkReqHeader() {
 
 bool URIParser::checkGoBeforeDirectory() {
 	if (client.getURI().find("/../") != std::string::npos) {
-		client.setStatus(404);
+		client.setStatus(400);
 		return true;
 	}
 	return false;
