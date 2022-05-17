@@ -52,4 +52,4 @@ s	:	all
 j	:	all
 		@ ./webserv jeokim_test.conf
 
-.PHONY	:	all clean fclean re
+.PHONY	:	all clean fclean re test s j
