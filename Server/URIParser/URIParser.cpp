@@ -27,7 +27,7 @@ void URIParser::checkReqHeader() {
 
 bool URIParser::checkGoBeforeDirectory() {
 	if (client.getURI().find("/../") != std::string::npos) {
-		client.setStatus(404);
+		client.setStatus(400);
 		return true;
 	}
 	return false;
@@ -278,9 +278,6 @@ void URIParser::setCGIPATH(int const & block, int const & i) {
 	}
 }
 
-/*
-**
-*/
 void URIParser::checkAutoIndex() {
 	bool err;
 	std::string body;
@@ -336,6 +333,7 @@ void URIParser::checkHostName() {
 	int sbi = client.getResServerBlockIndex();
 
 	hostname = config[sbi].host + ":" + ft_itoa(config[sbi].port);
-	if (client.getHostName() != hostname)
+	if ((client.getHostName() != hostname) &&
+		!((config[sbi].host == client.getHostName()) && config[sbi].port == 80))
 		client.setStatus(400);
 }
