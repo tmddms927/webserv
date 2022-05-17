@@ -336,6 +336,7 @@ void URIParser::checkHostName() {
 	int sbi = client.getResServerBlockIndex();
 
 	hostname = config[sbi].host + ":" + ft_itoa(config[sbi].port);
-	if (client.getHostName() != hostname)
+	if ((client.getHostName() != hostname) &&
+		!((config[sbi].host == client.getHostName()) && config[sbi].port == 80))
 		client.setStatus(400);
 }
