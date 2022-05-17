@@ -9,7 +9,6 @@ void    HTTP::addHeader(std::pair<std::string, std::string> & header) {
     ft_trim_space(header.first);
     ft_trim_space(header.second);
     requestMessage.header_in.insert(header);
-    //header validate
 }
 
 bool    HTTP::extractstr(std::string & dest, std::string & src, std::string const & cut) {
@@ -172,6 +171,8 @@ void    HTTP::additionalParseRequestHeader() {
     if (requestMessage.method == 0) {
         setStatus(NOT_ALLOWED);
     }
+    if (requestMessage.header_in.find(HOST_STR) != requestMessage.header_in.end())
+        requestMessage.host_name = requestMessage.header_in[HOST_STR];
 }
 
 char    HTTP::methodStringtoBit(std::string str) {
@@ -204,10 +205,7 @@ void    HTTP::reqInputBuf(std::string const & str) {
         requestMessage.request_step = CLIENT_READ_FINISH;
     }
     if (requestMessage.request_step == CLIENT_READ_FINISH) {
-        // if (requestMessage.method_name == "POST" && requestMessage.body.empty())
-            // setStatus(NOT_ALLOWED);
         setStatus(0);
-        // reqPrint();
     }
 }
 

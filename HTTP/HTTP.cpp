@@ -65,6 +65,7 @@ void HTTP::resetHTTP() {
     requestMessage.request_step = CLIENT_READ_REQ_LINE;
     requestMessage.keep_alive = true;
     requestMessage.port_num = 0;
+	requestMessage.host_name = "";
     cgi.CGI_clear();
 	cgi_header_buf = "";
 	cgi_buf = "";
@@ -102,6 +103,10 @@ std::string const & HTTP::getResponseBody() const {
 
 unsigned long long const & HTTP::getTimeOut() {
 	return time_out;
+}
+
+std::string const	&	HTTP::getHostName() const {
+	return requestMessage.host_name;
 }
 
 void HTTP::setTimeOut() {
