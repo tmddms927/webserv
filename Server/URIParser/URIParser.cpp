@@ -278,9 +278,6 @@ void URIParser::setCGIPATH(int const & block, int const & i) {
 	}
 }
 
-/*
-**
-*/
 void URIParser::checkAutoIndex() {
 	bool err;
 	std::string body;
