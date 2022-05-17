@@ -13,7 +13,7 @@ void    HTTP::makeCGIArg(std::vector<std::string> & arg) {
 
 void    HTTP::makeCGIEnv(std::vector<std::string> & env) {
     env.push_back("REQUEST_METHOD=" + requestMessage.method_name);
-    env.push_back("PATH_INFO=" + requestMessage.unparsed_uri);
+    env.push_back("PATH_INFO=" + responseMessage.cgi_directory);
     env.push_back("SERVER_PROTOCOL=HTTP/1.1");
     env.push_back("CONTENT_LENGTH=" + ft_itoa(requestMessage.body.size()));
 
