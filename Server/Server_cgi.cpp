@@ -40,10 +40,18 @@ void Server::readCGI() {
 		wait(NULL);
 	}
 	if (status == CGI_FINISHED) {
-		if (clients[client_fd].cgi_setResponseline() == CGI_FINISHED)
-			; // error 처리
-		if (clients[client_fd].cgi_setResponseHeader() == CGI_FINISHED)
-			; // error 처리
+		if (clients[client_fd].cgi_setResponseline() == CGI_ERROR) {
+			clients[client_fd].resetResponseBody();
+			clients[client_fd].resetResponseHeader();
+			clients[client_fd].setRedirectStatus(500);
+			clients[client_fd].setResponseLine();
+		}
+		if (clients[client_fd].cgi_setResponseHeader() == CGI_ERROR) {
+			clients[client_fd].resetResponseBody();
+			clients[client_fd].resetResponseHeader();
+			clients[client_fd].setRedirectStatus(500);
+			clients[client_fd].setResponseLine();
+		}
 		setResDefaultHeaderField(client_fd);
 		change_events(client_fd, EVFILT_WRITE, EV_ENABLE);
 		cgi_fd.erase(curr_event->ident);
